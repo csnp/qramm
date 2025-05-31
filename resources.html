@@ -225,6 +225,26 @@
             transform: translateY(-1px);
         }
 
+        /* Downloadable Resource Section */
+        .download-card {
+            background: linear-gradient(135deg, #e8f2ff, #f0f8ff);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .download-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .download-icon {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
         /* CTA Section */
         .cta-section {
             background: linear-gradient(135deg, #667eea, #764ba2);
@@ -305,7 +325,7 @@
     <div class="page-header">
         <div class="container">
             <h1>QRAMM Resources</h1>
-            <p>Comprehensive collection of tools, documentation, and references for quantum readiness implementation</p>
+            <p>Comprehensive collection of tools, documentation, and resources for quantum readiness implementation</p>
         </div>
     </div>
 
@@ -343,6 +363,58 @@
                 </div>
             </section>
 
+            <!-- Implementation Guides & Templates -->
+            <section class="resource-section">
+                <h2>Implementation Guides & Templates</h2>
+                <p class="section-description">
+                    Practical tools and templates to streamline your quantum readiness implementation process.
+                </p>
+                
+                <div class="resource-grid">
+                    <div class="download-card">
+                        <div class="download-icon">📋</div>
+                        <h3>Vendor Assessment Questionnaire</h3>
+                        <p>Comprehensive template for evaluating vendor quantum readiness capabilities and roadmaps. Includes 50+ questions across all QRAMM dimensions.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/vendor-questionnaire-template.md" target="_blank" class="btn btn-primary">Download Template</a>
+                    </div>
+
+                    <div class="download-card">
+                        <div class="download-icon">🚀</div>
+                        <h3>Getting Started Implementation Guide</h3>
+                        <p>Step-by-step roadmap for beginning your quantum readiness journey, including timeline templates and milestone tracking.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/implementation/getting-started.md" target="_blank" class="btn btn-primary">View Guide</a>
+                    </div>
+
+                    <div class="download-card">
+                        <div class="download-icon">📊</div>
+                        <h3>Executive Reporting Template</h3>
+                        <p>Ready-to-use PowerPoint template for presenting quantum readiness assessment results and recommendations to executive leadership.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/executive-report-template.md" target="_blank" class="btn btn-primary">Download Template</a>
+                    </div>
+
+                    <div class="download-card">
+                        <div class="download-icon">🔍</div>
+                        <h3>Cryptographic Asset Inventory Worksheet</h3>
+                        <p>Structured spreadsheet template for conducting comprehensive cryptographic asset discovery and risk assessment.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/asset-inventory-template.md" target="_blank" class="btn btn-primary">Download Worksheet</a>
+                    </div>
+
+                    <div class="download-card">
+                        <div class="download-icon">⚠️</div>
+                        <h3>Risk Assessment Matrix</h3>
+                        <p>Quantum-specific risk assessment framework with impact and likelihood scales tailored for post-quantum cryptography transition.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/risk-matrix-template.md" target="_blank" class="btn btn-primary">Download Matrix</a>
+                    </div>
+
+                    <div class="download-card">
+                        <div class="download-icon">📈</div>
+                        <h3>Maturity Progression Roadmap</h3>
+                        <p>Visual roadmap template showing progression paths from Basic to Advanced maturity levels across all four QRAMM dimensions.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/maturity-roadmap-template.md" target="_blank" class="btn btn-primary">Download Roadmap</a>
+                    </div>
+                </div>
+            </section>
+
             <!-- Community & Support -->
             <section class="resource-section">
                 <h2>Community & Support</h2>
@@ -371,6 +443,24 @@
                         <p>For comprehensive quantum readiness assessment and implementation support, connect with the CSNP team.</p>
                         <a href="mailto:qramm@csnp.org" class="resource-link">Contact: qramm@csnp.org →</a>
                     </div>
+
+                    <div class="resource-card">
+                        <h3>Community Discussions</h3>
+                        <p>Join ongoing discussions about quantum readiness best practices, implementation challenges, and industry developments.</p>
+                        <a href="https://github.com/csnp/qramm/discussions" target="_blank" class="resource-link">Join Discussions →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Training & Workshops</h3>
+                        <p>Access information about QRAMM training sessions, workshops, and certification programs offered by CSNP and partners.</p>
+                        <a href="mailto:qramm@csnp.org?subject=Training Inquiry" class="resource-link">Training Inquiries →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Industry Case Studies</h3>
+                        <p>Real-world implementation examples and lessons learned from organizations that have successfully applied the QRAMM framework.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/case-studies.md" target="_blank" class="resource-link">View Case Studies →</a>
+                    </div>
                 </div>
             </section>
 
@@ -395,9 +485,73 @@
                     </div>
 
                     <div class="resource-card">
-                        <h3>Industry Resources</h3>
-                        <p>Additional quantum security guidance from CISA, NCSC, ENISA, and other cybersecurity organizations.</p>
-                        <a href="https://www.cisa.gov/quantum" target="_blank" class="resource-link">Explore Resources →</a>
+                        <h3>CISA Quantum Security Resources</h3>
+                        <p>Cybersecurity and Infrastructure Security Agency guidance on quantum threats and mitigation strategies.</p>
+                        <a href="https://www.cisa.gov/quantum" target="_blank" class="resource-link">Visit CISA →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>NCSC Quantum Security Guidance</h3>
+                        <p>UK National Cyber Security Centre recommendations for preparing organizations for the quantum threat.</p>
+                        <a href="https://www.ncsc.gov.uk/collection/quantum" target="_blank" class="resource-link">Visit NCSC →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>ENISA Quantum Technologies Report</h3>
+                        <p>European Union Agency for Cybersecurity analysis of quantum computing implications for cybersecurity.</p>
+                        <a href="https://www.enisa.europa.eu/topics/emerging-technologies" target="_blank" class="resource-link">Visit ENISA →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Industry White Papers</h3>
+                        <p>Collection of authoritative white papers from leading technology companies and research institutions on quantum readiness.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/white-papers.md" target="_blank" class="resource-link">Browse Papers →</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Technical Resources -->
+            <section class="resource-section">
+                <h2>Technical Resources</h2>
+                <p class="section-description">
+                    Deep-dive technical documentation and resources for implementing quantum-safe technologies.
+                </p>
+                
+                <div class="resource-grid">
+                    <div class="resource-card">
+                        <h3>Post-Quantum Algorithm Reference</h3>
+                        <p>Comprehensive overview of NIST-standardized post-quantum cryptographic algorithms with implementation considerations.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/pqc-algorithms.md" target="_blank" class="resource-link">View Reference →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Migration Planning Toolkit</h3>
+                        <p>Technical guidance for planning and executing cryptographic migrations from classical to quantum-safe algorithms.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/migration-toolkit.md" target="_blank" class="resource-link">Access Toolkit →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Testing & Validation Frameworks</h3>
+                        <p>Methodologies and tools for testing quantum-safe implementations and validating security properties.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/testing-frameworks.md" target="_blank" class="resource-link">View Frameworks →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Performance Benchmarking Guide</h3>
+                        <p>Standardized approaches for measuring and optimizing post-quantum cryptography performance in production environments.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/performance-benchmarking.md" target="_blank" class="resource-link">Download Guide →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Integration Best Practices</h3>
+                        <p>Proven strategies for integrating quantum-safe cryptography into existing systems with minimal disruption.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/integration-practices.md" target="_blank" class="resource-link">View Practices →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Code Examples & Libraries</h3>
+                        <p>Sample implementations and recommended libraries for common post-quantum cryptography use cases.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/code-examples/" target="_blank" class="resource-link">Browse Examples →</a>
                     </div>
                 </div>
             </section>

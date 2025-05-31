@@ -1,4 +1,4 @@
-# QRAMM: Quantum-Ready Assessment & Maturity Model
+# QRAMM: Quantum Readiness Assurance Maturity Model
 
 > **A comprehensive framework for evaluating and improving organizational readiness for post-quantum cryptography transitions**
 
@@ -9,7 +9,7 @@
 
 ## About QRAMM
 
-The **Quantum-Ready Assessment & Maturity Model (QRAMM)** is an open-source framework designed to help organizations systematically assess and improve their readiness for the post-quantum cryptography transition. Developed by the **CyberSecurity NonProfit (CSNP)**, QRAMM provides a comprehensive methodology for evaluating quantum security risks and implementing quantum-safe security measures.
+The **Quantum Readiness Assurance Maturity Model (QRAMM)** is an open-source framework designed to help organizations systematically assess and improve their readiness for the post-quantum cryptography transition. Developed by the **CyberSecurity NonProfit (CSNP)**, QRAMM provides a comprehensive methodology for evaluating quantum security risks and implementing quantum-safe security measures.
 
 ### Framework Authors
 
@@ -40,7 +40,7 @@ The **Quantum-Ready Assessment & Maturity Model (QRAMM)** is an open-source fram
 
 ## What is QRAMM?
 
-The **Quantum-Ready Assessment & Maturity Model (QRAMM)** is an open-source framework designed to help organizations assess and improve their readiness for the post-quantum cryptography transition. As quantum computing advances threaten current cryptographic standards, QRAMM provides a structured approach to evaluate, plan, and implement quantum-safe security measures.
+The **Quantum Readiness Assurance Maturity Model (QRAMM)** is an open-source framework designed to help organizations assess and improve their readiness for the post-quantum cryptography transition. As quantum computing advances threaten current cryptographic standards, QRAMM provides a structured approach to evaluate, plan, and implement quantum-safe security measures.
 
 ### Why QRAMM Matters
 
@@ -89,6 +89,17 @@ Each dimension is assessed across **5 maturity levels**:
 | **4** | **Advanced** | Optimized processes with continuous improvement |
 | **5** | **Optimizing** | Industry-leading practices and innovation |
 
+## Assessment Approach
+
+QRAMM assessments use **4 answer options per question** that map to the 5-level maturity scale:
+
+- **Option 1**: Basic (Level 1)
+- **Option 2**: Developing/Established (Levels 2-3)  
+- **Option 3**: Advanced (Level 4)
+- **Option 4**: Optimizing (Level 5)
+
+This approach balances assessment simplicity with comprehensive maturity evaluation.
+
 ## Quick Assessment Tool
 
 **Get immediate insights** with our streamlined 12-question assessment covering all 4 dimensions:
@@ -115,7 +126,7 @@ QRAMM is released under the **MIT License**, making it free for commercial and n
 
 ### Academic Citation
 ```
-Stamm, E., & Fane, A. S. (2025). QRAMM: Quantum-Ready Assessment & Maturity Model. 
+Stamm, E., & Fane, A. S. (2025). QRAMM: Quantum Readiness Assurance Maturity Model. 
 CyberSecurity NonProfit (CSNP). https://github.com/csnp/qramm
 ```
 
