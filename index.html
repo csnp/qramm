@@ -20,7 +20,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #2d3748;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
@@ -190,6 +190,7 @@
             border-radius: 10px;
             margin-bottom: 1rem;
             border-left: 3px solid #667eea;
+            color: #2d3748;
         }
 
         .evidence-section {
@@ -209,6 +210,7 @@
         .evidence-list {
             list-style: none;
             padding-left: 0;
+            color: #4a5568;
         }
 
         .evidence-list li {
@@ -319,6 +321,7 @@
             font-size: 1rem;
             margin-bottom: 0.5rem;
             opacity: 0.9;
+            color: white;
         }
 
         .dimension-score {
@@ -350,6 +353,15 @@
 
         .recommendation-card.high {
             border-left-color: #38b2ac;
+        }
+
+        .recommendation-card h3 {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendation-card p {
+            color: #4a5568;
         }
 
         .priority {
@@ -469,9 +481,9 @@
                 <a href="#" class="logo">QRAMM</a>
                 <ul class="nav-links">
                     <li><a href="#assessment">Assessment</a></li>
-                    <li><a href="#framework">Framework</a></li>
-                    <li><a href="#resources">Resources</a></li>
-                    <li><a href="https://github.com/qramm-community">GitHub</a></li>
+                    <li><a href="framework.html">Framework</a></li>
+                    <li><a href="resources.html">Resources</a></li>
+                    <li><a href="https://github.com/csnp/qramm">GitHub</a></li>
                 </ul>
             </nav>
         </div>
@@ -542,7 +554,7 @@
     </main>
 
     <script>
-        // Assessment Questions Data - Restored complete 12 questions across 4 dimensions
+        // Assessment Questions Data - Fixed discrete 1-5 levels
         const assessmentQuestions = [
             {
                 id: 1,
@@ -560,7 +572,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Limited visibility into cryptographic assets. Knowledge exists mainly with individual technical staff, discovered reactively when issues arise." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic discovery efforts using tools and processes. Most critical systems documented with regular updates." },
+                    { value: 2, text: "Level 2 - Developing: Partial systematic discovery efforts. Some tools and processes in place, but coverage is incomplete." },
+                    { value: 3, text: "Level 3 - Established: Systematic discovery efforts using tools and processes. Most critical systems documented with regular updates." },
                     { value: 4, text: "Level 4 - Advanced: Comprehensive automated discovery processes that systematically identify cryptographic implementations. Asset inventory is regularly updated." },
                     { value: 5, text: "Level 5 - Optimizing: Real-time discovery capabilities with automated detection, integrated enterprise systems, and industry-leading practices." }
                 ]
@@ -581,7 +594,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic awareness of quantum threats but no systematic assessment of risk to specific cryptographic assets." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Quantum risk assessments conducted for critical systems using structured methodologies with quantitative analysis." },
+                    { value: 2, text: "Level 2 - Developing: Initial quantum risk assessment efforts. Basic methodologies in place for critical systems." },
+                    { value: 3, text: "Level 3 - Established: Quantum risk assessments conducted for critical systems using structured methodologies with quantitative analysis." },
                     { value: 4, text: "Level 4 - Advanced: Advanced quantum risk modeling with scenario analysis and predictive capabilities across all assets." },
                     { value: 5, text: "Level 5 - Optimizing: Industry-leading quantum risk assessment with continuous monitoring and contribution to standards development." }
                 ]
@@ -602,7 +616,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Minimal visibility into third-party cryptographic practices. Vendor quantum readiness not systematically evaluated." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic third-party quantum readiness assessment processes integrated into vendor management." },
+                    { value: 2, text: "Level 2 - Developing: Basic vendor assessment processes. Initial discussions with key vendors about quantum readiness." },
+                    { value: 3, text: "Level 3 - Established: Systematic third-party quantum readiness assessment processes integrated into vendor management." },
                     { value: 4, text: "Level 4 - Advanced: Advanced vendor quantum readiness management with automated monitoring and collaborative improvement programs." },
                     { value: 5, text: "Level 5 - Optimizing: Lead ecosystem quantum readiness through comprehensive vendor development programs and industry collaboration." }
                 ]
@@ -623,7 +638,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Executive awareness exists but no formal governance structure or regular engagement on quantum readiness initiatives." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Executive leadership actively engaged through formal governance committees with regular quantum readiness reviews." },
+                    { value: 2, text: "Level 2 - Developing: Some executive engagement. Initial governance structures being established." },
+                    { value: 3, text: "Level 3 - Established: Executive leadership actively engaged through formal governance committees with regular quantum readiness reviews." },
                     { value: 4, text: "Level 4 - Advanced: Executive leadership drives quantum readiness as strategic priority with optimized governance processes." },
                     { value: 5, text: "Level 5 - Optimizing: Executive team provides industry leadership on quantum readiness governance with external influence on standards." }
                 ]
@@ -644,7 +660,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic awareness of need for quantum readiness planning but no formal strategy or dedicated resource allocation." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Comprehensive quantum readiness strategy integrated into business planning with systematic resource allocation." },
+                    { value: 2, text: "Level 2 - Developing: Initial strategic planning efforts. Basic resource allocation for quantum readiness activities." },
+                    { value: 3, text: "Level 3 - Established: Comprehensive quantum readiness strategy integrated into business planning with systematic resource allocation." },
                     { value: 4, text: "Level 4 - Advanced: Optimized quantum readiness strategy with advanced scenario planning and adaptive resource allocation." },
                     { value: 5, text: "Level 5 - Optimizing: Lead industry quantum readiness strategic planning through innovative approaches and industry framework contribution." }
                 ]
@@ -665,7 +682,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Quantum risks not systematically integrated into enterprise risk management. Risk evaluation is ad-hoc." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Quantum risks fully integrated into enterprise risk management with systematic assessment and monitoring." },
+                    { value: 2, text: "Level 2 - Developing: Initial integration of quantum risks into enterprise risk processes. Basic risk monitoring in place." },
+                    { value: 3, text: "Level 3 - Established: Quantum risks fully integrated into enterprise risk management with systematic assessment and monitoring." },
                     { value: 4, text: "Level 4 - Advanced: Advanced quantum risk integration with sophisticated modeling balancing risk mitigation with business agility." },
                     { value: 5, text: "Level 5 - Optimizing: Quantum risk integration demonstrates industry leadership and influences risk management frameworks." }
                 ]
@@ -686,7 +704,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic data classification focused on traditional compliance but haven't systematically evaluated quantum computing impact." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Comprehensive data classification incorporating quantum computing impact assessment across all data categories." },
+                    { value: 2, text: "Level 2 - Developing: Initial data classification efforts considering quantum impact. Basic frameworks in place." },
+                    { value: 3, text: "Level 3 - Established: Comprehensive data classification incorporating quantum computing impact assessment across all data categories." },
                     { value: 4, text: "Level 4 - Advanced: Advanced data classification with sophisticated quantum risk modeling and optimization of protection strategies." },
                     { value: 5, text: "Level 5 - Optimizing: Data classification and quantum risk assessment demonstrates industry leadership and contributes to standards." }
                 ]
@@ -707,7 +726,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Minimal quantum-safe data protection implementation. Current protections rely primarily on classical cryptography." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic quantum-safe data protection implementation covering all data requiring long-term protection." },
+                    { value: 2, text: "Level 2 - Developing: Initial quantum-safe implementation efforts. Pilot programs and proof-of-concepts in progress." },
+                    { value: 3, text: "Level 3 - Established: Systematic quantum-safe data protection implementation covering all data requiring long-term protection." },
                     { value: 4, text: "Level 4 - Advanced: Optimized quantum-safe data protection with advanced implementations and performance optimization." },
                     { value: 5, text: "Level 5 - Optimizing: Quantum-safe data protection implementation demonstrates industry leadership and contributes to technology standards." }
                 ]
@@ -728,7 +748,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic data lifecycle management focused on traditional compliance but haven't systematically addressed quantum-safe protection." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Comprehensive data lifecycle management with quantum-safe protection integrated throughout data lifecycle." },
+                    { value: 2, text: "Level 2 - Developing: Initial integration of quantum considerations into data lifecycle processes. Basic policies in place." },
+                    { value: 3, text: "Level 3 - Established: Comprehensive data lifecycle management with quantum-safe protection integrated throughout data lifecycle." },
                     { value: 4, text: "Level 4 - Advanced: Optimized data lifecycle management with advanced quantum-safe protection strategies and automated capabilities." },
                     { value: 5, text: "Level 5 - Optimizing: Data lifecycle and quantum-safe protection management demonstrates industry leadership and influences standards." }
                 ]
@@ -749,7 +770,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic technical understanding of quantum-safe cryptography but minimal systematic evaluation or implementation." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic quantum-safe technology evaluation and deployment processes with comprehensive implementation." },
+                    { value: 2, text: "Level 2 - Developing: Initial technology evaluation efforts. Basic pilot programs and proofs-of-concept in progress." },
+                    { value: 3, text: "Level 3 - Established: Systematic quantum-safe technology evaluation and deployment processes with comprehensive implementation." },
                     { value: 4, text: "Level 4 - Advanced: Advanced quantum-safe technology deployment with optimized selection processes and industry-leading practices." },
                     { value: 5, text: "Level 5 - Optimizing: Quantum-safe technology evaluation and deployment demonstrates industry leadership and contributes to standards." }
                 ]
@@ -770,7 +792,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic understanding of integration challenges but minimal systematic approach to managing interoperability issues." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic integration and interoperability management ensuring quantum-safe implementations work effectively." },
+                    { value: 2, text: "Level 2 - Developing: Initial integration planning efforts. Basic interoperability testing for critical systems." },
+                    { value: 3, text: "Level 3 - Established: Systematic integration and interoperability management ensuring quantum-safe implementations work effectively." },
                     { value: 4, text: "Level 4 - Advanced: Advanced integration capabilities with optimized interoperability management and sophisticated approaches." },
                     { value: 5, text: "Level 5 - Optimizing: Integration and interoperability management demonstrates industry leadership and contributes to integration standards." }
                 ]
@@ -791,7 +814,8 @@
                 ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic understanding of performance implications but minimal systematic optimization of quantum-safe implementations." },
-                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic performance optimization and operational management ensuring implementations meet requirements." },
+                    { value: 2, text: "Level 2 - Developing: Initial performance optimization efforts. Basic monitoring and management capabilities in place." },
+                    { value: 3, text: "Level 3 - Established: Systematic performance optimization and operational management ensuring implementations meet requirements." },
                     { value: 4, text: "Level 4 - Advanced: Advanced performance optimization with sophisticated tuning and industry-leading operational practices." },
                     { value: 5, text: "Level 5 - Optimizing: Performance and operational optimization demonstrates industry leadership and contributes to optimization methodologies." }
                 ]
