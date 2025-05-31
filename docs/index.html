@@ -218,6 +218,57 @@
             margin-bottom: 16px;
         }
 
+        .question-explanation {
+            background: #e8f4fd;
+            border-left: 4px solid #4dabf7;
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #1c7ed6;
+        }
+
+        .question-explanation h4 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #1864ab;
+        }
+
+        .evidence-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #856404;
+        }
+
+        .evidence-section h4 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #6f5d00;
+        }
+
+        .evidence-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .evidence-list li {
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .evidence-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #ffc107;
+            font-weight: bold;
+        }
+
         .question-options {
             display: flex;
             flex-direction: column;
@@ -668,12 +719,19 @@
 
     <!-- JavaScript for Interactive Assessment -->
     <script>
-        // Assessment Questions Data
+        // Assessment Questions Data with Enhanced Context
         const assessmentQuestions = [
             {
                 dimension: "CVI",
                 title: "Cryptographic Asset Discovery",
                 question: "How comprehensive is your organization's knowledge of cryptographic implementations across all systems?",
+                explanation: "This assesses how your organization locates and identifies cryptographic assets including algorithms (e.g., RSA, AES), protocols (e.g., TLS, SSH), key sizes, Certificate Authorities (CA), Key Management Systems (KMS), Hardware Security Modules (HSM), and implementation details across all systems, applications, and infrastructure.",
+                evidence: [
+                    "Documentation of known cryptographic implementations in critical systems, including algorithm types and key sizes",
+                    "Use of automated network scanning tools that identify TLS implementations across the infrastructure", 
+                    "Integrated tools identifying cryptography in applications, networks, hardware, and cloud services",
+                    "Advanced dashboards providing an up-to-date and comprehensive view of the cryptographic landscape"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Limited visibility into cryptographic assets. Knowledge exists mainly with individual technical staff, discovered reactively when issues arise." },
                     { value: 2, text: "Level 2 - Developing: Begun systematic discovery efforts using basic tools and manual processes. Some critical systems documented but significant gaps remain." },
@@ -686,6 +744,13 @@
                 dimension: "CVI",
                 title: "Cryptographic Risk Assessment",
                 question: "How systematically does your organization assess and prioritize quantum computing risks to your cryptographic assets?",
+                explanation: "This examines your approach to evaluating how susceptible your cryptographic implementations are to quantum attacks based on algorithm types, key sizes, and implementation details. It focuses on systematic risk evaluation methodologies and prioritization frameworks.",
+                evidence: [
+                    "Inventory annotated with algorithm types, key lengths, and known quantum vulnerabilities",
+                    "Use of industry standards (e.g., NIST, ETSI) to classify algorithm susceptibility", 
+                    "Automated tools scanning code, configurations, and certificates for weak cryptographic implementations",
+                    "Evidence of in-depth assessment covering various cryptographic contexts (e.g., key exchange, signatures, encryption)"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic awareness of quantum threats but no systematic assessment of risk to specific cryptographic assets." },
                     { value: 2, text: "Level 2 - Developing: Initial quantum risk assessments for some critical systems using basic methodologies. Some high-priority vulnerabilities identified." },
@@ -698,6 +763,13 @@
                 dimension: "CVI",
                 title: "Third-Party Cryptographic Management",
                 question: "How effectively does your organization assess and manage quantum risks in your vendor and partner ecosystems?",
+                explanation: "This examines your organization's ability to identify, document, and monitor how cryptography is implemented within third-party services (e.g., SaaS platforms, cloud workloads, managed services) to ensure quantum-vulnerable components are not overlooked during risk assessment and migration planning.",
+                evidence: [
+                    "Reviews of TLS settings or certificate usage in cloud-facing systems",
+                    "Cloud Security Posture Management (CSPM) tools identifying crypto parameters in cloud environments",
+                    "Real-time scanning or API-based monitoring of cryptographic configurations in multi-cloud or SaaS environments", 
+                    "Contractual obligations for vendors to report cryptographic changes and vulnerabilities"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Minimal visibility into third-party cryptographic practices. Vendor quantum readiness not systematically evaluated." },
                     { value: 2, text: "Level 2 - Developing: Begun including basic quantum readiness questions in vendor assessments. Some critical vendors provided initial roadmap information." },
@@ -710,6 +782,13 @@
                 dimension: "SGRM",
                 title: "Executive Leadership & Governance",
                 question: "How actively is your executive leadership engaged in quantum readiness planning and decision-making?",
+                explanation: "This examines how your organization has established leadership responsibility and accountability for quantum computing risks, including the governance structures that provide oversight of quantum readiness initiatives and strategic decision-making processes.",
+                evidence: [
+                    "Executive charters or board minutes explicitly referencing quantum computing risks",
+                    "Organizational charts or role definitions showing a named executive or officer responsible for quantum readiness",
+                    "Governance frameworks or steering committee documents detailing mandates to oversee cryptographic transitions",
+                    "Strategic plans or roadmaps with timelines for achieving post-quantum cryptographic readiness approved by executive governance"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Executive awareness exists but no formal governance structure or regular engagement on quantum readiness initiatives." },
                     { value: 2, text: "Level 2 - Developing: Designated executive sponsors for quantum readiness with periodic briefings. Initial governance structures being established." },
@@ -722,6 +801,13 @@
                 dimension: "SGRM",
                 title: "Strategic Planning & Resource Allocation",
                 question: "How comprehensive is your organization's strategic planning and resource allocation for quantum readiness?",
+                explanation: "This assesses the maturity of your organization's strategic approach to quantum readiness, including how financial resources and personnel are allocated to quantum readiness initiatives, budgeting processes, and investment tracking for quantum security efforts.",
+                evidence: [
+                    "Budget planning documents or spreadsheets listing quantum risk mitigation as a distinct cost center",
+                    "Formal resource requests or internal memos justifying quantum-related initiatives",
+                    "Annual financial plans or board-approved budgets allocating specific amounts to cryptographic modernization",
+                    "Documentation of ROI modeling, impact forecasts, or long-term cost planning for quantum transition efforts"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic awareness of need for quantum readiness planning but no formal strategy or dedicated resource allocation." },
                     { value: 2, text: "Level 2 - Developing: Developed initial quantum readiness strategy with high-level timeline and begun allocating resources for planning." },
@@ -734,6 +820,13 @@
                 dimension: "SGRM",
                 title: "Risk Integration & Management",
                 question: "How well integrated is quantum risk assessment into your organization's enterprise risk management processes?",
+                explanation: "This examines your organization's approach to identifying and evaluating quantum computing risks using structured assessment frameworks, risk categorization, prioritization methods, and integration with existing enterprise risk management systems.",
+                evidence: [
+                    "Risk assessment documentation outlining methodology specific to quantum computing threats",
+                    "Defined quantum-specific risk categories based on algorithm type, key size, asset exposure, and business criticality",
+                    "Application of quantum threat models to prioritize cryptographic migration timelines",
+                    "Automated tools that continuously assess quantum vulnerability based on threat intelligence updates"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Quantum risks not systematically integrated into enterprise risk management. Risk evaluation is ad-hoc." },
                     { value: 2, text: "Level 2 - Developing: Begun integrating quantum risks into enterprise risk frameworks with initial risk assessment." },
@@ -746,6 +839,13 @@
                 dimension: "DPE",
                 title: "Data Classification & Quantum Risk Assessment",
                 question: "How systematically has your organization classified data based on quantum computing impact and protection requirements?",
+                explanation: "This examines how your organization identifies sensitive or long-lived data that may require protection against quantum computing threats, including the categorization of data assets according to their vulnerability based on protection timeframe, sensitivity, and business impact.",
+                evidence: [
+                    "Data classification records explicitly linking datasets to protection lifespans that exceed projected quantum threats",
+                    "Documentation showing the use of quantum threat models to determine protection requirements",
+                    "Metadata schemas or tagging conventions that flag long-term sensitive data for enhanced cryptographic safeguards",
+                    "Output from data discovery tools identifying high-value fields tagged for long-duration confidentiality"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic data classification focused on traditional compliance but haven't systematically evaluated quantum computing impact." },
                     { value: 2, text: "Level 2 - Developing: Begun enhancing data classification to include quantum risk considerations with initial assessment of long-term protection needs." },
@@ -758,6 +858,13 @@
                 dimension: "DPE",
                 title: "Quantum-Safe Data Protection Implementation",
                 question: "How comprehensively has your organization implemented quantum-safe protection for data requiring long-term security?",
+                explanation: "This examines how your organization deploys cryptographic safeguards that protect data against quantum computing threats, including algorithm selection, key management, and control validation across different data states and environments.",
+                evidence: [
+                    "Implementation records showing post-quantum or hybrid algorithms applied to quantum-sensitive systems",
+                    "Methodology documents mapping cryptographic control types to data categories and protection durations",
+                    "Deployment diagrams confirming the presence of quantum-resistant protections for data at rest, in transit, and in use",
+                    "Configuration templates that enforce algorithm and key-type selection based on classification tags"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Minimal quantum-safe data protection implementation. Current protections rely primarily on classical cryptography." },
                     { value: 2, text: "Level 2 - Developing: Initiated quantum-safe data protection for some critical data categories with pilot implementations." },
@@ -770,6 +877,13 @@
                 dimension: "DPE",
                 title: "Data Lifecycle & Long-term Protection Management",
                 question: "How effectively does your organization manage data lifecycle considerations for quantum-safe protection?",
+                explanation: "This examines your organization's strategic approach to aligning quantum-resistant protections with data lifecycles, ensuring that encryption and integrity controls remain valid for the duration the data must remain secure or verifiable, including retention policies and lifecycle management.",
+                evidence: [
+                    "Documentation linking data protection durations to classification levels and cryptographic control choices",
+                    "Mapping of backup/archive data to protection requirements based on expected confidentiality needs",
+                    "Procedures for retiring, reclassifying, or re-encrypting long-lived data as quantum capabilities evolve",
+                    "Integration with data governance tools that apply protection policies over time based on lifecycle events"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic data lifecycle management focused on traditional compliance but haven't systematically addressed quantum-safe protection." },
                     { value: 2, text: "Level 2 - Developing: Begun integrating quantum-safe considerations into data lifecycle management with initial planning." },
@@ -782,6 +896,13 @@
                 dimension: "ITR",
                 title: "Quantum-Safe Technology Selection & Deployment",
                 question: "How systematically has your organization evaluated and implemented quantum-safe cryptographic technologies?",
+                explanation: "This examines your organization's approach to selecting, testing, and deploying quantum-resistant cryptographic technologies, including algorithm evaluation processes, pilot implementations, and systematic deployment across systems and environments.",
+                evidence: [
+                    "Technology evaluation frameworks that assess post-quantum cryptographic algorithms against organizational requirements",
+                    "Pilot project documentation showing testing of quantum-safe algorithms in representative environments",
+                    "Deployment plans and timelines for systematic implementation of quantum-resistant technologies",
+                    "Performance testing results and compatibility assessments for quantum-safe cryptographic implementations"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic technical understanding of quantum-safe cryptography but minimal systematic evaluation or implementation." },
                     { value: 2, text: "Level 2 - Developing: Conducted initial quantum-safe technology evaluations with pilot implementations and basic deployment." },
@@ -794,6 +915,13 @@
                 dimension: "ITR",
                 title: "Integration & Interoperability Management",
                 question: "How effectively does your organization manage integration and interoperability challenges in quantum-safe implementations?",
+                explanation: "This examines your organization's capability to integrate quantum-safe cryptographic technologies with existing systems, manage interoperability requirements, and ensure seamless operation across diverse technical environments and vendor ecosystems.",
+                evidence: [
+                    "Integration architecture documents showing how quantum-safe technologies connect with existing systems",
+                    "Interoperability testing results demonstrating compatibility across different platforms and vendors",
+                    "Integration management processes that address technical constraints and compatibility requirements",
+                    "Documentation of integration challenges and solutions developed for quantum-safe implementations"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic understanding of integration challenges but minimal systematic approach to managing interoperability issues." },
                     { value: 2, text: "Level 2 - Developing: Begun developing integration strategies and addressing basic interoperability challenges with initial success." },
@@ -806,6 +934,13 @@
                 dimension: "ITR",
                 title: "Performance & Operational Optimization",
                 question: "How effectively has your organization optimized the performance and operational aspects of quantum-safe implementations?",
+                explanation: "This examines your organization's approach to optimizing the performance, efficiency, and operational aspects of quantum-safe cryptographic implementations, including performance monitoring, tuning processes, and operational management procedures.",
+                evidence: [
+                    "Performance benchmarking results comparing quantum-safe implementations to baseline cryptographic systems",
+                    "Performance optimization procedures and tuning processes for quantum-safe cryptographic operations",
+                    "Operational monitoring and management processes specific to quantum-safe implementations",
+                    "Documentation of performance improvements and optimization strategies developed for quantum-safe technologies"
+                ],
                 options: [
                     { value: 1, text: "Level 1 - Basic: Basic understanding of performance implications but minimal systematic optimization of quantum-safe implementations." },
                     { value: 2, text: "Level 2 - Developing: Begun performance optimization efforts with initial tuning and basic operational procedures." },
@@ -847,6 +982,19 @@
                         Question ${currentQuestion + 1}: ${question.title}
                     </div>
                     <p style="margin-bottom: 20px; color: #666;">${question.question}</p>
+                    
+                    <div class="question-explanation">
+                        <h4>What this question assesses:</h4>
+                        <p>${question.explanation}</p>
+                    </div>
+                    
+                    <div class="evidence-section">
+                        <h4>Evidence to look for:</h4>
+                        <ul class="evidence-list">
+                            ${question.evidence.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
                     <div class="question-options">
                         ${question.options.map((option, index) => `
                             <div class="option" onclick="selectOption(${option.value}, ${index})">
