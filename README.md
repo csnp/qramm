@@ -1,8 +1,8 @@
-# QRAMM™: Quantum Risk Assessment and Management Methodology
+# QRAMM™: Quantum Readiness Assurance Maturity Model
 
 <div align="center">
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/csnp/qramm.svg)](https://github.com/csnp/qramm/stargazers)
 [![NIST Aligned](https://img.shields.io/badge/NIST-Aligned-green.svg)](https://csrc.nist.gov/projects/post-quantum-cryptography)
 [![Enterprise Ready](https://img.shields.io/badge/Enterprise-Ready-purple.svg)](https://csnp.github.io/qramm)
@@ -17,7 +17,7 @@
 
 ## Executive Summary
 
-The **Quantum Risk Assessment and Management Methodology (QRAMM™)** is a comprehensive, evidence-based framework designed to help enterprises systematically prepare for the quantum computing threat to current cryptographic systems. Developed by cybersecurity experts at CyberSecurity NonProfit (CSNP), QRAMM provides the structured approach organizations need to:
+The **Quantum Readiness Assurance Maturity Model (QRAMM™)** is a comprehensive, evidence-based framework designed to help enterprises systematically prepare for the quantum computing threat to current cryptographic systems. Developed by cybersecurity experts at CyberSecurity NonProfit (CSNP), QRAMM provides the structured approach organizations need to:
 
 - **Assess** current quantum vulnerability across all cryptographic assets
 - **Plan** strategic transition to quantum-safe cryptography
@@ -248,7 +248,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License & Usage
 
-QRAMM is released under the **Apache License 2.0**, providing:
+QRAMM is released under the **MIT License**, providing:
 - ✅ Commercial use
 - ✅ Modification
 - ✅ Distribution
@@ -258,7 +258,7 @@ QRAMM is released under the **Apache License 2.0**, providing:
 ### Citation
 ```bibtex
 @software{qramm2025,
-  title = {QRAMM: Quantum Risk Assessment and Management Methodology},
+  title = {QRAMM: Quantum Readiness Assurance Maturity Model},
   author = {Stamm, Emily and Fane, Abdel Sy},
   organization = {CyberSecurity NonProfit (CSNP)},
   year = {2025},
