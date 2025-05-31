@@ -479,40 +479,6 @@ For each question, select the option that best describes your organization's cur
 - Security controls in pipelines enforcing approved cryptographic algorithms for code signing and deployment
 - Automated tooling output showing real-time tracking or alerts on cryptographic changes in builds or dependencies
 
-### Question 1.3.9: How does your organization evaluate cryptographic dependencies for architectural complexity and transition fragility?
-
-**Explanation**: This assesses whether your organization evaluates how tightly coupled cryptographic components are across systems, and how susceptible the architecture is to cascading failures or upgrade bottlenecks during quantum-safe transitions.
-
-**Options**:
-- No evaluation of cryptographic complexity or fragility
-- Informal review of major dependencies without complexity analysis
-- Structured assessment of dependency complexity and upgrade risk
-- Simulations and metrics guide architecture hardening and migration design
-
-**Evidence to Look For**:
-- Crypto dependency diagrams annotated with shared libraries, protocols, or trust anchors that highlight upgrade bottlenecks
-- Architecture review records identifying fragile crypto trust paths or legacy chokepoints
-- Complexity scores or dashboards tracking depth of cryptographic chains, shared asset reuse, and decoupling progress
-- Logs showing crypto-related changes that triggered cascading impacts across services
-
-
-### Question 1.3.10: How does your organization optimize cryptographic dependencies for migration efficiency and system resilience?
-
-**Explanation**: This examines how your organization designs and refactors cryptographic dependencies to enable efficient quantum-safe transitions while maintaining system resilience and minimizing migration complexity.
-
-**Options**:
-- No optimization of cryptographic dependencies for migration efficiency
-- Ad-hoc decoupling efforts when migration bottlenecks are encountered
-- Systematic optimization of crypto dependencies to reduce migration complexity and improve resilience
-- Automated dependency optimization with continuous monitoring and improvement of migration readiness
-
-**Evidence to Look For**:
-- Architecture refactoring projects aimed at reducing cryptographic coupling and migration bottlenecks
-- Design patterns or guidelines that promote cryptographic agility and modular dependency structures
-- Metrics tracking dependency optimization progress and migration efficiency improvements
-- Automated tools that analyze and recommend dependency optimizations for quantum-safe transitions
-
-
 ---
 
 # Dimension 2: Strategic Governance & Risk Management (SGRM)
@@ -648,40 +614,6 @@ For each question, select the option that best describes your organization's cur
 - Participation in cross-sector exercises (e.g., financial or healthcare quantum risk pilots)
 - Published maturity models, playbooks, or cryptographic transition architectures
 - White papers, blogs, or public presentations on cryptographic transition strategies
-
-### Question 2.1.9: How does your organization integrate quantum readiness considerations into enterprise architecture and technology planning?
-
-**Explanation**: This examines how quantum security requirements and cryptographic agility are systematically incorporated into enterprise architecture decisions, technology roadmaps, and strategic planning processes.
-
-**Options**:
-- Quantum readiness considerations are not integrated into architecture or technology planning
-- Quantum requirements are considered informally during major architecture decisions
-- Quantum readiness is systematically integrated into enterprise architecture and technology planning processes
-- Quantum security drives architecture and technology decisions with automated assessment and optimization
-
-**Evidence to Look For**:
-- Architecture review processes that include quantum readiness and cryptographic agility requirements
-- Technology roadmaps that explicitly account for quantum-safe transitions and implementation timelines
-- Architecture standards and patterns that promote cryptographic agility and quantum readiness
-- Enterprise architecture artifacts that document quantum security requirements and compliance mapping
-
-
-### Question 2.1.10: How does your organization foster a culture of quantum security awareness and continuous learning?
-
-**Explanation**: This assesses how your organization builds and maintains organizational capability for quantum security through culture development, continuous learning, knowledge sharing, and workforce development initiatives.
-
-**Options**:
-- No quantum security culture or learning initiatives exist
-- Basic awareness training provided with limited reinforcement or follow-up
-- Structured culture and learning programs promote quantum security awareness and capability development
-- Comprehensive culture of quantum security excellence with continuous learning, innovation, and knowledge leadership
-
-**Evidence to Look For**:
-- Quantum security awareness training programs for different organizational roles and levels
-- Internal knowledge sharing forums, workshops, or communities of practice focused on quantum readiness
-- Career development paths and competency frameworks that include quantum security skills
-- Recognition and incentive programs that reward quantum security contributions and learning
-
 
 ## Practice 2.2: Risk Assessment & Compliance Management
 
@@ -994,23 +926,6 @@ For each question, select the option that best describes your organization's cur
 - Participation in industry forums or working groups focused on post-quantum supply chain security
 - Internal innovation programs or retrospectives aimed at improving vendor cryptographic assurance
 - Recognition, adoption, or citation of your vendor risk practices in external frameworks, toolkits, or standards
-
-### Question 2.3.10: How does your organization build resilient supply chain architectures that minimize quantum risk exposure?
-
-**Explanation**: This examines how your organization designs supply chain relationships and technical architectures to minimize quantum-related risks, including vendor diversification, cryptographic isolation, and supply chain resilience strategies.
-
-**Options**:
-- No consideration of quantum risks in supply chain architecture design
-- Basic vendor diversification with limited quantum-specific considerations
-- Structured supply chain architecture that explicitly addresses quantum risks and vendor dependencies
-- Resilient supply chain architecture with quantum-aware design, automated risk monitoring, and adaptive response capabilities
-
-**Evidence to Look For**:
-- Supply chain architecture documents that address quantum risk exposure and mitigation strategies
-- Vendor diversification strategies that consider quantum readiness and cryptographic capabilities
-- Technical isolation mechanisms that limit quantum risk propagation across supply chain relationships
-- Supply chain resilience planning that includes quantum threat scenarios and response strategies
-
 
 ---
 
@@ -1327,23 +1242,6 @@ For each question, select the option that best describes your organization's cur
 - Records of research, pilot projects, or POCs evaluating new cryptographic techniques or storage security technologies
 - Internal reviews identifying capability gaps and corresponding remediation or enhancement roadmaps
 - Adoption of advanced features (e.g., algorithm agility, dynamic rekeying, self-validating storage) in enterprise storage platforms
-
-### Question 3.2.10: How does your organization integrate storage security with broader data lifecycle and quantum readiness strategies?
-
-**Explanation**: This examines how your organization aligns storage security measures with comprehensive data protection strategies and quantum readiness planning to ensure consistent protection across the entire data lifecycle.
-
-**Options**:
-- Storage security operates independently without integration with broader data protection strategies
-- Basic coordination between storage security and data lifecycle management
-- Storage security is systematically integrated with data lifecycle and quantum readiness strategies
-- Comprehensive integration of storage security with adaptive data protection and quantum readiness across all environments
-
-**Evidence to Look For**:
-- Data lifecycle policies that explicitly address storage security requirements and quantum protection needs
-- Integration between storage security controls and broader data protection governance frameworks
-- Coordination between storage security teams and quantum readiness initiatives across the organization
-- Unified metrics and reporting that track storage security effectiveness within broader data protection objectives
-
 
 ## Practice 3.3: Transit Security & Protocol Management
 
