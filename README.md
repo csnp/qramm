@@ -9,7 +9,7 @@
 
 **The Industry-Leading Open Source Framework for Organizational Quantum Readiness**
 
-[**Launch Assessment**](https://csnp.github.io/qramm) | [**View Framework**](https://csnp.github.io/qramm/framework.html) | [**Download Templates**](https://github.com/csnp/qramm/tree/main/templates) | [**Contact Experts**](mailto:qramm@csnp.org)
+[**Launch Assessment**](https://csnp.github.io/qramm) | [**View Framework**](https://csnp.github.io/qramm/framework.html) | [**Download Templates**](https://github.com/csnp/qramm/tree/main/templates)
 
 </div>
 
@@ -17,7 +17,7 @@
 
 ## Executive Summary
 
-The **Quantum Readiness Assurance Maturity Model (QRAMM™)** is a comprehensive, evidence-based framework designed to help enterprises systematically prepare for the quantum computing threat to current cryptographic systems. Developed by cybersecurity experts at CyberSecurity NonProfit (CSNP), QRAMM provides the structured approach organizations need to:
+The **Quantum Readiness Assurance Maturity Model (QRAMM™)** is an evidence-based framework designed to help enterprises systematically prepare for the quantum computing threat to current cryptographic systems. Developed by cybersecurity experts at CyberSecurity NonProfit (CSNP), QRAMM provides the structured approach organizations need to:
 
 - **Assess** current quantum vulnerability across all cryptographic assets
 - **Plan** strategic transition to quantum-safe cryptography
@@ -132,9 +132,9 @@ With quantum computers capable of breaking RSA-2048 encryption expected within 5
 ## Scoring System & Methodology
 
 ### Assessment Structure
-- **12 Core Questions**: 3 questions per dimension
-- **48 Detailed Questions**: Available for comprehensive assessment
-- **Evidence-Based**: Each question includes specific evidence requirements
+- **120 Total Questions**: Complete assessment framework
+- **30 Questions per Dimension**: In-depth evaluation of each area
+- **10 Questions per Practice**: Detailed assessment of 12 practices
 - **4 Answer Options**: Each question has 4 options mapping to 5 maturity levels
 
 ### Scoring Calculation
@@ -162,64 +162,26 @@ Maturity Level = Derived from overall score thresholds
 - [Executive Report Template](https://github.com/csnp/qramm/blob/main/templates/executive-report-template.md)
 - [Asset Inventory Template](https://github.com/csnp/qramm/blob/main/templates/asset-inventory-template.md)
 - [Vendor Assessment Questionnaire](https://github.com/csnp/qramm/blob/main/templates/vendor-questionnaire-template.md)
+- [Evidence Collection Template](https://github.com/csnp/qramm/blob/main/templates/evidence-collection-template.md)
 
 ### 3. Engage Stakeholders
 - Present assessment results to executive leadership
 - Establish quantum readiness working group
 - Allocate initial resources for planning phase
 
-## Technical Specifications
-
-### Integration Capabilities
-- **REST API**: Available for assessment automation
-- **Data Formats**: JSON, CSV export options
-- **Security Tools**: Compatible with SIEM, GRC platforms
-- **Cloud Support**: AWS, Azure, GCP ready
-
-### Performance Metrics
-- **Assessment Time**: 15-20 minutes (quick), 2-3 hours (comprehensive)
-- **Calculation Speed**: Real-time results generation
-- **Scalability**: Supports enterprise-wide deployment
-- **Availability**: 99.9% uptime SLA
-
 ## Regulatory Compliance & Standards
 
 ### Standards Alignment
 - **NIST Post-Quantum Cryptography**: Full alignment with NIST standards
 - **ISO/IEC Standards**: Compatible with ISO 27001/27002
-- **Industry Frameworks**: Supports COBIT, ITIL integration
-- **Regional Compliance**: EU, US, APAC requirements
-
-### Audit Support
-- Complete audit trail documentation
-- Evidence collection templates
-- Compliance mapping matrices
-- Regulatory reporting formats
-
-## Industry Adoption
-
-<div align="center">
-
-| Metric | Value | Source |
-|--------|-------|--------|
-| **Fortune 500 Adoption** | 73% have quantum initiatives | Industry Survey 2024 |
-| **Global Investment** | $15.3B by 2025 | Market Research |
-| **Regulatory Mandates** | 12 countries requiring assessments | Government Reports |
-| **Implementation Timeline** | 18-36 months average | QRAMM Analytics |
-
-</div>
 
 ## Support & Resources
 
-### Professional Services
-- **Email**: [qramm@csnp.org](mailto:qramm@csnp.org)
-- **Enterprise Support**: Custom implementation guidance
-- **Training Programs**: Certification and workshops available
-- **Consulting**: Strategic advisory services
+For questions about QRAMM implementation or framework guidance, contact: [qramm@csnp.org](mailto:qramm@csnp.org)
 
 ### Community Resources
 - **GitHub Discussions**: [Join the conversation](https://github.com/csnp/qramm/discussions)
-- **Documentation**: [Comprehensive guides](https://github.com/csnp/qramm)
+- **Documentation**: [Complete guides](https://github.com/csnp/qramm)
 - **Case Studies**: Real-world implementations
 - **Best Practices**: Industry-proven approaches
 
@@ -227,12 +189,12 @@ Maturity Level = Derived from overall score thresholds
 
 ### Leadership Team
 
-**Emily Stamm** - *Primary Author*  
-VP of CSNP Board | Strategic Planning & Executive Engagement  
+**Emily Stamm** - *Author*  
+VP of CSNP Board  
 [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
 
 **Abdel Sy Fane** - *Co-Author*  
-Executive Director of CSNP | Technical Implementation & Risk Assessment  
+Executive Director of CSNP  
 [LinkedIn](https://www.linkedin.com/in/abdelsyfane/)
 
 **Organization**: [CyberSecurity NonProfit (CSNP)](https://csnp.org)
@@ -291,7 +253,6 @@ QRAMM is released under the **MIT License**, providing:
 
 1. **[Take the Assessment](https://csnp.github.io/qramm)** - Get your baseline score in minutes
 2. **[Download Templates](https://github.com/csnp/qramm/tree/main/templates)** - Accelerate implementation
-3. **[Contact Experts](mailto:qramm@csnp.org)** - Get personalized guidance
 
 **The quantum threat is approaching. Organizations that act now will thrive in the post-quantum era.**
 
