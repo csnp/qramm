@@ -151,6 +151,10 @@ Maturity Level = Derived from overall score thresholds
 - **Level 4 (Advanced)**: Score 3.6 - 3.9
 - **Level 5 (Optimizing)**: Score 4.0 (Perfect score demonstrating excellence)
 
+## 🚀 Coming Soon: QRAMM Assessment Toolkit
+
+CSNP is developing a comprehensive Excel-based assessment toolkit featuring automated scoring and scorecards. This toolkit will streamline your quantum readiness assessment process with instant calculations and professional reporting. Expected release: July 2025, following initial community feedback.
+
 ## Getting Started
 
 ### 1. Quick Assessment (Recommended First Step)

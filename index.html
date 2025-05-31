@@ -1021,6 +1021,30 @@
             }
         }
 
+        /* Coming Soon Banner */
+        .coming-soon-banner {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: #333;
+            padding: 15px 20px;
+            text-align: center;
+            position: fixed;
+            top: 80px;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+
+        .coming-soon-banner .emoji {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+
+        .coming-soon-content {
+            margin-top: 60px;
+        }
+
         /* Utility Classes */
         .text-center { text-align: center; }
         .mt-2 { margin-top: 1rem; }
@@ -1046,8 +1070,14 @@
         </nav>
     </header>
 
+    <!-- Coming Soon Banner -->
+    <div class="coming-soon-banner">
+        <span class="emoji">🚀</span>
+        <strong>Coming Soon:</strong> QRAMM Assessment Toolkit - Excel-based tool with automated scoring and scorecards. Expected release: July 2025!
+    </div>
+
     <!-- Enhanced Hero Section -->
-    <section id="home" class="hero">
+    <section id="home" class="hero coming-soon-content">
         <div class="container">
             <h1>Quantum Risk Assessment & Management Methodology</h1>
             <p class="subtitle">The comprehensive open-source framework for organizational quantum readiness</p>
