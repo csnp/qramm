@@ -1,7 +1,5 @@
 # QRAMM: Quantum Readiness Assurance Maturity Model
 
-> **A comprehensive framework for evaluating and improving organizational readiness for post-quantum cryptography transitions**
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/csnp/qramm.svg)](https://github.com/csnp/qramm/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/csnp/qramm.svg)](https://github.com/csnp/qramm/network)
@@ -14,7 +12,11 @@ The **Quantum Readiness Assurance Maturity Model (QRAMM)** is an open-source fra
 ### Framework Authors
 
 **Primary Author:** Emily Stamm - Strategic Planning & Executive Engagement  
+Emily is cofounder and VP of CSNP Board
+
 **Co-Author:** Abdel Sy Fane - Technical Implementation & Risk Assessment  
+Abdel is Cofounder and Executive Director
+
 **Developed by:** [CyberSecurity NonProfit (CSNP)](https://csnp.org)
 
 ### Contact Information
