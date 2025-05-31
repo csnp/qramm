@@ -135,7 +135,7 @@ With quantum computers capable of breaking RSA-2048 encryption expected within 5
 - **12 Core Questions**: 3 questions per dimension
 - **48 Detailed Questions**: Available for comprehensive assessment
 - **Evidence-Based**: Each question includes specific evidence requirements
-- **Discrete Scoring**: Clear 1-5 maturity levels (no fractional scores)
+- **4 Answer Options**: Each question has 4 options mapping to 5 maturity levels
 
 ### Scoring Calculation
 ```
@@ -145,11 +145,11 @@ Maturity Level = Derived from overall score thresholds
 ```
 
 ### Maturity Thresholds
-- **Level 1 (Basic)**: Score 1.0 - 1.49
-- **Level 2 (Developing)**: Score 1.5 - 2.49
-- **Level 3 (Established)**: Score 2.5 - 3.49
-- **Level 4 (Advanced)**: Score 3.5 - 4.49
-- **Level 5 (Optimizing)**: Score 4.5 - 5.0
+- **Level 1 (Basic)**: Score 1.0 - 1.5
+- **Level 2 (Developing)**: Score 1.6 - 2.5
+- **Level 3 (Established)**: Score 2.6 - 3.5
+- **Level 4 (Advanced)**: Score 3.6 - 3.9
+- **Level 5 (Optimizing)**: Score 4.0 (Perfect score demonstrating excellence)
 
 ## Getting Started
 
