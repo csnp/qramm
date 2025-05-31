@@ -182,8 +182,6 @@ For questions about QRAMM implementation or framework guidance, contact: [qramm@
 ### Community Resources
 - **GitHub Discussions**: [Join the conversation](https://github.com/csnp/qramm/discussions)
 - **Documentation**: [Complete guides](https://github.com/csnp/qramm)
-- **Case Studies**: Real-world implementations
-- **Best Practices**: Industry-proven approaches
 
 ## Framework Development
 
@@ -238,9 +236,6 @@ QRAMM is released under the **MIT License**, providing:
 
 ### Q: How often should we reassess?
 **A**: Quarterly for critical systems, annually for full organizational assessment.
-
-### Q: What's the typical ROI?
-**A**: Organizations report 40-60% risk reduction and regulatory compliance cost savings within 18 months.
 
 ### Q: Do we need quantum experts?
 **A**: No. QRAMM provides all necessary guidance. Expert consultation available for complex implementations.
