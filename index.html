@@ -173,6 +173,17 @@
             margin-bottom: 1rem;
         }
 
+        .dimension-badge {
+            background: #667eea;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
         .question-explanation {
             background: rgba(102, 126, 234, 0.05);
             padding: 1rem;
@@ -216,7 +227,7 @@
 
         .answer-options {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: 1fr;
             gap: 1rem;
             margin-top: 1rem;
         }
@@ -228,7 +239,7 @@
             padding: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
-            text-align: center;
+            text-align: left;
         }
 
         .answer-option:hover {
@@ -241,15 +252,16 @@
             background: rgba(102, 126, 234, 0.1);
         }
 
-        .option-score {
+        .option-level {
             font-weight: bold;
             color: #667eea;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .option-text {
-            margin-top: 0.5rem;
             color: #4a5568;
+            line-height: 1.5;
         }
 
         /* Results Section */
@@ -285,6 +297,34 @@
 
         canvas {
             max-height: 300px;
+        }
+
+        /* Dimension Scores */
+        .dimension-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .dimension-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .dimension-name {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .dimension-score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
         }
 
         /* Recommendations */
@@ -378,6 +418,10 @@
             .results-grid {
                 grid-template-columns: 1fr;
             }
+
+            .dimension-scores {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* Loading Animation */
@@ -448,7 +492,7 @@
         <section id="assessment" class="assessment-section">
             <div class="container">
                 <h2 class="section-title">Quantum Readiness Assessment</h2>
-                <p class="section-subtitle">Answer the following questions to evaluate your organization's quantum readiness maturity level</p>
+                <p class="section-subtitle">Answer the following 12 questions across 4 key dimensions to evaluate your organization's quantum readiness maturity level</p>
                 
                 <div id="questionsContainer">
                     <!-- Questions will be populated by JavaScript -->
@@ -471,13 +515,17 @@
                         <canvas id="overallChart"></canvas>
                     </div>
                     <div class="chart-container">
-                        <h3 class="chart-title">Domain Breakdown</h3>
+                        <h3 class="chart-title">Dimension Breakdown</h3>
                         <canvas id="domainChart"></canvas>
                     </div>
                     <div class="chart-container">
                         <h3 class="chart-title">Maturity Distribution</h3>
                         <canvas id="maturityChart"></canvas>
                     </div>
+                </div>
+
+                <div class="dimension-scores" id="dimensionScores">
+                    <!-- Dimension scores will be populated by JavaScript -->
                 </div>
             </div>
         </section>
@@ -494,169 +542,281 @@
     </main>
 
     <script>
-        // Assessment Questions Data
+        // Assessment Questions Data - Restored complete 12 questions across 4 dimensions
         const assessmentQuestions = [
             {
                 id: 1,
-                title: "Quantum Computing Awareness and Education",
-                subtitle: "Leadership and Team Understanding",
-                explanation: "This question evaluates your organization's foundational understanding of quantum computing and its potential impact on your business operations, security, and competitive position.",
+                dimension: "CVI",
+                title: "Cryptographic Asset Discovery",
+                subtitle: "Cryptographic Visibility & Inventory",
+                question: "How comprehensive is your organization's knowledge of cryptographic implementations across all systems?",
+                explanation: "Understanding what cryptographic assets exist across your organization is fundamental to quantum readiness. This includes all encryption, digital signatures, key management systems, and cryptographic protocols used in applications, databases, network communications, and embedded systems.",
                 evidence: [
-                    "Executive leadership can articulate quantum computing risks and opportunities",
-                    "Regular quantum computing briefings and updates",
-                    "Documented quantum computing impact assessment",
-                    "Staff training programs on quantum topics",
-                    "Participation in quantum computing conferences or forums"
+                    "Complete inventory of cryptographic algorithms and implementations",
+                    "Automated discovery tools for cryptographic assets",
+                    "Documentation of encryption protocols across all systems",
+                    "Regular audits and updates to cryptographic inventories",
+                    "Integration with asset management and security monitoring systems"
                 ],
                 options: [
-                    { score: 1, text: "Minimal awareness; quantum computing is not on the organizational radar" },
-                    { score: 2, text: "Basic awareness; limited understanding among key stakeholders" },
-                    { score: 4, text: "Good awareness; regular discussions and some training initiatives" },
-                    { score: 5, text: "Comprehensive awareness; organization-wide education and expert knowledge" }
-                ],
-                domain: "Governance"
+                    { value: 1, text: "Level 1 - Basic: Limited visibility into cryptographic assets. Knowledge exists mainly with individual technical staff, discovered reactively when issues arise." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic discovery efforts using tools and processes. Most critical systems documented with regular updates." },
+                    { value: 4, text: "Level 4 - Advanced: Comprehensive automated discovery processes that systematically identify cryptographic implementations. Asset inventory is regularly updated." },
+                    { value: 5, text: "Level 5 - Optimizing: Real-time discovery capabilities with automated detection, integrated enterprise systems, and industry-leading practices." }
+                ]
             },
             {
                 id: 2,
-                title: "Cryptographic Inventory and Assessment",
-                subtitle: "Current Cryptographic Infrastructure",
-                explanation: "This assesses your organization's knowledge of current cryptographic implementations and their vulnerability to quantum attacks. A comprehensive inventory is essential for planning quantum-safe transitions.",
+                dimension: "CVI",
+                title: "Cryptographic Risk Assessment",
+                subtitle: "Cryptographic Visibility & Inventory",
+                question: "How systematically does your organization assess and prioritize quantum computing risks to your cryptographic assets?",
+                explanation: "Quantum risk assessment involves evaluating which cryptographic implementations are most vulnerable to quantum attacks, understanding the business impact of compromised cryptography, and prioritizing protection efforts based on risk levels.",
                 evidence: [
-                    "Complete inventory of cryptographic algorithms in use",
-                    "Documentation of encryption protocols and implementations",
-                    "Regular security audits including cryptographic assessments",
-                    "Classification of crypto usage by criticality and exposure",
-                    "Automated tools for cryptographic discovery and monitoring"
+                    "Structured quantum risk assessment methodology",
+                    "Risk prioritization based on business impact and exposure",
+                    "Regular updates based on quantum computing developments",
+                    "Integration with enterprise risk management processes",
+                    "Quantitative risk analysis and scenario modeling"
                 ],
                 options: [
-                    { score: 1, text: "No formal cryptographic inventory exists" },
-                    { score: 2, text: "Partial inventory; awareness of some but not all cryptographic usage" },
-                    { score: 4, text: "Comprehensive inventory with regular updates and assessments" },
-                    { score: 5, text: "Real-time cryptographic monitoring with automated discovery and classification" }
-                ],
-                domain: "Technical"
+                    { value: 1, text: "Level 1 - Basic: Basic awareness of quantum threats but no systematic assessment of risk to specific cryptographic assets." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Quantum risk assessments conducted for critical systems using structured methodologies with quantitative analysis." },
+                    { value: 4, text: "Level 4 - Advanced: Advanced quantum risk modeling with scenario analysis and predictive capabilities across all assets." },
+                    { value: 5, text: "Level 5 - Optimizing: Industry-leading quantum risk assessment with continuous monitoring and contribution to standards development." }
+                ]
             },
             {
                 id: 3,
-                title: "Quantum-Safe Migration Planning",
-                subtitle: "Strategic Transition Roadmap",
-                explanation: "This evaluates your organization's strategic planning for transitioning to quantum-resistant cryptographic systems, including timelines, priorities, and resource allocation.",
+                dimension: "CVI",
+                title: "Third-Party Cryptographic Management",
+                subtitle: "Cryptographic Visibility & Inventory",
+                question: "How effectively does your organization assess and manage quantum risks in your vendor and partner ecosystems?",
+                explanation: "Supply chain quantum readiness is critical since vulnerabilities in vendor systems can compromise your entire security posture. This involves assessing vendor quantum preparedness and ensuring coordinated transition strategies.",
                 evidence: [
-                    "Documented quantum-safe migration strategy and roadmap",
-                    "Risk-based prioritization of systems for migration",
-                    "Timeline alignment with quantum threat emergence predictions",
-                    "Resource allocation and budget planning for transitions",
-                    "Regular strategy reviews and updates based on new developments"
+                    "Vendor quantum readiness assessment processes",
+                    "Contractual requirements for quantum-safe transitions",
+                    "Regular vendor communication about quantum timelines",
+                    "Supply chain risk assessments including quantum considerations",
+                    "Collaborative quantum readiness planning with key partners"
                 ],
                 options: [
-                    { score: 1, text: "No migration planning; reactive approach only" },
-                    { score: 2, text: "Initial planning discussions; basic awareness of need for transition" },
-                    { score: 4, text: "Detailed migration roadmap with timelines and resource allocation" },
-                    { score: 5, text: "Comprehensive, regularly updated strategy with multiple scenario planning" }
-                ],
-                domain: "Strategy"
+                    { value: 1, text: "Level 1 - Basic: Minimal visibility into third-party cryptographic practices. Vendor quantum readiness not systematically evaluated." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic third-party quantum readiness assessment processes integrated into vendor management." },
+                    { value: 4, text: "Level 4 - Advanced: Advanced vendor quantum readiness management with automated monitoring and collaborative improvement programs." },
+                    { value: 5, text: "Level 5 - Optimizing: Lead ecosystem quantum readiness through comprehensive vendor development programs and industry collaboration." }
+                ]
             },
             {
                 id: 4,
-                title: "Vendor and Supply Chain Readiness",
-                subtitle: "Third-Party Quantum Preparedness",
-                explanation: "This assesses your organization's engagement with vendors and partners regarding quantum readiness, as supply chain vulnerabilities can significantly impact overall security posture.",
+                dimension: "SGRM",
+                title: "Executive Leadership & Governance",
+                subtitle: "Strategic Governance & Risk Management",
+                question: "How actively is your executive leadership engaged in quantum readiness planning and decision-making?",
+                explanation: "Executive leadership engagement ensures quantum readiness receives appropriate priority, resources, and strategic direction. This includes board oversight, executive sponsorship, and integration with business strategy.",
                 evidence: [
-                    "Vendor quantum readiness assessments and requirements",
-                    "Contractual clauses requiring quantum-safe transitions",
-                    "Regular communication with vendors about quantum timelines",
-                    "Supply chain risk assessments including quantum considerations",
-                    "Preferred vendor lists prioritizing quantum-ready solutions"
+                    "Executive committee or board oversight of quantum readiness",
+                    "Regular executive briefings on quantum developments",
+                    "Executive sponsorship of quantum readiness initiatives",
+                    "Integration of quantum considerations into strategic planning",
+                    "Executive involvement in industry quantum initiatives"
                 ],
                 options: [
-                    { score: 1, text: "No vendor engagement on quantum issues" },
-                    { score: 2, text: "Basic discussions with key vendors about quantum readiness" },
-                    { score: 4, text: "Formal vendor requirements and regular quantum readiness reviews" },
-                    { score: 5, text: "Comprehensive supply chain quantum risk management program" }
-                ],
-                domain: "Partnerships"
+                    { value: 1, text: "Level 1 - Basic: Executive awareness exists but no formal governance structure or regular engagement on quantum readiness initiatives." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Executive leadership actively engaged through formal governance committees with regular quantum readiness reviews." },
+                    { value: 4, text: "Level 4 - Advanced: Executive leadership drives quantum readiness as strategic priority with optimized governance processes." },
+                    { value: 5, text: "Level 5 - Optimizing: Executive team provides industry leadership on quantum readiness governance with external influence on standards." }
+                ]
             },
             {
                 id: 5,
-                title: "Regulatory and Compliance Preparedness",
-                subtitle: "Standards and Regulatory Alignment",
-                explanation: "This evaluates your organization's awareness and preparation for emerging quantum-related regulations, standards, and compliance requirements in your industry.",
+                dimension: "SGRM",
+                title: "Strategic Planning & Resource Allocation",
+                subtitle: "Strategic Governance & Risk Management",
+                question: "How comprehensive is your organization's strategic planning and resource allocation for quantum readiness?",
+                explanation: "Strategic planning involves developing comprehensive roadmaps for quantum-safe transitions, including timeline planning, resource allocation, budget planning, and coordination with business objectives and technology refresh cycles.",
                 evidence: [
-                    "Monitoring of quantum-related regulatory developments",
-                    "Engagement with industry standards bodies on quantum issues",
-                    "Legal and compliance team awareness of quantum implications",
-                    "Documentation of quantum considerations in compliance frameworks",
-                    "Participation in industry quantum working groups"
+                    "Comprehensive quantum readiness strategy and roadmap",
+                    "Multi-year budget planning for quantum initiatives",
+                    "Resource allocation aligned with risk priorities",
+                    "Integration with technology refresh and upgrade cycles",
+                    "Regular strategy reviews and adaptive planning processes"
                 ],
                 options: [
-                    { score: 1, text: "No awareness of quantum regulatory implications" },
-                    { score: 2, text: "Basic monitoring of regulatory developments" },
-                    { score: 4, text: "Active engagement with standards bodies and regulatory tracking" },
-                    { score: 5, text: "Leadership role in quantum standards development and regulatory preparation" }
-                ],
-                domain: "Compliance"
+                    { value: 1, text: "Level 1 - Basic: Basic awareness of need for quantum readiness planning but no formal strategy or dedicated resource allocation." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Comprehensive quantum readiness strategy integrated into business planning with systematic resource allocation." },
+                    { value: 4, text: "Level 4 - Advanced: Optimized quantum readiness strategy with advanced scenario planning and adaptive resource allocation." },
+                    { value: 5, text: "Level 5 - Optimizing: Lead industry quantum readiness strategic planning through innovative approaches and industry framework contribution." }
+                ]
             },
             {
                 id: 6,
-                title: "Incident Response and Recovery Planning",
-                subtitle: "Quantum Attack Preparedness",
-                explanation: "This assesses your organization's preparedness for potential quantum-enabled attacks and the ability to respond quickly to cryptographic compromises or quantum breakthrough announcements.",
+                dimension: "SGRM",
+                title: "Risk Integration & Management",
+                subtitle: "Strategic Governance & Risk Management",
+                question: "How well integrated is quantum risk assessment into your organization's enterprise risk management processes?",
+                explanation: "Integration with enterprise risk management ensures quantum risks are properly evaluated alongside other business risks, with appropriate risk treatment strategies and monitoring processes.",
                 evidence: [
-                    "Incident response plans include quantum attack scenarios",
-                    "Regular drills and exercises for quantum-related incidents",
-                    "Communication plans for quantum breakthrough announcements",
-                    "Emergency cryptographic upgrade procedures",
-                    "Business continuity planning considering quantum risks"
+                    "Quantum risks formally integrated into enterprise risk register",
+                    "Regular quantum risk monitoring and reporting processes",
+                    "Risk treatment strategies for identified quantum threats",
+                    "Integration with business continuity and incident response",
+                    "Quantum risk metrics and key risk indicators"
                 ],
                 options: [
-                    { score: 1, text: "No specific quantum incident response planning" },
-                    { score: 2, text: "Basic consideration of quantum risks in existing incident response" },
-                    { score: 4, text: "Dedicated quantum incident response procedures and regular testing" },
-                    { score: 5, text: "Comprehensive quantum crisis management with automated response capabilities" }
-                ],
-                domain: "Operations"
+                    { value: 1, text: "Level 1 - Basic: Quantum risks not systematically integrated into enterprise risk management. Risk evaluation is ad-hoc." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Quantum risks fully integrated into enterprise risk management with systematic assessment and monitoring." },
+                    { value: 4, text: "Level 4 - Advanced: Advanced quantum risk integration with sophisticated modeling balancing risk mitigation with business agility." },
+                    { value: 5, text: "Level 5 - Optimizing: Quantum risk integration demonstrates industry leadership and influences risk management frameworks." }
+                ]
             },
             {
                 id: 7,
-                title: "Investment and Resource Allocation",
-                subtitle: "Financial Commitment to Quantum Readiness",
-                explanation: "This evaluates your organization's financial commitment and resource allocation toward quantum readiness initiatives, including budget planning and cost-benefit analysis.",
+                dimension: "DPE",
+                title: "Data Classification & Quantum Risk Assessment",
+                subtitle: "Data Protection Engineering",
+                question: "How systematically has your organization classified data based on quantum computing impact and protection requirements?",
+                explanation: "Data classification for quantum readiness involves identifying data that requires long-term protection, understanding data sensitivity and retention requirements, and mapping protection requirements to quantum-safe controls.",
                 evidence: [
-                    "Dedicated budget allocation for quantum readiness initiatives",
-                    "Cost-benefit analysis of quantum-safe transitions",
-                    "ROI calculations for quantum preparedness investments",
-                    "Multi-year funding commitments for quantum programs",
-                    "Integration of quantum costs into technology refresh cycles"
+                    "Data classification framework incorporating quantum impact",
+                    "Assessment of data retention and sensitivity requirements",
+                    "Mapping of protection requirements to quantum-safe controls",
+                    "Regular review and update of data classifications",
+                    "Integration with data governance and privacy programs"
                 ],
                 options: [
-                    { score: 1, text: "No dedicated quantum readiness budget or resources" },
-                    { score: 2, text: "Ad-hoc funding for quantum-related activities" },
-                    { score: 4, text: "Dedicated quantum readiness budget with clear allocation strategy" },
-                    { score: 5, text: "Comprehensive multi-year investment program with regular ROI assessment" }
-                ],
-                domain: "Financial"
+                    { value: 1, text: "Level 1 - Basic: Basic data classification focused on traditional compliance but haven't systematically evaluated quantum computing impact." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Comprehensive data classification incorporating quantum computing impact assessment across all data categories." },
+                    { value: 4, text: "Level 4 - Advanced: Advanced data classification with sophisticated quantum risk modeling and optimization of protection strategies." },
+                    { value: 5, text: "Level 5 - Optimizing: Data classification and quantum risk assessment demonstrates industry leadership and contributes to standards." }
+                ]
             },
             {
                 id: 8,
-                title: "Technology Testing and Validation",
-                subtitle: "Quantum-Safe Technology Evaluation",
-                explanation: "This assesses your organization's capabilities for testing and validating quantum-safe technologies, including pilot programs and proof-of-concept implementations.",
+                dimension: "DPE",
+                title: "Quantum-Safe Data Protection Implementation",
+                subtitle: "Data Protection Engineering",
+                question: "How comprehensively has your organization implemented quantum-safe protection for data requiring long-term security?",
+                explanation: "Implementation of quantum-safe data protection involves deploying post-quantum cryptographic algorithms, implementing hybrid classical-quantum protection strategies, and ensuring data remains protected throughout its lifecycle.",
                 evidence: [
-                    "Pilot programs for quantum-safe cryptographic implementations",
-                    "Testing environments for quantum-resistant algorithms",
-                    "Performance benchmarking of post-quantum cryptography",
-                    "Interoperability testing with existing systems",
-                    "Security validation of quantum-safe implementations"
+                    "Deployment of post-quantum cryptographic algorithms",
+                    "Hybrid protection strategies during transition periods",
+                    "Implementation across all data requiring long-term protection",
+                    "Performance optimization and operational integration",
+                    "Validation and testing of quantum-safe implementations"
                 ],
                 options: [
-                    { score: 1, text: "No testing or validation of quantum-safe technologies" },
-                    { score: 2, text: "Limited experimental testing of quantum-safe solutions" },
-                    { score: 4, text: "Regular testing and validation programs for quantum-safe technologies" },
-                    { score: 5, text: "Comprehensive testing infrastructure with continuous validation processes" }
+                    { value: 1, text: "Level 1 - Basic: Minimal quantum-safe data protection implementation. Current protections rely primarily on classical cryptography." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic quantum-safe data protection implementation covering all data requiring long-term protection." },
+                    { value: 4, text: "Level 4 - Advanced: Optimized quantum-safe data protection with advanced implementations and performance optimization." },
+                    { value: 5, text: "Level 5 - Optimizing: Quantum-safe data protection implementation demonstrates industry leadership and contributes to technology standards." }
+                ]
+            },
+            {
+                id: 9,
+                dimension: "DPE",
+                title: "Data Lifecycle & Long-term Protection Management",
+                subtitle: "Data Protection Engineering",
+                question: "How effectively does your organization manage data lifecycle considerations for quantum-safe protection?",
+                explanation: "Data lifecycle management for quantum readiness involves understanding data retention requirements, implementing protection strategies that evolve with data sensitivity, and ensuring quantum-safe protection throughout the data lifecycle.",
+                evidence: [
+                    "Integration of quantum considerations into data lifecycle policies",
+                    "Automated protection level adjustments based on data age and sensitivity",
+                    "Long-term data preservation strategies using quantum-safe methods",
+                    "Data disposal and destruction processes considering quantum threats",
+                    "Lifecycle-aware key management and cryptographic agility"
                 ],
-                domain: "Technical"
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic data lifecycle management focused on traditional compliance but haven't systematically addressed quantum-safe protection." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Comprehensive data lifecycle management with quantum-safe protection integrated throughout data lifecycle." },
+                    { value: 4, text: "Level 4 - Advanced: Optimized data lifecycle management with advanced quantum-safe protection strategies and automated capabilities." },
+                    { value: 5, text: "Level 5 - Optimizing: Data lifecycle and quantum-safe protection management demonstrates industry leadership and influences standards." }
+                ]
+            },
+            {
+                id: 10,
+                dimension: "ITR",
+                title: "Quantum-Safe Technology Selection & Deployment",
+                subtitle: "Implementation & Technology Readiness",
+                question: "How systematically has your organization evaluated and implemented quantum-safe cryptographic technologies?",
+                explanation: "Technology selection and deployment involves evaluating post-quantum cryptographic algorithms, conducting pilots and proofs of concept, and implementing quantum-safe technologies in production environments with proper validation and testing.",
+                evidence: [
+                    "Systematic evaluation of post-quantum cryptographic standards",
+                    "Pilot programs and proof-of-concept implementations",
+                    "Production deployment of quantum-safe technologies",
+                    "Validation and testing of quantum-safe implementations",
+                    "Technology roadmaps aligned with standards development"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic technical understanding of quantum-safe cryptography but minimal systematic evaluation or implementation." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic quantum-safe technology evaluation and deployment processes with comprehensive implementation." },
+                    { value: 4, text: "Level 4 - Advanced: Advanced quantum-safe technology deployment with optimized selection processes and industry-leading practices." },
+                    { value: 5, text: "Level 5 - Optimizing: Quantum-safe technology evaluation and deployment demonstrates industry leadership and contributes to standards." }
+                ]
+            },
+            {
+                id: 11,
+                dimension: "ITR",
+                title: "Integration & Interoperability Management",
+                subtitle: "Implementation & Technology Readiness",
+                question: "How effectively does your organization manage integration and interoperability challenges in quantum-safe implementations?",
+                explanation: "Integration and interoperability management involves ensuring quantum-safe implementations work effectively with existing systems, managing protocol compatibility, and coordinating with industry standards and partner systems.",
+                evidence: [
+                    "Systematic approach to quantum-safe system integration",
+                    "Interoperability testing with existing systems and partners",
+                    "Protocol compatibility and standards alignment",
+                    "Migration strategies minimizing operational disruption",
+                    "Coordination with industry standards and partner roadmaps"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic understanding of integration challenges but minimal systematic approach to managing interoperability issues." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic integration and interoperability management ensuring quantum-safe implementations work effectively." },
+                    { value: 4, text: "Level 4 - Advanced: Advanced integration capabilities with optimized interoperability management and sophisticated approaches." },
+                    { value: 5, text: "Level 5 - Optimizing: Integration and interoperability management demonstrates industry leadership and contributes to integration standards." }
+                ]
+            },
+            {
+                id: 12,
+                dimension: "ITR",
+                title: "Performance & Operational Optimization",
+                subtitle: "Implementation & Technology Readiness",
+                question: "How effectively has your organization optimized the performance and operational aspects of quantum-safe implementations?",
+                explanation: "Performance and operational optimization involves tuning quantum-safe implementations for optimal performance, ensuring operational readiness through monitoring and management capabilities, and maintaining high availability and reliability.",
+                evidence: [
+                    "Performance benchmarking and optimization of quantum-safe systems",
+                    "Operational monitoring and management capabilities",
+                    "High availability and reliability of quantum-safe implementations",
+                    "Performance tuning and capacity planning processes",
+                    "Operational excellence in quantum-safe technology management"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic understanding of performance implications but minimal systematic optimization of quantum-safe implementations." },
+                    { value: 2.5, text: "Level 2-3 - Developing/Established: Systematic performance optimization and operational management ensuring implementations meet requirements." },
+                    { value: 4, text: "Level 4 - Advanced: Advanced performance optimization with sophisticated tuning and industry-leading operational practices." },
+                    { value: 5, text: "Level 5 - Optimizing: Performance and operational optimization demonstrates industry leadership and contributes to optimization methodologies." }
+                ]
             }
         ];
+
+        // Dimension information for display
+        const dimensionInfo = {
+            "CVI": {
+                name: "Cryptographic Visibility & Inventory",
+                description: "Understanding and managing cryptographic assets"
+            },
+            "SGRM": {
+                name: "Strategic Governance & Risk Management", 
+                description: "Leadership and strategic approach to quantum readiness"
+            },
+            "DPE": {
+                name: "Data Protection Engineering",
+                description: "Protecting data against quantum threats"
+            },
+            "ITR": {
+                name: "Implementation & Technology Readiness",
+                description: "Technical implementation and operational readiness"
+            }
+        };
 
         // State management
         let currentAnswers = {};
@@ -685,8 +845,11 @@
             card.className = 'question-card';
             card.id = `question-${question.id}`;
 
+            const dimensionName = dimensionInfo[question.dimension].name;
+
             card.innerHTML = `
-                <div class="question-title">${question.title}</div>
+                <div class="dimension-badge">${question.dimension} - ${dimensionName}</div>
+                <div class="question-title">Question ${index + 1}: ${question.title}</div>
                 <div class="question-subtitle">${question.subtitle}</div>
                 
                 <div class="question-explanation">
@@ -702,9 +865,9 @@
 
                 <div class="answer-options">
                     ${question.options.map(option => `
-                        <div class="answer-option" data-question="${question.id}" data-score="${option.score}">
-                            <div class="option-score">Level ${option.score}</div>
-                            <div class="option-text">${option.text}</div>
+                        <div class="answer-option" data-question="${question.id}" data-score="${option.value}">
+                            <div class="option-level">${option.text.split(' - ')[0]}</div>
+                            <div class="option-text">${option.text.split(' - ').slice(1).join(' - ')}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -714,7 +877,7 @@
             const options = card.querySelectorAll('.answer-option');
             options.forEach(option => {
                 option.addEventListener('click', () => {
-                    selectAnswer(question.id, parseInt(option.dataset.score), option);
+                    selectAnswer(question.id, parseFloat(option.dataset.score), option);
                 });
             });
 
@@ -733,7 +896,10 @@
             optionElement.classList.add('selected');
             
             // Store the answer
-            currentAnswers[questionId] = score;
+            currentAnswers[questionId] = {
+                score: score,
+                dimension: assessmentQuestions.find(q => q.id === questionId).dimension
+            };
             
             // Update progress and show calculate button if all answered
             updateProgress();
@@ -768,30 +934,33 @@
 
         // Analyze assessment results
         function analyzeResults() {
-            const domains = {};
+            const dimensions = {};
             let totalScore = 0;
             let maxPossibleScore = 0;
 
-            assessmentQuestions.forEach(question => {
-                const score = currentAnswers[question.id] || 0;
-                const domain = question.domain;
+            // Initialize dimensions
+            Object.keys(dimensionInfo).forEach(dim => {
+                dimensions[dim] = { scores: [], total: 0, count: 0 };
+            });
 
-                if (!domains[domain]) {
-                    domains[domain] = { score: 0, maxScore: 0, count: 0 };
-                }
-
-                domains[domain].score += score;
-                domains[domain].maxScore += 5; // Maximum score per question
-                domains[domain].count += 1;
-
-                totalScore += score;
+            // Process answers
+            Object.values(currentAnswers).forEach(answer => {
+                dimensions[answer.dimension].scores.push(answer.score);
+                dimensions[answer.dimension].total += answer.score;
+                dimensions[answer.dimension].count += 1;
+                totalScore += answer.score;
                 maxPossibleScore += 5;
             });
 
             // Calculate averages
-            Object.keys(domains).forEach(domain => {
-                domains[domain].average = domains[domain].score / domains[domain].count;
-                domains[domain].percentage = (domains[domain].score / domains[domain].maxScore) * 100;
+            Object.keys(dimensions).forEach(dim => {
+                if (dimensions[dim].count > 0) {
+                    dimensions[dim].average = dimensions[dim].total / dimensions[dim].count;
+                    dimensions[dim].percentage = (dimensions[dim].total / (dimensions[dim].count * 5)) * 100;
+                } else {
+                    dimensions[dim].average = 0;
+                    dimensions[dim].percentage = 0;
+                }
             });
 
             const overallAverage = totalScore / assessmentQuestions.length;
@@ -804,7 +973,7 @@
                     average: overallAverage,
                     percentage: overallPercentage
                 },
-                domains: domains
+                dimensions: dimensions
             };
         }
 
@@ -816,11 +985,21 @@
             const maturityLevel = getMaturityLevel(results.overall.average);
             
             document.getElementById('overallScore').textContent = 
-                `Overall Quantum Readiness Score: ${overallScore}/5.0 (${maturityLevel})`;
+                `Overall QRAMM Score: ${overallScore}/5.0 (${maturityLevel})`;
+
+            // Create dimension scores display
+            const dimensionScoresContainer = document.getElementById('dimensionScores');
+            dimensionScoresContainer.innerHTML = Object.keys(results.dimensions)
+                .map(dim => `
+                    <div class="dimension-card">
+                        <div class="dimension-name">${dimensionInfo[dim].name} (${dim})</div>
+                        <div class="dimension-score">${results.dimensions[dim].average.toFixed(1)}</div>
+                    </div>
+                `).join('');
 
             // Create charts
             createOverallChart(results.overall.percentage);
-            createDomainChart(results.domains);
+            createDomainChart(results.dimensions);
             createMaturityChart(results);
         }
 
@@ -864,17 +1043,17 @@
         }
 
         // Create domain breakdown chart
-        function createDomainChart(domains) {
+        function createDomainChart(dimensions) {
             const ctx = document.getElementById('domainChart').getContext('2d');
-            const labels = Object.keys(domains);
-            const data = labels.map(domain => domains[domain].average);
+            const labels = Object.keys(dimensions);
+            const data = labels.map(dim => dimensions[dim].average);
 
             new Chart(ctx, {
                 type: 'radar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Domain Scores',
+                        label: 'Dimension Scores',
                         data: data,
                         borderColor: 'rgba(255, 255, 255, 0.8)',
                         backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -909,7 +1088,8 @@
             const ctx = document.getElementById('maturityChart').getContext('2d');
             const maturityLevels = [0, 0, 0, 0, 0]; // Initial, Developing, Defined, Managed, Optimized
 
-            Object.values(currentAnswers).forEach(score => {
+            Object.values(currentAnswers).forEach(answer => {
+                const score = answer.score;
                 if (score >= 1 && score < 2) maturityLevels[0]++;
                 else if (score >= 2 && score < 3) maturityLevels[1]++;
                 else if (score >= 3 && score < 4) maturityLevels[2]++;
@@ -922,7 +1102,7 @@
                 data: {
                     labels: ['Initial', 'Developing', 'Defined', 'Managed', 'Optimized'],
                     datasets: [{
-                        label: 'Number of Domains',
+                        label: 'Number of Questions',
                         data: maturityLevels,
                         backgroundColor: [
                             'rgba(245, 101, 101, 0.8)',
@@ -963,28 +1143,30 @@
             
             const recommendations = [];
 
-            // Analyze each domain and generate recommendations
-            Object.entries(results.domains).forEach(([domain, data]) => {
+            // Analyze each dimension and generate recommendations
+            Object.entries(results.dimensions).forEach(([dimension, data]) => {
+                const dimensionName = dimensionInfo[dimension].name;
+                
                 if (data.average < 2) {
                     recommendations.push({
                         priority: 'critical',
-                        domain: domain,
-                        title: `Critical: ${domain} Domain Requires Immediate Attention`,
-                        description: `Your ${domain.toLowerCase()} domain scored ${data.average.toFixed(1)}/5.0, indicating significant gaps that need immediate attention to ensure quantum readiness.`
+                        dimension: dimension,
+                        title: `Critical: ${dimensionName} Requires Immediate Attention`,
+                        description: `Your ${dimensionName} scored ${data.average.toFixed(1)}/5.0, indicating significant gaps that need immediate attention to ensure quantum readiness. ${dimensionInfo[dimension].description}.`
                     });
                 } else if (data.average < 3) {
                     recommendations.push({
                         priority: 'medium',
-                        domain: domain,
-                        title: `Medium: Enhance ${domain} Capabilities`,
-                        description: `Your ${domain.toLowerCase()} domain scored ${data.average.toFixed(1)}/5.0. Consider developing structured programs to improve this area.`
+                        dimension: dimension,
+                        title: `Medium: Enhance ${dimensionName} Capabilities`,
+                        description: `Your ${dimensionName} scored ${data.average.toFixed(1)}/5.0. Consider developing structured programs to improve this area. ${dimensionInfo[dimension].description}.`
                     });
                 } else if (data.average < 4) {
                     recommendations.push({
                         priority: 'high',
-                        domain: domain,
-                        title: `Good: Optimize ${domain} Processes`,
-                        description: `Your ${domain.toLowerCase()} domain scored ${data.average.toFixed(1)}/5.0. Focus on optimization and continuous improvement.`
+                        dimension: dimension,
+                        title: `Good: Optimize ${dimensionName} Processes`,
+                        description: `Your ${dimensionName} scored ${data.average.toFixed(1)}/5.0. Focus on optimization and continuous improvement. ${dimensionInfo[dimension].description}.`
                     });
                 }
             });
@@ -1007,7 +1189,7 @@
                     <div class="recommendation-card high">
                         <div class="priority high">Excellent</div>
                         <h3>Outstanding Quantum Readiness</h3>
-                        <p>Congratulations! Your organization demonstrates excellent quantum readiness across all domains. Continue monitoring developments and maintaining your preparedness programs.</p>
+                        <p>Congratulations! Your organization demonstrates excellent quantum readiness across all four QRAMM dimensions. Continue monitoring developments and maintaining your preparedness programs.</p>
                     </div>
                 `;
             }
