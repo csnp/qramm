@@ -100,60 +100,57 @@
 
         /* Resource Sections */
         .resource-section {
-            padding: 40px 0;
-            border-bottom: 2px solid #f1f3f4;
+            padding: 60px 0;
         }
 
-        .resource-section:last-child {
-            border-bottom: none;
+        .resource-section:nth-child(even) {
+            background: #f8f9fa;
         }
 
         .resource-section h2 {
-            font-size: 2.2rem;
-            color: #333;
-            margin-bottom: 1rem;
             text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
         }
 
-        .resource-section .section-description {
+        .section-description {
             text-align: center;
             font-size: 1.1rem;
             color: #666;
-            margin-bottom: 3rem;
             max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
+            margin: 0 auto 3rem;
         }
 
-        /* Resource Grid */
         .resource-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
         }
 
         .resource-card {
-            background: #f8f9fa;
+            background: white;
             border-radius: 12px;
             padding: 2rem;
-            border-left: 4px solid #667eea;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+            position: relative;
         }
 
         .resource-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
         .resource-card h3 {
-            color: #667eea;
+            color: #333;
             font-size: 1.3rem;
             margin-bottom: 1rem;
         }
 
         .resource-card p {
             color: #666;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .resource-link {
@@ -162,87 +159,49 @@
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            transition: color 0.3s ease;
+            gap: 5px;
+            transition: gap 0.3s ease;
         }
 
         .resource-link:hover {
-            color: #5a67d8;
+            gap: 10px;
         }
 
-        /* Tools Section */
-        .tools-grid {
+        /* Downloads Section */
+        .downloads-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
         }
 
-        .tool-card {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 16px;
-            padding: 2rem;
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .tool-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .tool-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .tool-card h3 {
-            color: #333;
-            margin-bottom: 1rem;
-        }
-
-        .tool-card p {
-            color: #666;
-            margin-bottom: 1.5rem;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5a67d8;
-            transform: translateY(-1px);
-        }
-
-        /* Downloadable Resource Section */
         .download-card {
-            background: linear-gradient(135deg, #e8f2ff, #f0f8ff);
-            border: 2px solid #667eea;
+            background: white;
             border-radius: 12px;
             padding: 2rem;
             text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s ease;
         }
 
         .download-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
         .download-icon {
-            font-size: 2.5rem;
-            color: #667eea;
+            font-size: 3rem;
             margin-bottom: 1rem;
+        }
+
+        .download-card h3 {
+            color: #333;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .download-card p {
+            color: #666;
+            margin-bottom: 1.5rem;
         }
 
         /* CTA Section */
@@ -251,7 +210,6 @@
             color: white;
             padding: 60px 0;
             text-align: center;
-            margin: 60px 0 0 0;
         }
 
         .cta-section h2 {
@@ -265,10 +223,32 @@
             opacity: 0.9;
         }
 
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin: 0 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5561d9;
+            transform: translateY(-2px);
+        }
+
         .btn-white {
             background: white;
             color: #667eea;
-            margin: 0 10px;
         }
 
         .btn-white:hover {
@@ -300,7 +280,7 @@
             }
             
             .resource-grid,
-            .tools-grid {
+            .downloads-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -325,92 +305,74 @@
     <div class="page-header">
         <div class="container">
             <h1>QRAMM Resources</h1>
-            <p>Comprehensive collection of tools, documentation, and resources for quantum readiness implementation</p>
+            <p>Everything you need to implement quantum readiness in your organization</p>
         </div>
     </div>
 
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
-            <!-- Assessment Tools -->
+            <!-- Framework Documentation -->
             <section class="resource-section">
-                <h2>Assessment Tools</h2>
+                <h2>Framework Documentation</h2>
                 <p class="section-description">
-                    Interactive and comprehensive assessment tools to evaluate your organization's quantum readiness maturity.
+                    Complete documentation for understanding and implementing the QRAMM framework across your organization.
                 </p>
                 
-                <div class="tools-grid">
-                    <div class="tool-card">
-                        <div class="tool-icon">📊</div>
+                <div class="resource-grid">
+                    <div class="resource-card">
                         <h3>Quick Assessment</h3>
-                        <p>Interactive 12-question assessment providing immediate insights into your quantum readiness maturity with visualizations.</p>
-                        <a href="index.html#assessment" class="btn btn-primary">Take Assessment</a>
+                        <p>12-question assessment providing immediate insights into your organization's quantum readiness maturity level across all four dimensions.</p>
+                        <a href="index.html#assessment" class="resource-link">Take Assessment →</a>
                     </div>
 
-                    <div class="tool-card">
-                        <div class="tool-icon">📋</div>
-                        <h3>Comprehensive Assessment</h3>
-                        <p>Complete 120-question framework covering all four dimensions and twelve practices for detailed evaluation.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/assessment/full-assessment.md" target="_blank" class="btn btn-primary">View Assessment</a>
+                    <div class="resource-card">
+                        <h3>Full QRAMM Assessment Guide</h3>
+                        <p>Comprehensive 48-question assessment with detailed evidence requirements and maturity level descriptions for thorough evaluation.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/assessment/full-assessment.md" target="_blank" class="resource-link">View Full Assessment →</a>
                     </div>
 
-                    <div class="tool-card">
-                        <div class="tool-icon">📄</div>
-                        <h3>Framework Documentation</h3>
-                        <p>Complete QRAMM methodology with detailed guidance for each dimension and implementation approach.</p>
-                        <a href="https://github.com/csnp/qramm" target="_blank" class="btn btn-primary">Explore Framework</a>
+                    <div class="resource-card">
+                        <h3>Framework Overview</h3>
+                        <p>Complete technical documentation of the QRAMM methodology, including dimensional integration and implementation guidance.</p>
+                        <a href="https://github.com/csnp/qramm" target="_blank" class="resource-link">Explore Documentation →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Implementation Roadmap</h3>
+                        <p>Step-by-step guidance for implementing QRAMM in your organization, from initial assessment to continuous improvement.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/implementation/getting-started.md" target="_blank" class="resource-link">Get Started →</a>
                     </div>
                 </div>
             </section>
 
-            <!-- Implementation Guides & Templates -->
+            <!-- Downloads & Templates -->
             <section class="resource-section">
-                <h2>Implementation Guides & Templates</h2>
+                <h2>Downloads & Templates</h2>
                 <p class="section-description">
-                    Practical tools and templates to streamline your quantum readiness implementation process.
+                    Ready-to-use templates and tools to accelerate your quantum readiness implementation.
                 </p>
                 
-                <div class="resource-grid">
+                <div class="downloads-grid">
                     <div class="download-card">
                         <div class="download-icon">📋</div>
-                        <h3>Vendor Assessment Questionnaire</h3>
-                        <p>Comprehensive template for evaluating vendor quantum readiness capabilities and roadmaps. Includes 50+ questions across all QRAMM dimensions.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/vendor-questionnaire-template.md" target="_blank" class="btn btn-primary">Download Template</a>
-                    </div>
-
-                    <div class="download-card">
-                        <div class="download-icon">🚀</div>
-                        <h3>Getting Started Implementation Guide</h3>
-                        <p>Step-by-step roadmap for beginning your quantum readiness journey, including timeline templates and milestone tracking.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/implementation/getting-started.md" target="_blank" class="btn btn-primary">View Guide</a>
+                        <h3>Executive Report Template</h3>
+                        <p>Professional template for presenting quantum readiness assessment results and recommendations to executive leadership.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/templates/executive-report-template.md" target="_blank" class="btn btn-primary">Download Template</a>
                     </div>
 
                     <div class="download-card">
                         <div class="download-icon">📊</div>
-                        <h3>Executive Reporting Template</h3>
-                        <p>Ready-to-use PowerPoint template for presenting quantum readiness assessment results and recommendations to executive leadership.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/executive-report-template.md" target="_blank" class="btn btn-primary">Download Template</a>
+                        <h3>Asset Inventory Template</h3>
+                        <p>Comprehensive template for documenting cryptographic assets across your organization's infrastructure and applications.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/templates/asset-inventory-template.md" target="_blank" class="btn btn-primary">Download Template</a>
                     </div>
 
                     <div class="download-card">
                         <div class="download-icon">🔍</div>
-                        <h3>Cryptographic Asset Inventory Worksheet</h3>
-                        <p>Structured spreadsheet template for conducting comprehensive cryptographic asset discovery and risk assessment.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/asset-inventory-template.md" target="_blank" class="btn btn-primary">Download Worksheet</a>
-                    </div>
-
-                    <div class="download-card">
-                        <div class="download-icon">⚠️</div>
-                        <h3>Risk Assessment Matrix</h3>
-                        <p>Quantum-specific risk assessment framework with impact and likelihood scales tailored for post-quantum cryptography transition.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/risk-matrix-template.md" target="_blank" class="btn btn-primary">Download Matrix</a>
-                    </div>
-
-                    <div class="download-card">
-                        <div class="download-icon">📈</div>
-                        <h3>Maturity Progression Roadmap</h3>
-                        <p>Visual roadmap template showing progression paths from Basic to Advanced maturity levels across all four QRAMM dimensions.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/maturity-roadmap-template.md" target="_blank" class="btn btn-primary">Download Roadmap</a>
+                        <h3>Vendor Assessment Questionnaire</h3>
+                        <p>Structured questionnaire for evaluating vendor and partner quantum readiness as part of supply chain risk management.</p>
+                        <a href="https://github.com/csnp/qramm/blob/test-release/templates/vendor-questionnaire-template.md" target="_blank" class="btn btn-primary">Download Template</a>
                     </div>
                 </div>
             </section>
@@ -449,18 +411,6 @@
                         <p>Join ongoing discussions about quantum readiness best practices, implementation challenges, and industry developments.</p>
                         <a href="https://github.com/csnp/qramm/discussions" target="_blank" class="resource-link">Join Discussions →</a>
                     </div>
-
-                    <div class="resource-card">
-                        <h3>Training & Workshops</h3>
-                        <p>Access information about QRAMM training sessions, workshops, and certification programs offered by CSNP and partners.</p>
-                        <a href="mailto:qramm@csnp.org?subject=Training Inquiry" class="resource-link">Training Inquiries →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>Industry Case Studies</h3>
-                        <p>Real-world implementation examples and lessons learned from organizations that have successfully applied the QRAMM framework.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/case-studies.md" target="_blank" class="resource-link">View Case Studies →</a>
-                    </div>
                 </div>
             </section>
 
@@ -491,67 +441,9 @@
                     </div>
 
                     <div class="resource-card">
-                        <h3>NCSC Quantum Security Guidance</h3>
-                        <p>UK National Cyber Security Centre recommendations for preparing organizations for the quantum threat.</p>
-                        <a href="https://www.ncsc.gov.uk/collection/quantum" target="_blank" class="resource-link">Visit NCSC →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>ENISA Quantum Technologies Report</h3>
-                        <p>European Union Agency for Cybersecurity analysis of quantum computing implications for cybersecurity.</p>
-                        <a href="https://www.enisa.europa.eu/topics/emerging-technologies" target="_blank" class="resource-link">Visit ENISA →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>Industry White Papers</h3>
-                        <p>Collection of authoritative white papers from leading technology companies and research institutions on quantum readiness.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/white-papers.md" target="_blank" class="resource-link">Browse Papers →</a>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Technical Resources -->
-            <section class="resource-section">
-                <h2>Technical Resources</h2>
-                <p class="section-description">
-                    Deep-dive technical documentation and resources for implementing quantum-safe technologies.
-                </p>
-                
-                <div class="resource-grid">
-                    <div class="resource-card">
-                        <h3>Post-Quantum Algorithm Reference</h3>
-                        <p>Comprehensive overview of NIST-standardized post-quantum cryptographic algorithms with implementation considerations.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/pqc-algorithms.md" target="_blank" class="resource-link">View Reference →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>Migration Planning Toolkit</h3>
-                        <p>Technical guidance for planning and executing cryptographic migrations from classical to quantum-safe algorithms.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/toolkit/migration-toolkit.md" target="_blank" class="resource-link">Access Toolkit →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>Testing & Validation Frameworks</h3>
-                        <p>Methodologies and tools for testing quantum-safe implementations and validating security properties.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/testing-frameworks.md" target="_blank" class="resource-link">View Frameworks →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>Performance Benchmarking Guide</h3>
-                        <p>Standardized approaches for measuring and optimizing post-quantum cryptography performance in production environments.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/performance-benchmarking.md" target="_blank" class="resource-link">Download Guide →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>Integration Best Practices</h3>
-                        <p>Proven strategies for integrating quantum-safe cryptography into existing systems with minimal disruption.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/integration-practices.md" target="_blank" class="resource-link">View Practices →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>Code Examples & Libraries</h3>
-                        <p>Sample implementations and recommended libraries for common post-quantum cryptography use cases.</p>
-                        <a href="https://github.com/csnp/qramm/blob/test-release/resources/code-examples/" target="_blank" class="resource-link">Browse Examples →</a>
+                        <h3>Global Quantum Standards</h3>
+                        <p>Overview of international quantum security standards and frameworks from organizations worldwide.</p>
+                        <a href="https://github.com/csnp/qramm" target="_blank" class="resource-link">View Standards →</a>
                     </div>
                 </div>
             </section>
