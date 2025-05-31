@@ -13,14 +13,8 @@ The **Quantum-Ready Assessment & Maturity Model (QRAMM)** is an open-source fram
 
 ### Framework Authors
 
-**Primary Author:**
-- **Emily Stamm** - Strategic Planning & Executive Engagement  
-  LinkedIn: [emily-stamm](https://www.linkedin.com/in/emily-stamm/)
-
-**Co-Author:**  
-- **Abdel Sy Fane** - Technical Implementation & Risk Assessment  
-  LinkedIn: [abdelsyfane](https://www.linkedin.com/in/abdelsyfane/)
-
+**Primary Author:** Emily Stamm - Strategic Planning & Executive Engagement  
+**Co-Author:** Abdel Sy Fane - Technical Implementation & Risk Assessment  
 **Developed by:** [CyberSecurity NonProfit (CSNP)](https://csnp.org)
 
 ### Contact Information
@@ -43,8 +37,6 @@ The **Quantum-Ready Assessment & Maturity Model (QRAMM)** is an open-source fram
 ## Quick Start
 
 **Take the Quick Assessment**: Get immediate insights into your organization's quantum readiness in under 10 minutes → [**Start Assessment**](https://csnp.github.io/qramm)
-
-**Download Full Framework**: Access the complete 120-question assessment and implementation guide → [**Framework Documentation**](framework/)
 
 ## What is QRAMM?
 
@@ -108,22 +100,9 @@ Each dimension is assessed across **5 maturity levels**:
 
 [**Start Quick Assessment**](https://csnp.github.io/qramm)
 
-## Contact & Support
+## Community & Contributing
 
-### Framework Authors & Project Leadership
-
-**Emily Stamm** - Primary Author & Strategic Planning Lead  
-- **LinkedIn:** [https://www.linkedin.com/in/emily-stamm/](https://www.linkedin.com/in/emily-stamm/)  
-- **Contact:** [qramm@csnp.org](mailto:qramm@csnp.org)
-
-**Abdel Sy Fane** - Co-Author & Technical Implementation Lead  
-- **LinkedIn:** [https://www.linkedin.com/in/abdelsyfane/](https://www.linkedin.com/in/abdelsyfane/)  
-- **Contact:** [qramm@csnp.org](mailto:qramm@csnp.org)
-
-### CyberSecurity NonProfit (CSNP)
-- **Website**: [https://csnp.org](https://csnp.org)
-- **General Contact**: [info@csnp.org](mailto:info@csnp.org)
-- **QRAMM Inquiries**: [qramm@csnp.org](mailto:qramm@csnp.org)
+QRAMM is an open-source community initiative led by CSNP. We welcome contributions from security professionals, researchers, and organizations worldwide.
 
 ### Get Involved
 - **Community Discussion**: [GitHub Discussions](https://github.com/csnp/qramm/discussions)
@@ -140,13 +119,6 @@ Stamm, E., & Fane, A. S. (2025). QRAMM: Quantum-Ready Assessment & Maturity Mode
 CyberSecurity NonProfit (CSNP). https://github.com/csnp/qramm
 ```
 
-### Professional Reference
-```
-CyberSecurity NonProfit. (2025). Quantum-Ready Assessment & Maturity Model (QRAMM). 
-Framework for Organizational Post-Quantum Cryptography Readiness. 
-Authors: Emily Stamm & Abdel Sy Fane. Available at: https://github.com/csnp/qramm
-```
-
 ---
 
 ## Ready to Begin?
@@ -154,9 +126,8 @@ Authors: Emily Stamm & Abdel Sy Fane. Available at: https://github.com/csnp/qram
 **Start your quantum readiness journey today:**
 
 1. **[Visit Our Interactive Website](https://csnp.github.io/qramm)** - Complete assessment and explore framework
-2. **[Download the Full Framework](framework/)** - Access complete documentation  
-3. **[Join the Community](https://github.com/csnp/qramm/discussions)** - Connect with quantum security professionals
-4. **[Contact the Authors](mailto:qramm@csnp.org)** - Get expert guidance from Emily Stamm and Abdel Sy Fane
+2. **[Join the Community](https://github.com/csnp/qramm/discussions)** - Connect with quantum security professionals
+3. **[Contact Us](mailto:qramm@csnp.org)** - Get expert guidance
 
 **The quantum threat is real. The time to prepare is now.**
 
@@ -165,8 +136,6 @@ Authors: Emily Stamm & Abdel Sy Fane. Available at: https://github.com/csnp/qram
 <div align="center">
 
 **Star this repository if QRAMM helps your organization prepare for the quantum future**
-
-**Watch for updates** | **Fork to contribute** | **Join discussions**
 
 *Built by Emily Stamm & Abdel Sy Fane • Developed by CyberSecurity NonProfit (CSNP)*
 
