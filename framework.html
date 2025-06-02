@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRAMM Framework - Comprehensive Quantum Readiness Methodology</title>
+    <meta name="description" content="Explore the complete QRAMM framework with four dimensions, maturity levels, and implementation guidance">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        /* Main Content */
+        .main-content {
+            background: white;
+            margin-top: 80px;
+            padding: 60px 0;
+            min-height: calc(100vh - 80px);
+        }
+
+        .page-header {
+            text-align: center;
+            padding: 60px 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            margin: -60px 0 60px 0;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Framework Overview */
+        .framework-overview {
+            padding: 40px 0;
+        }
+
+        .framework-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .dimension-card {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 2rem;
+            border-left: 6px solid #667eea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .dimension-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .dimension-card h3 {
+            color: #667eea;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .dimension-card .dimension-subtitle {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .dimension-card p {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .practices-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .practices-list li {
+            background: white;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            font-size: 0.9rem;
+        }
+
+        /* Maturity Levels */
+        .maturity-section {
+            background: #f8f9fa;
+            padding: 60px 0;
+            margin: 60px 0;
+        }
+
+        .maturity-levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .maturity-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .maturity-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .maturity-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .maturity-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .maturity-description {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+            margin: 60px 0;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin: 0 10px;
+        }
+
+        .btn-white {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-white:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-outline:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        /* Footer */
+        .footer {
+            background: #333;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            
+            .framework-grid,
+            .maturity-levels {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <a href="index.html" class="logo">QRAMM</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#assessment">Quick Assessment</a></li>
+                <li><a href="framework.html">Framework</a></li>
+                <li><a href="resources.html">Resources</a></li>
+                <li><a href="https://github.com/csnp/qramm" target="_blank">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1>QRAMM Framework</h1>
+            <p>Comprehensive methodology for organizational quantum readiness assessment and management</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Framework Overview -->
+            <section class="framework-overview">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 3rem; color: #333;">Four Comprehensive Dimensions</h2>
+                
+                <div class="framework-grid">
+                    <div class="dimension-card">
+                        <h3>🔍 Dimension 1: CVI</h3>
+                        <div class="dimension-subtitle">Cryptographic Visibility & Inventory</div>
+                        <p>Foundation: You cannot protect what you cannot see</p>
+                        <p>Comprehensive discovery and cataloging of all cryptographic assets across your organization.</p>
+                        <ul class="practices-list">
+                            <li>Cryptographic Asset Discovery & Documentation</li>
+                            <li>Cryptographic Risk Assessment & Prioritization</li>
+                            <li>Cryptographic Dependencies & Supply Chain Management</li>
+                        </ul>
+                    </div>
+
+                    <div class="dimension-card">
+                        <h3>⚖️ Dimension 2: SGRM</h3>
+                        <div class="dimension-subtitle">Strategic Governance & Risk Management</div>
+                        <p>Leadership: Quantum readiness requires organizational commitment</p>
+                        <p>Executive leadership, policy framework, and strategic planning for quantum readiness.</p>
+                        <ul class="practices-list">
+                            <li>Quantum Risk Governance & Leadership</li>
+                            <li>Quantum Readiness Strategy & Planning</li>
+                            <li>Quantum Risk Assessment & Management</li>
+                        </ul>
+                    </div>
+
+                    <div class="dimension-card">
+                        <h3>🛡️ Dimension 3: DPE</h3>
+                        <div class="dimension-subtitle">Data Protection Engineering</div>
+                        <p>Protection: Securing data throughout its lifecycle</p>
+                        <p>Technical implementation of quantum-safe data protection throughout information lifecycle.</p>
+                        <ul class="practices-list">
+                            <li>Data Classification & Quantum Risk Assessment</li>
+                            <li>Quantum-Safe Data Protection Implementation</li>
+                            <li>Data Lifecycle & Long-term Protection Management</li>
+                        </ul>
+                    </div>
+
+                    <div class="dimension-card">
+                        <h3>⚙️ Dimension 4: ITR</h3>
+                        <div class="dimension-subtitle">Implementation & Technical Readiness</div>
+                        <p>Execution: Translating strategy into technical reality</p>
+                        <p>Technical infrastructure and implementation capabilities for quantum-safe technology deployment.</p>
+                        <ul class="practices-list">
+                            <li>Quantum-Safe Technology Selection & Deployment</li>
+                            <li>Integration & Interoperability Management</li>
+                            <li>Performance & Operational Optimization</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Maturity Levels -->
+            <section class="maturity-section">
+                <div class="container">
+                    <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 3rem; color: #333;">Five-Level Maturity Progression</h2>
+                    
+                    <div class="maturity-levels">
+                        <div class="maturity-card">
+                            <div class="maturity-number">1</div>
+                            <div class="maturity-title">Basic</div>
+                            <div class="maturity-description">Initial awareness and ad-hoc practices. Starting point for most organizations with limited quantum readiness activities.</div>
+                        </div>
+
+                        <div class="maturity-card">
+                            <div class="maturity-number">2</div>
+                            <div class="maturity-title">Developing</div>
+                            <div class="maturity-description">Structured approaches beginning to emerge with systematic planning initiated and some quantum readiness activities underway.</div>
+                        </div>
+
+                        <div class="maturity-card">
+                            <div class="maturity-number">3</div>
+                            <div class="maturity-title">Established</div>
+                            <div class="maturity-description">Systematic and consistent practices implemented organization-wide with comprehensive quantum readiness capabilities.</div>
+                        </div>
+
+                        <div class="maturity-card">
+                            <div class="maturity-number">4</div>
+                            <div class="maturity-title">Advanced</div>
+                            <div class="maturity-description">Optimized processes with continuous improvement and industry leadership in quantum readiness practices.</div>
+                        </div>
+
+                        <div class="maturity-card">
+                            <div class="maturity-number">5</div>
+                            <div class="maturity-title">Optimizing</div>
+                            <div class="maturity-description">Industry-leading practices with continuous innovation, external influence on standards, and transformative leadership.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Implementation Approach -->
+            <section style="padding: 40px 0;">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem; color: #333;">Holistic Integration</h2>
+                <div style="text-align: center; margin-bottom: 3rem;">
+                    <p style="font-size: 1.2rem; color: #666; max-width: 800px; margin: 0 auto;">
+                        The four dimensions work together to provide comprehensive quantum readiness through vertical and horizontal integration, ensuring strategy informs implementation while technical reality guides strategic decisions.
+                    </p>
+                </div>
+
+                <div style="background: #f8f9fa; border-radius: 16px; padding: 3rem; text-align: center;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #667eea;">
+                            <strong>Strategy ↔ Visibility</strong><br>
+                            <small style="color: #666;">Governance enables discovery</small>
+                        </div>
+                        <div style="background: white; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #667eea;">
+                            <strong>Protection ↔ Implementation</strong><br>
+                            <small style="color: #666;">Technical capability enables protection</small>
+                        </div>
+                    </div>
+                    <p style="color: #666; font-style: italic;">
+                        Continuous feedback loops ensure each dimension optimizes the others for comprehensive quantum readiness.
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container">
+                <h2>Ready to Assess Your Quantum Readiness?</h2>
+                <p>Get your baseline assessment and start your quantum readiness journey today.</p>
+                <a href="index.html#assessment" class="btn btn-white">Take Quick Assessment</a>
+                <a href="https://github.com/csnp/qramm" target="_blank" class="btn btn-outline">Explore on GitHub</a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 QRAMM Framework. Developed by CyberSecurity NonProfit (CSNP) • <a href="https://csnp.org" target="_blank">CSNP.org</a></p>
+        </div>
+    </footer>
+</body>
+</html>
