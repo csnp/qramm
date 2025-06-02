@@ -8,8 +8,9 @@ The QRAMM Full Assessment is a comprehensive evaluation framework designed to me
 **Assessment Structure:**
 - **4 Dimensions:** CVI, SGRM, DPE, ITR
 - **12 Practices:** 3 practices per dimension
-- **120 Questions:** 30 questions per dimension
-- **4 Maturity Levels:** From Basic (1) to Advanced (4)
+- **120 Questions:** 10 questions per practice
+- **5 Maturity Levels:** From Basic (1) to Optimizing (5)
+- **2 Assessment Streams:** Foundation (60%) and Advanced (40%) per practice
 
 ## Instructions
 
@@ -3446,8 +3447,8 @@ Integration of PQC enforcement into build systems, developer workflows, or softw
 
 ## Scoring Methodology
 
-The QRAMM assessment uses a 4-point scale where:
-- Each question is scored from 1-4 based on the selected maturity level
+The QRAMM assessment uses a 5-point scale where:
+- Each question is scored from 1-5 based on the selected maturity level
 - Practice scores are calculated as the average of all questions within that practice
 - Dimension scores are calculated as the average of all practices within that dimension
 - Overall QRAMM score is calculated as the average of all four dimension scores
