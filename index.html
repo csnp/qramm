@@ -1,0 +1,2220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRAMM - Quantum Readiness Assurance Maturity Model</title>
+    <meta name="description" content="Open-source quantum readiness assessment and management framework for organizations">
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- CSS Styles -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background: #667eea;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu-toggle span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: #333;
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+
+        .nav-links.active {
+            display: flex;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            flex-direction: column;
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            gap: 0;
+        }
+
+        .nav-links.active li {
+            padding: 0.5rem 0;
+            text-align: center;
+        }
+
+        /* Hero Section Enhanced */
+        .hero {
+            padding: 140px 0 100px;
+            text-align: center;
+            color: white;
+            margin-top: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero .subtitle {
+            font-size: 1.4rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        .hero .value-prop {
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 1s ease 0.3s both;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease 0.4s both;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .main-content {
+            background: white;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* Framework Overview Section */
+        .framework-overview {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .framework-overview h2 {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .framework-overview .lead-text {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+        }
+
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .dimension-box {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-top: 4px solid #667eea;
+        }
+
+        .dimension-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .dimension-box h3 {
+            color: #667eea;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dimension-box .dimension-subtitle {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .dimension-box p {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .dimension-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .dimension-box ul li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: #555;
+        }
+
+        .dimension-box ul li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* Stakeholder Benefits Section */
+        .stakeholder-benefits {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .stakeholder-benefits h2 {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .stakeholder-benefits .lead-text {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+        }
+
+        .stakeholder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .stakeholder-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 16px;
+            padding: 2.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .stakeholder-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .stakeholder-card h3 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stakeholder-card .role {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .stakeholder-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .stakeholder-card ul li {
+            padding: 0.5rem 0;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .stakeholder-card ul li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* Quantum Threat Timeline */
+        .threat-timeline {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .threat-timeline h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .threat-timeline .lead-text {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            opacity: 0.95;
+        }
+
+        .timeline-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 3rem;
+            backdrop-filter: blur(10px);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .timeline-item {
+            text-align: center;
+        }
+
+        .timeline-year {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-event {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Regulatory Compliance Section */
+        .regulatory-section {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .regulatory-section h2 {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .regulatory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .regulatory-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .regulatory-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .regulatory-card h3 {
+            color: #667eea;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .regulatory-card p {
+            color: #666;
+        }
+
+        /* Implementation Roadmap */
+        .roadmap-section {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .roadmap-section h2 {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .roadmap-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .roadmap-phase {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .roadmap-phase:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 60px;
+            width: 2px;
+            height: calc(100% + 2rem);
+            background: #e9ecef;
+        }
+
+        .phase-number {
+            background: #667eea;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            flex-shrink: 0;
+            margin-right: 2rem;
+        }
+
+        .phase-content {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .phase-content h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .phase-content .phase-duration {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .phase-content p {
+            color: #666;
+        }
+
+        /* Assessment Section */
+        .assessment-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .assessment-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            margin: 0 auto;
+            animation: slideInUp 0.8s ease;
+        }
+
+        .assessment-card h2 {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .assessment-card p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        /* Quiz Container */
+        .quiz-container {
+            display: none;
+            text-align: left;
+            margin-top: 2rem;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .question-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .question-explanation {
+            background: #e8f4fd;
+            border-left: 4px solid #4dabf7;
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #1c7ed6;
+        }
+
+        .question-explanation h4 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #1864ab;
+        }
+
+        .evidence-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #856404;
+        }
+
+        .evidence-section h4 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #6f5d00;
+        }
+
+        .evidence-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .evidence-list li {
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .evidence-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .question-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .option input[type="radio"] {
+            margin: 0;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        /* Results Section */
+        .results-container {
+            display: none;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .score-display {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .score-number {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .score-label {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            height: 350px;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .dimension-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dimension-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .dimension-name {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .dimension-score {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        .recommendations {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .recommendations h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .recommendations ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .recommendations li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+            border: 1px solid #e9ecef;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Industry Adoption Section */
+        .industry-adoption {
+            padding: 80px 0;
+            background: #f8f9fa;
+            text-align: center;
+        }
+
+        .industry-adoption h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .industry-adoption .lead-text {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+        }
+
+        .adoption-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-section p {
+            font-size: 1.3rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.95;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons-footer {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-large {
+            padding: 16px 32px;
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a1a1a;
+            color: white;
+            padding: 60px 0 40px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1.5rem;
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        .footer-section p {
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+
+        .footer-section a {
+            color: #ccc;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: #667eea;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid #333;
+            color: #999;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .coming-soon-content {
+                margin-top: 100px;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .assessment-card {
+                padding: 20px;
+                margin: 0 10px;
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .dimension-scores {
+                grid-template-columns: 1fr;
+            }
+
+            .roadmap-phase {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .phase-number {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+
+            .roadmap-phase:not(:last-child)::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        /* Coming Soon Banner */
+        .coming-soon-banner {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: #333;
+            padding: 15px 20px;
+            text-align: center;
+            position: fixed;
+            top: 80px;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+
+        .coming-soon-banner .emoji {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+
+        .coming-soon-content {
+            margin-top: 60px;
+        }
+
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <a href="#home" class="logo">QRAMM</a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#assessment">Quick Assessment</a></li>
+                <li><a href="./framework.html">Documentation</a></li>
+                <li><a href="./resources.html">Resources</a></li>
+                <li><a href="https://github.com/csnp/qramm" target="_blank">GitHub</a></li>
+            </ul>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Coming Soon Banner -->
+    <div class="coming-soon-banner">
+        <span class="emoji">🚀</span>
+        <strong>Coming Soon:</strong> QRAMM Assessment Toolkit - Excel-based tool with automated scoring and scorecards. Expected release: July 2025!
+    </div>
+
+    <!-- Enhanced Hero Section -->
+    <section id="home" class="hero coming-soon-content">
+        <div class="container">
+            <h1>Quantum Readiness Assurance Maturity Model</h1>
+            <p class="subtitle">The open-source framework for organizational quantum readiness</p>
+            <p class="value-prop">
+                As quantum computing threatens to break current encryption within 5-10 years, organizations must act now. 
+                QRAMM provides a systematic, evidence-based approach to assess, plan, and implement quantum-safe security 
+                across your entire enterprise.
+            </p>
+            <div class="cta-buttons">
+                <a href="#assessment" class="btn btn-primary btn-large">
+                    Start Quick Assessment
+                </a>
+                <a href="#framework-overview" class="btn btn-secondary btn-large">
+                    Explore Framework
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Framework Overview Section -->
+        <section id="framework-overview" class="framework-overview">
+            <div class="container">
+                <h2>The QRAMM Framework</h2>
+                <p class="lead-text">
+                    Four integrated dimensions provide comprehensive coverage of quantum readiness, 
+                    from cryptographic discovery to enterprise-wide implementation.
+                </p>
+                
+                <div class="dimensions-grid">
+                    <div class="dimension-box">
+                        <h3>🔍 Dimension 1: CVI</h3>
+                        <div class="dimension-subtitle">Cryptographic Visibility & Inventory</div>
+                        <p>You cannot protect what you cannot see. Discover and catalog all cryptographic assets.</p>
+                        <ul>
+                            <li>Automated cryptographic discovery</li>
+                            <li>Quantum vulnerability assessment</li>
+                            <li>Third-party crypto management</li>
+                        </ul>
+                    </div>
+
+                    <div class="dimension-box">
+                        <h3>⚖️ Dimension 2: SGRM</h3>
+                        <div class="dimension-subtitle">Strategic Governance & Risk Management</div>
+                        <p>Executive leadership and strategic planning for quantum transformation.</p>
+                        <ul>
+                            <li>Board-level governance structures</li>
+                            <li>Quantum risk integration</li>
+                            <li>Resource allocation strategies</li>
+                        </ul>
+                    </div>
+
+                    <div class="dimension-box">
+                        <h3>🛡️ Dimension 3: DPE</h3>
+                        <div class="dimension-subtitle">Data Protection Engineering</div>
+                        <p>Implement quantum-safe protection for data requiring long-term security.</p>
+                        <ul>
+                            <li>Data classification for quantum risk</li>
+                            <li>Quantum-safe encryption deployment</li>
+                            <li>Lifecycle protection management</li>
+                        </ul>
+                    </div>
+
+                    <div class="dimension-box">
+                        <h3>⚙️ Dimension 4: ITR</h3>
+                        <div class="dimension-subtitle">Implementation & Technical Readiness</div>
+                        <p>Deploy and optimize quantum-safe technologies across your infrastructure.</p>
+                        <ul>
+                            <li>Technology selection & testing</li>
+                            <li>Integration management</li>
+                            <li>Performance optimization</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stakeholder Benefits Section -->
+        <section id="benefits" class="stakeholder-benefits">
+            <div class="container">
+                <h2>Benefits for Every Stakeholder</h2>
+                <p class="lead-text">
+                    QRAMM addresses the unique needs and concerns of each organizational stakeholder, 
+                    ensuring comprehensive buy-in and successful implementation.
+                </p>
+
+                <div class="stakeholder-grid">
+                    <div class="stakeholder-card">
+                        <h3>Executive Leadership</h3>
+                        <p class="role">C-Suite & Board Members</p>
+                        <ul>
+                            <li>Clear ROI on quantum readiness investments</li>
+                            <li>Competitive advantage through early adoption</li>
+                            <li>Risk mitigation for shareholder value</li>
+                            <li>Regulatory compliance assurance</li>
+                            <li>Strategic roadmap with measurable milestones</li>
+                        </ul>
+                    </div>
+
+                    <div class="stakeholder-card">
+                        <h3>Security Professionals</h3>
+                        <p class="role">CISOs & Security Teams</p>
+                        <ul>
+                            <li>Comprehensive cryptographic asset visibility</li>
+                            <li>Systematic vulnerability assessment</li>
+                            <li>Technical implementation guidance</li>
+                            <li>Integration with existing security tools</li>
+                            <li>Industry best practices and benchmarks</li>
+                        </ul>
+                    </div>
+
+                    <div class="stakeholder-card">
+                        <h3>Compliance Officers</h3>
+                        <p class="role">GRC & Audit Teams</p>
+                        <ul>
+                            <li>NIST framework alignment</li>
+                            <li>Comprehensive audit trails</li>
+                            <li>Regulatory requirement mapping</li>
+                            <li>Documentation templates</li>
+                            <li>Third-party assessment tools</li>
+                        </ul>
+                    </div>
+
+                    <div class="stakeholder-card">
+                        <h3>IT Leaders</h3>
+                        <p class="role">CTOs & IT Teams</p>
+                        <ul>
+                            <li>Clear implementation complexity assessment</li>
+                            <li>Resource requirement planning</li>
+                            <li>Technology selection criteria</li>
+                            <li>Performance impact analysis</li>
+                            <li>Phased migration strategies</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quantum Threat Timeline -->
+        <section id="timeline" class="threat-timeline">
+            <div class="container">
+                <h2>The Quantum Threat Timeline</h2>
+                <p class="lead-text">
+                    Industry experts agree: the quantum threat is not a matter of if, but when. 
+                    Organizations must begin their quantum readiness journey today.
+                </p>
+
+                <div class="timeline-container">
+                    <h3 style="margin-bottom: 2rem;">Critical Milestones</h3>
+                    <div class="timeline-grid">
+                        <div class="timeline-item">
+                            <div class="timeline-year">2024-2025</div>
+                            <div class="timeline-event">Initial quantum readiness assessments begin</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-year">2026-2028</div>
+                            <div class="timeline-event">NIST PQC standards fully adopted</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-year">2029-2032</div>
+                            <div class="timeline-event">Cryptographically relevant quantum computers emerge</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-year">2033+</div>
+                            <div class="timeline-event">Current encryption potentially broken</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 2rem; font-size: 1.1rem;">
+                        <strong>Remember:</strong> Data encrypted today can be harvested now and decrypted later. 
+                        The time to protect your long-term sensitive data is NOW.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Regulatory Compliance Section -->
+        <section class="regulatory-section">
+            <div class="container">
+                <h2>Regulatory & Compliance Alignment</h2>
+                <div class="regulatory-grid">
+                    <div class="regulatory-card">
+                        <h3>NIST Standards</h3>
+                        <p>Full alignment with NIST Post-Quantum Cryptography standardization and migration guidelines</p>
+                    </div>
+                    <div class="regulatory-card">
+                        <h3>Industry Regulations</h3>
+                        <p>Meet emerging quantum security requirements for financial services, healthcare, and critical infrastructure</p>
+                    </div>
+                    <div class="regulatory-card">
+                        <h3>International Standards</h3>
+                        <p>Compatible with ETSI, ISO/IEC, and regional quantum security frameworks worldwide</p>
+                    </div>
+                    <div class="regulatory-card">
+                        <h3>Audit Readiness</h3>
+                        <p>Comprehensive documentation and evidence collection for regulatory audits and assessments</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Implementation Roadmap -->
+        <section class="roadmap-section">
+            <div class="container">
+                <h2>Your Quantum Readiness Journey</h2>
+                <div class="roadmap-container">
+                    <div class="roadmap-phase">
+                        <div class="phase-number">1</div>
+                        <div class="phase-content">
+                            <h3>Discovery & Assessment</h3>
+                            <p class="phase-duration">3-6 months</p>
+                            <p>Complete QRAMM assessment, discover cryptographic assets, identify vulnerabilities, and establish baseline maturity levels across all four dimensions.</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-phase">
+                        <div class="phase-number">2</div>
+                        <div class="phase-content">
+                            <h3>Planning & Prioritization</h3>
+                            <p class="phase-duration">2-4 months</p>
+                            <p>Develop quantum readiness strategy, prioritize critical systems, allocate resources, and create detailed implementation roadmap with executive approval.</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-phase">
+                        <div class="phase-number">3</div>
+                        <div class="phase-content">
+                            <h3>Pilot Implementation</h3>
+                            <p class="phase-duration">6-12 months</p>
+                            <p>Deploy quantum-safe technologies in pilot environments, validate performance, refine processes, and build organizational capability.</p>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-phase">
+                        <div class="phase-number">4</div>
+                        <div class="phase-content">
+                            <h3>Enterprise Rollout</h3>
+                            <p class="phase-duration">12-24 months</p>
+                            <p>Systematic deployment across the enterprise, continuous monitoring, optimization, and advancement toward quantum readiness maturity.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Industry Adoption Section -->
+        <section class="industry-adoption">
+            <div class="container">
+                <h2>Industry Momentum</h2>
+                <p class="lead-text">
+                    Leading organizations worldwide are already taking action. 
+                    Don't let your organization fall behind in the quantum race.
+                </p>
+                <div class="adoption-stats">
+                    <div class="stat-card">
+                        <div class="stat-number">73%</div>
+                        <div class="stat-label">of Fortune 500 companies have quantum initiatives</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">$15.3B</div>
+                        <div class="stat-label">global investment in quantum computing by 2025</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">5-10</div>
+                        <div class="stat-label">years until quantum computers break RSA-2048</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Assessment Section -->
+        <section id="assessment" class="assessment-section">
+            <div class="container">
+                <div class="assessment-card">
+                    <h2>Quantum Readiness Assessment</h2>
+                    <p>Discover your organization's quantum readiness maturity in just 15-20 minutes. Get immediate insights with comprehensive visualizations and actionable recommendations.</p>
+                    
+                    <!-- Start Assessment Button -->
+                    <div id="assessment-start">
+                        <button onclick="startAssessment()" class="btn btn-primary btn-large">
+                            Start Your Quick Assessment Now
+                        </button>
+                        <p class="mt-2">
+                            <strong>12 Questions</strong> • <strong>15-20 Minutes</strong> • <strong>Instant Results</strong> • <strong>No Registration Required</strong>
+                        </p>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="progress-container" class="hidden">
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p id="progress-text">Question 1 of 12</p>
+                    </div>
+
+                    <!-- Quiz Container -->
+                    <div id="quiz-container" class="quiz-container">
+                        <!-- Questions will be inserted here dynamically -->
+                    </div>
+
+                    <!-- Results Container -->
+                    <div id="results-container" class="results-container">
+                        <!-- Results will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <div class="container">
+                <h2>Why Choose QRAMM?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>🎯 Comprehensive Coverage</h3>
+                        <p>The only framework addressing all aspects of quantum readiness from discovery to implementation</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📊 Evidence-Based</h3>
+                        <p>Grounded in industry research, NIST guidelines, and real-world implementation experience</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🚀 Actionable Insights</h3>
+                        <p>Clear maturity levels and specific recommendations for improvement at every stage</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🌍 Open Source</h3>
+                        <p>Community-driven development ensuring continuous improvement and broad applicability</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🏢 Enterprise Ready</h3>
+                        <p>Designed for organizations of all sizes with scalable implementation approaches</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📈 ROI Focused</h3>
+                        <p>Clear business value proposition with measurable outcomes and risk reduction</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA Section -->
+        <section class="cta-section">
+            <div class="container">
+                <h2>Start Your Quantum Readiness Journey Today</h2>
+                <p>
+                    The quantum threat is real and approaching fast. Organizations that act now will be 
+                    positioned to thrive in the post-quantum era. Don't wait until it's too late.
+                </p>
+                <div class="cta-buttons-footer">
+                    <a href="#assessment" class="btn btn-primary btn-large">
+                        Take Quick Assessment
+                    </a>
+                    <a href="https://github.com/csnp/qramm" target="_blank" class="btn btn-secondary btn-large">
+                        View on GitHub
+                    </a>
+                    <a href="mailto:qramm@csnp.org" class="btn btn-secondary btn-large">
+                        Contact Us
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>About QRAMM</h3>
+                    <p>The Quantum Readiness Assurance Maturity Model (QRAMM) is an open-source framework developed by CyberSecurity NonProfit (CSNP) to help organizations prepare for the quantum computing era.</p>
+                    <p style="margin-top: 1rem;">
+                        <strong>Version:</strong> 1.0<br>
+                        <strong>License:</strong> MIT
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h3>Framework Authors</h3>
+                    <p style="color: #ccc; margin-bottom: 1rem;">CyberSecurity NonProfit (CSNP)</p>
+                    <a href="https://www.linkedin.com/in/emily-stamm/" target="_blank">Emily Stamm - LinkedIn</a>
+                    <a href="https://www.linkedin.com/in/abdelsyfane/" target="_blank">Abdel Sy Fane - LinkedIn</a>
+                    <a href="https://csnp.org" target="_blank">CSNP.org</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <a href="https://github.com/csnp/qramm" target="_blank">GitHub Repository</a>
+                    <a href="./framework.html">Framework Documentation</a>
+                    <a href="./resources.html">Implementation Resources</a>
+                    <a href="https://github.com/csnp/qramm/discussions" target="_blank">Community Discussions</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <a href="mailto:qramm@csnp.org">qramm@csnp.org</a>
+                    <a href="mailto:info@csnp.org">Partnership Inquiries</a>
+                    <p style="margin-top: 1rem; color: #999;">
+                        Contribute to QRAMM development on GitHub
+                    </p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 QRAMM Framework. Developed by CyberSecurity NonProfit (CSNP) • <a href="https://csnp.org" target="_blank" style="color: #667eea;">CSNP.org</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Interactive Assessment -->
+    <script>
+        // Assessment Questions Data with Enhanced Context
+        const assessmentQuestions = [
+            {
+                dimension: "CVI",
+                title: "Cryptographic Asset Discovery",
+                question: "How comprehensive is your organization's knowledge of cryptographic implementations across all systems?",
+                explanation: "This assesses how your organization locates and identifies cryptographic assets including algorithms (e.g., RSA, AES), protocols (e.g., TLS, SSH), key sizes, Certificate Authorities (CA), Key Management Systems (KMS), Hardware Security Modules (HSM), and implementation details across all systems, applications, and infrastructure.",
+                evidence: [
+                    "Documentation of known cryptographic implementations in critical systems, including algorithm types and key sizes",
+                    "Use of automated network scanning tools that identify TLS implementations across the infrastructure", 
+                    "Integrated tools identifying cryptography in applications, networks, hardware, and cloud services",
+                    "Advanced dashboards providing an up-to-date and comprehensive view of the cryptographic landscape"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Limited visibility into cryptographic assets. Knowledge exists mainly with individual technical staff, discovered reactively when issues arise." },
+                    { value: 2, text: "Level 2 - Developing: Begun systematic discovery efforts using basic tools and manual processes. Some critical systems documented but significant gaps remain." },
+                    { value: 3, text: "Level 3 - Established: Comprehensive automated discovery processes that systematically identify cryptographic implementations. Asset inventory is regularly updated." },
+                    { value: 4, text: "Level 4 - Optimizing: Industry-leading cryptographic asset intelligence with predictive analytics and automated risk assessment." }
+                ]
+            },
+            {
+                dimension: "CVI",
+                title: "Cryptographic Risk Assessment",
+                question: "How systematically does your organization assess and prioritize quantum computing risks to your cryptographic assets?",
+                explanation: "This examines your approach to evaluating how susceptible your cryptographic implementations are to quantum attacks based on algorithm types, key sizes, and implementation details. It focuses on systematic risk evaluation methodologies and prioritization frameworks.",
+                evidence: [
+                    "Inventory annotated with algorithm types, key lengths, and known quantum vulnerabilities",
+                    "Use of industry standards (e.g., NIST, ETSI) to classify algorithm susceptibility", 
+                    "Automated tools scanning code, configurations, and certificates for weak cryptographic implementations",
+                    "Evidence of in-depth assessment covering various cryptographic contexts (e.g., key exchange, signatures, encryption)"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic awareness of quantum threats but no systematic assessment of risk to specific cryptographic assets." },
+                    { value: 2, text: "Level 2 - Developing: Initial quantum risk assessments for some critical systems using basic methodologies. Some high-priority vulnerabilities identified." },
+                    { value: 3, text: "Level 3 - Established: Systematic quantum risk assessment processes covering all cryptographic assets with quantitative analysis." },
+                    { value: 4, text: "Level 4 - Optimizing: Industry-leading quantum risk assessment capabilities with advanced modeling influencing industry standards." }
+                ]
+            },
+            {
+                dimension: "CVI",
+                title: "Third-Party Cryptographic Management",
+                question: "How effectively does your organization assess and manage quantum risks in your vendor and partner ecosystems?",
+                explanation: "This examines your organization's ability to identify, document, and monitor how cryptography is implemented within third-party services (e.g., SaaS platforms, cloud workloads, managed services) to ensure quantum-vulnerable components are not overlooked during risk assessment and migration planning.",
+                evidence: [
+                    "Reviews of TLS settings or certificate usage in cloud-facing systems",
+                    "Cloud Security Posture Management (CSPM) tools identifying crypto parameters in cloud environments",
+                    "Real-time scanning or API-based monitoring of cryptographic configurations in multi-cloud or SaaS environments", 
+                    "Contractual obligations for vendors to report cryptographic changes and vulnerabilities"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Minimal visibility into third-party cryptographic practices. Vendor quantum readiness not systematically evaluated." },
+                    { value: 2, text: "Level 2 - Developing: Begun including basic quantum readiness questions in vendor assessments. Some critical vendors provided initial roadmap information." },
+                    { value: 3, text: "Level 3 - Established: Systematic third-party quantum readiness assessment processes integrated into vendor management." },
+                    { value: 4, text: "Level 4 - Optimizing: Lead ecosystem quantum readiness through comprehensive vendor development programs and industry collaboration." }
+                ]
+            },
+            {
+                dimension: "SGRM",
+                title: "Executive Leadership & Governance",
+                question: "How actively is your executive leadership engaged in quantum readiness planning and decision-making?",
+                explanation: "This examines how your organization has established leadership responsibility and accountability for quantum computing risks, including the governance structures that provide oversight of quantum readiness initiatives and strategic decision-making processes.",
+                evidence: [
+                    "Executive charters or board minutes explicitly referencing quantum computing risks",
+                    "Organizational charts or role definitions showing a named executive or officer responsible for quantum readiness",
+                    "Governance frameworks or steering committee documents detailing mandates to oversee cryptographic transitions",
+                    "Strategic plans or roadmaps with timelines for achieving post-quantum cryptographic readiness approved by executive governance"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Executive awareness exists but no formal governance structure or regular engagement on quantum readiness initiatives." },
+                    { value: 2, text: "Level 2 - Developing: Designated executive sponsors for quantum readiness with periodic briefings. Initial governance structures being established." },
+                    { value: 3, text: "Level 3 - Established: Executive leadership actively engaged through formal governance committees with regular quantum readiness reviews." },
+                    { value: 4, text: "Level 4 - Optimizing: Executive team provides industry leadership on quantum readiness governance with external influence on standards." }
+                ]
+            },
+            {
+                dimension: "SGRM",
+                title: "Strategic Planning & Resource Allocation",
+                question: "How comprehensive is your organization's strategic planning and resource allocation for quantum readiness?",
+                explanation: "This assesses the maturity of your organization's strategic approach to quantum readiness, including how financial resources and personnel are allocated to quantum readiness initiatives, budgeting processes, and investment tracking for quantum security efforts.",
+                evidence: [
+                    "Budget planning documents or spreadsheets listing quantum risk mitigation as a distinct cost center",
+                    "Formal resource requests or internal memos justifying quantum-related initiatives",
+                    "Annual financial plans or board-approved budgets allocating specific amounts to cryptographic modernization",
+                    "Documentation of ROI modeling, impact forecasts, or long-term cost planning for quantum transition efforts"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic awareness of need for quantum readiness planning but no formal strategy or dedicated resource allocation." },
+                    { value: 2, text: "Level 2 - Developing: Developed initial quantum readiness strategy with high-level timeline and begun allocating resources for planning." },
+                    { value: 3, text: "Level 3 - Established: Comprehensive quantum readiness strategy integrated into business planning with systematic resource allocation." },
+                    { value: 4, text: "Level 4 - Optimizing: Lead industry quantum readiness strategic planning through innovative approaches and industry framework contribution." }
+                ]
+            },
+            {
+                dimension: "SGRM",
+                title: "Risk Integration & Management",
+                question: "How well integrated is quantum risk assessment into your organization's enterprise risk management processes?",
+                explanation: "This examines your organization's approach to identifying and evaluating quantum computing risks using structured assessment frameworks, risk categorization, prioritization methods, and integration with existing enterprise risk management systems.",
+                evidence: [
+                    "Risk assessment documentation outlining methodology specific to quantum computing threats",
+                    "Defined quantum-specific risk categories based on algorithm type, key size, asset exposure, and business criticality",
+                    "Application of quantum threat models to prioritize cryptographic migration timelines",
+                    "Automated tools that continuously assess quantum vulnerability based on threat intelligence updates"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Quantum risks not systematically integrated into enterprise risk management. Risk evaluation is ad-hoc." },
+                    { value: 2, text: "Level 2 - Developing: Begun integrating quantum risks into enterprise risk frameworks with initial risk assessment." },
+                    { value: 3, text: "Level 3 - Established: Quantum risks fully integrated into enterprise risk management with systematic assessment and monitoring." },
+                    { value: 4, text: "Level 4 - Optimizing: Quantum risk integration demonstrates industry leadership and influences risk management frameworks." }
+                ]
+            },
+            {
+                dimension: "DPE",
+                title: "Data Classification & Quantum Risk Assessment",
+                question: "How systematically has your organization classified data based on quantum computing impact and protection requirements?",
+                explanation: "This examines how your organization identifies sensitive or long-lived data that may require protection against quantum computing threats, including the categorization of data assets according to their vulnerability based on protection timeframe, sensitivity, and business impact.",
+                evidence: [
+                    "Data classification records explicitly linking datasets to protection lifespans that exceed projected quantum threats",
+                    "Documentation showing the use of quantum threat models to determine protection requirements",
+                    "Metadata schemas or tagging conventions that flag long-term sensitive data for enhanced cryptographic safeguards",
+                    "Output from data discovery tools identifying high-value fields tagged for long-duration confidentiality"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic data classification focused on traditional compliance but haven't systematically evaluated quantum computing impact." },
+                    { value: 2, text: "Level 2 - Developing: Begun enhancing data classification to include quantum risk considerations with initial assessment of long-term protection needs." },
+                    { value: 3, text: "Level 3 - Established: Comprehensive data classification incorporating quantum computing impact assessment across all data categories." },
+                    { value: 4, text: "Level 4 - Optimizing: Data classification and quantum risk assessment demonstrates industry leadership and contributes to data protection standards." }
+                ]
+            },
+            {
+                dimension: "DPE",
+                title: "Quantum-Safe Data Protection Implementation",
+                question: "How comprehensively has your organization implemented quantum-safe protection for data requiring long-term security?",
+                explanation: "This examines how your organization deploys cryptographic safeguards that protect data against quantum computing threats, including algorithm selection, key management, and control validation across different data states and environments.",
+                evidence: [
+                    "Implementation records showing post-quantum or hybrid algorithms applied to quantum-sensitive systems",
+                    "Methodology documents mapping cryptographic control types to data categories and protection durations",
+                    "Deployment diagrams confirming the presence of quantum-resistant protections for data at rest, in transit, and in use",
+                    "Configuration templates that enforce algorithm and key-type selection based on classification tags"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Minimal quantum-safe data protection implementation. Current protections rely primarily on classical cryptography." },
+                    { value: 2, text: "Level 2 - Developing: Initiated quantum-safe data protection for some critical data categories with pilot implementations." },
+                    { value: 3, text: "Level 3 - Established: Systematic quantum-safe data protection implementation covering all data requiring long-term protection." },
+                    { value: 4, text: "Level 4 - Optimizing: Quantum-safe data protection implementation demonstrates industry leadership and contributes to technology standards." }
+                ]
+            },
+            {
+                dimension: "DPE",
+                title: "Data Lifecycle & Long-term Protection Management",
+                question: "How effectively does your organization manage data lifecycle considerations for quantum-safe protection?",
+                explanation: "This examines your organization's strategic approach to aligning quantum-resistant protections with data lifecycles, ensuring that encryption and integrity controls remain valid for the duration the data must remain secure or verifiable, including retention policies and lifecycle management.",
+                evidence: [
+                    "Documentation linking data protection durations to classification levels and cryptographic control choices",
+                    "Mapping of backup/archive data to protection requirements based on expected confidentiality needs",
+                    "Procedures for retiring, reclassifying, or re-encrypting long-lived data as quantum capabilities evolve",
+                    "Integration with data governance tools that apply protection policies over time based on lifecycle events"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic data lifecycle management focused on traditional compliance but haven't systematically addressed quantum-safe protection." },
+                    { value: 2, text: "Level 2 - Developing: Begun integrating quantum-safe considerations into data lifecycle management with initial planning." },
+                    { value: 3, text: "Level 3 - Established: Comprehensive data lifecycle management with quantum-safe protection integrated throughout data lifecycle." },
+                    { value: 4, text: "Level 4 - Optimizing: Data lifecycle and quantum-safe protection management demonstrates industry leadership and influences standards." }
+                ]
+            },
+            {
+                dimension: "ITR",
+                title: "Quantum-Safe Technology Selection & Deployment",
+                question: "How systematically has your organization evaluated and implemented quantum-safe cryptographic technologies?",
+                explanation: "This examines your organization's approach to selecting, testing, and deploying quantum-resistant cryptographic technologies, including algorithm evaluation processes, pilot implementations, and systematic deployment across systems and environments.",
+                evidence: [
+                    "Technology evaluation frameworks that assess post-quantum cryptographic algorithms against organizational requirements",
+                    "Pilot project documentation showing testing of quantum-safe algorithms in representative environments",
+                    "Deployment plans and timelines for systematic implementation of quantum-resistant technologies",
+                    "Performance testing results and compatibility assessments for quantum-safe cryptographic implementations"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic technical understanding of quantum-safe cryptography but minimal systematic evaluation or implementation." },
+                    { value: 2, text: "Level 2 - Developing: Conducted initial quantum-safe technology evaluations with pilot implementations and basic deployment." },
+                    { value: 3, text: "Level 3 - Established: Systematic quantum-safe technology evaluation and deployment processes with comprehensive implementation." },
+                    { value: 4, text: "Level 4 - Optimizing: Quantum-safe technology evaluation and deployment demonstrates industry leadership and contributes to standards." }
+                ]
+            },
+            {
+                dimension: "ITR",
+                title: "Integration & Interoperability Management",
+                question: "How effectively does your organization manage integration and interoperability challenges in quantum-safe implementations?",
+                explanation: "This examines your organization's capability to integrate quantum-safe cryptographic technologies with existing systems, manage interoperability requirements, and ensure seamless operation across diverse technical environments and vendor ecosystems.",
+                evidence: [
+                    "Integration architecture documents showing how quantum-safe technologies connect with existing systems",
+                    "Interoperability testing results demonstrating compatibility across different platforms and vendors",
+                    "Integration management processes that address technical constraints and compatibility requirements",
+                    "Documentation of integration challenges and solutions developed for quantum-safe implementations"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic understanding of integration challenges but minimal systematic approach to managing interoperability issues." },
+                    { value: 2, text: "Level 2 - Developing: Begun developing integration strategies and addressing basic interoperability challenges with initial success." },
+                    { value: 3, text: "Level 3 - Established: Systematic integration and interoperability management ensuring quantum-safe implementations work effectively." },
+                    { value: 4, text: "Level 4 - Optimizing: Integration and interoperability management demonstrates industry leadership and contributes to integration standards." }
+                ]
+            },
+            {
+                dimension: "ITR",
+                title: "Performance & Operational Optimization",
+                question: "How effectively has your organization optimized the performance and operational aspects of quantum-safe implementations?",
+                explanation: "This examines your organization's approach to optimizing the performance, efficiency, and operational aspects of quantum-safe cryptographic implementations, including performance monitoring, tuning processes, and operational management procedures.",
+                evidence: [
+                    "Performance benchmarking results comparing quantum-safe implementations to baseline cryptographic systems",
+                    "Performance optimization procedures and tuning processes for quantum-safe cryptographic operations",
+                    "Operational monitoring and management processes specific to quantum-safe implementations",
+                    "Documentation of performance improvements and optimization strategies developed for quantum-safe technologies"
+                ],
+                options: [
+                    { value: 1, text: "Level 1 - Basic: Basic understanding of performance implications but minimal systematic optimization of quantum-safe implementations." },
+                    { value: 2, text: "Level 2 - Developing: Begun performance optimization efforts with initial tuning and basic operational procedures." },
+                    { value: 3, text: "Level 3 - Established: Systematic performance optimization and operational management ensuring implementations meet requirements." },
+                    { value: 4, text: "Level 4 - Optimizing: Performance and operational optimization demonstrates industry leadership and contributes to optimization methodologies." }
+                ]
+            }
+        ];
+
+        // Assessment State
+        let currentQuestion = 0;
+        let responses = [];
+        let isAssessmentActive = false;
+        let radarChart = null;
+        let barChart = null;
+
+        // Start Assessment Function
+        function startAssessment() {
+            isAssessmentActive = true;
+            currentQuestion = 0;
+            responses = [];
+            
+            document.getElementById('assessment-start').style.display = 'none';
+            document.getElementById('progress-container').classList.remove('hidden');
+            document.getElementById('quiz-container').style.display = 'block';
+            
+            displayQuestion();
+        }
+
+        // Display Current Question
+        function displayQuestion() {
+            const question = assessmentQuestions[currentQuestion];
+            const quizContainer = document.getElementById('quiz-container');
+            
+            quizContainer.innerHTML = `
+                <div class="question-card">
+                    <div class="question-title">
+                        Question ${currentQuestion + 1}: ${question.title}
+                    </div>
+                    <p style="margin-bottom: 20px; color: #666;">${question.question}</p>
+                    
+                    <div class="question-explanation">
+                        <h4>What this question assesses:</h4>
+                        <p>${question.explanation}</p>
+                    </div>
+                    
+                    <div class="evidence-section">
+                        <h4>Evidence to look for:</h4>
+                        <ul class="evidence-list">
+                            ${question.evidence.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="question-options">
+                        ${question.options.map((option, index) => `
+                            <div class="option" onclick="selectOption(${option.value}, ${index})">
+                                <input type="radio" name="q${currentQuestion}" value="${option.value}" id="option${index}">
+                                <label for="option${index}" style="cursor: pointer; flex: 1;">${option.text}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="text-align: center; margin-top: 24px;">
+                        <button id="next-btn" class="btn btn-primary" onclick="nextQuestion()" disabled>
+                            ${currentQuestion === assessmentQuestions.length - 1 ? 'Complete Assessment' : 'Next Question'}
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            updateProgress();
+        }
+
+        // Select Option Function
+        function selectOption(value, index) {
+            // Remove previous selections
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selection to clicked option
+            document.querySelectorAll('.option')[index].classList.add('selected');
+            document.getElementById(`option${index}`).checked = true;
+            
+            // Enable next button
+            document.getElementById('next-btn').disabled = false;
+            
+            // Store response
+            responses[currentQuestion] = {
+                question: currentQuestion,
+                dimension: assessmentQuestions[currentQuestion].dimension,
+                value: value
+            };
+        }
+
+        // Next Question Function
+        function nextQuestion() {
+            if (currentQuestion < assessmentQuestions.length - 1) {
+                currentQuestion++;
+                displayQuestion();
+            } else {
+                completeAssessment();
+            }
+        }
+
+        // Update Progress Bar
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / assessmentQuestions.length) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = `Question ${currentQuestion + 1} of ${assessmentQuestions.length}`;
+        }
+
+        // Complete Assessment Function
+        function completeAssessment() {
+            calculateResults();
+            displayResults();
+            
+            document.getElementById('quiz-container').style.display = 'none';
+            document.getElementById('progress-container').classList.add('hidden');
+            document.getElementById('results-container').style.display = 'block';
+        }
+
+        // Calculate Results
+        function calculateResults() {
+            const dimensionScores = {};
+            const dimensionCounts = {};
+            
+            // Initialize dimension totals
+            responses.forEach(response => {
+                if (!dimensionScores[response.dimension]) {
+                    dimensionScores[response.dimension] = 0;
+                    dimensionCounts[response.dimension] = 0;
+                }
+                dimensionScores[response.dimension] += response.value;
+                dimensionCounts[response.dimension]++;
+            });
+            
+            // Calculate averages
+            for (let dimension in dimensionScores) {
+                dimensionScores[dimension] = dimensionScores[dimension] / dimensionCounts[dimension];
+            }
+            
+            // Calculate overall score
+            const overallScore = Object.values(dimensionScores).reduce((sum, score) => sum + score, 0) / Object.keys(dimensionScores).length;
+            
+            return { dimensionScores, overallScore };
+        }
+
+        // Display Results with Enhanced Visualizations
+        function displayResults() {
+            const { dimensionScores, overallScore } = calculateResults();
+            const resultsContainer = document.getElementById('results-container');
+            
+            const maturityLevel = getMaturityLevel(overallScore);
+            const recommendations = generateRecommendations(dimensionScores, overallScore);
+            
+            resultsContainer.innerHTML = `
+                <div class="score-display">
+                    <div class="score-number">${overallScore.toFixed(1)}</div>
+                    <div class="score-label">Overall QRAMM Score</div>
+                    <div style="margin-top: 15px; font-size: 1.1rem;">
+                        ${maturityLevel.label}
+                    </div>
+                </div>
+                
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <div class="chart-title">Dimension Radar Chart</div>
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Maturity Levels</div>
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="dimension-scores">
+                    <div class="dimension-card">
+                        <div class="dimension-name">Cryptographic Visibility & Inventory (CVI)</div>
+                        <div class="dimension-score">${dimensionScores.CVI.toFixed(1)}</div>
+                    </div>
+                    <div class="dimension-card">
+                        <div class="dimension-name">Strategic Governance & Risk Management (SGRM)</div>
+                        <div class="dimension-score">${dimensionScores.SGRM.toFixed(1)}</div>
+                    </div>
+                    <div class="dimension-card">
+                        <div class="dimension-name">Data Protection Engineering (DPE)</div>
+                        <div class="dimension-score">${dimensionScores.DPE.toFixed(1)}</div>
+                    </div>
+                    <div class="dimension-card">
+                        <div class="dimension-name">Implementation & Technical Readiness (ITR)</div>
+                        <div class="dimension-score">${dimensionScores.ITR.toFixed(1)}</div>
+                    </div>
+                </div>
+                
+                <div class="recommendations">
+                    <h3>Your Quantum Readiness Assessment</h3>
+                    <p><strong>${maturityLevel.label}</strong></p>
+                    <p>${maturityLevel.description}</p>
+                    
+                    <h3 style="margin-top: 20px;">Priority Recommendations</h3>
+                    <ul>
+                        ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button onclick="restartAssessment()" class="btn btn-secondary">
+                        Take Quick Assessment Again
+                    </button>
+                    <a href="mailto:qramm@csnp.org?subject=QRAMM Assessment Results - Score ${overallScore.toFixed(1)}" class="btn btn-primary" style="margin-left: 1rem;">
+                        Get Detailed Analysis
+                    </a>
+                </div>
+            `;
+
+            // Create charts after DOM is updated
+            setTimeout(() => {
+                createRadarChart(dimensionScores);
+                createBarChart(dimensionScores);
+            }, 100);
+        }
+
+        // Create Radar Chart
+        function createRadarChart(dimensionScores) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (radarChart) {
+                radarChart.destroy();
+            }
+            
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: [
+                        'Cryptographic Visibility & Inventory',
+                        'Strategic Governance & Risk Management',
+                        'Data Protection Engineering',
+                        'Implementation & Technical Readiness'
+                    ],
+                    datasets: [{
+                        label: 'Your Scores',
+                        data: [
+                            dimensionScores.CVI,
+                            dimensionScores.SGRM,
+                            dimensionScores.DPE,
+                            dimensionScores.ITR
+                        ],
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(102, 126, 234, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 4,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create Bar Chart
+        function createBarChart(dimensionScores) {
+            const ctx = document.getElementById('barChart').getContext('2d');
+            
+            if (barChart) {
+                barChart.destroy();
+            }
+            
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['CVI', 'SGRM', 'DPE', 'ITR'],
+                    datasets: [{
+                        label: 'Maturity Level',
+                        data: [
+                            dimensionScores.CVI,
+                            dimensionScores.SGRM,
+                            dimensionScores.DPE,
+                            dimensionScores.ITR
+                        ],
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(118, 75, 162, 0.8)',
+                            'rgba(102, 126, 234, 0.6)',
+                            'rgba(118, 75, 162, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(102, 126, 234, 1)',
+                            'rgba(118, 75, 162, 1)',
+                            'rgba(102, 126, 234, 1)',
+                            'rgba(118, 75, 162, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 4,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Check for excellence indicators to qualify for Level 5
+        function hasExcellenceIndicators() {
+            // Count how many questions received the highest score (4)
+            const highestScores = responses.filter(r => r.value === 4).length;
+            // To qualify for Level 5, need perfect score (4.0) and all questions answered with highest option
+            return highestScores === assessmentQuestions.length;
+        }
+
+        // Get Maturity Level
+        function getMaturityLevel(score) {
+            if (score >= 4.0 && hasExcellenceIndicators()) {
+                return {
+                    label: "Level 5 - Quantum Optimizing",
+                    description: "Industry benchmark with transformative leadership. Your organization demonstrates exceptional quantum readiness."
+                };
+            } else if (score >= 3.6) {
+                return {
+                    label: "Level 4 - Quantum Advanced",
+                    description: "Excellent positioning with leadership opportunities. Strong quantum readiness foundation with optimization potential."
+                };
+            } else if (score >= 2.6) {
+                return {
+                    label: "Level 3 - Quantum Established",
+                    description: "Strong foundation with optimization opportunities. Good quantum readiness progress with advancement potential."
+                };
+            } else if (score >= 1.6) {
+                return {
+                    label: "Level 2 - Quantum Developing",
+                    description: "Good progress, sustained effort needed. Quantum readiness development underway requiring continued investment."
+                };
+            } else {
+                return {
+                    label: "Level 1 - Quantum Basic",
+                    description: "Critical attention required. Immediate action needed to establish quantum readiness foundation."
+                };
+            }
+        }
+
+        // Generate Recommendations
+        function generateRecommendations(dimensionScores, overallScore) {
+            const recommendations = [];
+            
+            // Find lowest scoring dimension
+            const lowestDimension = Object.keys(dimensionScores).reduce((a, b) => 
+                dimensionScores[a] < dimensionScores[b] ? a : b
+            );
+            
+            const dimensionNames = {
+                'CVI': 'Cryptographic Visibility & Inventory',
+                'SGRM': 'Strategic Governance & Risk Management',
+                'DPE': 'Data Protection Engineering',
+                'ITR': 'Implementation & Technical Readiness'
+            };
+            
+            const dimensionActions = {
+                'CVI': 'Conduct comprehensive cryptographic asset discovery and implement systematic risk assessment processes',
+                'SGRM': 'Establish executive governance structure and develop comprehensive quantum readiness strategy',
+                'DPE': 'Classify data based on quantum computing impact and implement quantum-safe protection for critical data',
+                'ITR': 'Evaluate quantum-safe cryptographic technologies and develop integration capabilities'
+            };
+            
+            recommendations.push(`Focus on ${dimensionNames[lowestDimension]} - your lowest scoring dimension (${dimensionScores[lowestDimension].toFixed(1)})`);
+            recommendations.push(dimensionActions[lowestDimension]);
+            
+            if (overallScore < 1.6) {
+                recommendations.push('Establish quantum readiness working group with executive sponsorship');
+                recommendations.push('Contact qramm@csnp.org for comprehensive QRAMM assessment guidance');
+                recommendations.push('Develop 18-36 month quantum readiness roadmap with phased implementation');
+            } else if (overallScore < 2.6) {
+                recommendations.push('Implement systematic improvement processes across all dimensions');
+                recommendations.push('Begin pilot projects to build organizational quantum readiness capability');
+                recommendations.push('Integrate quantum risk into enterprise risk management processes');
+            } else if (overallScore < 3.6) {
+                recommendations.push('Optimize existing processes and pursue advanced quantum readiness capabilities');
+                recommendations.push('Consider industry leadership opportunities and best practice sharing');
+                recommendations.push('Develop comprehensive vendor and supply chain quantum readiness management');
+            } else {
+                recommendations.push('Lead industry quantum readiness initiatives and contribute to standards development');
+                recommendations.push('Establish center of excellence for quantum readiness within your organization');
+                recommendations.push('Consider quantum readiness community leadership opportunities');
+            }
+            
+            return recommendations;
+        }
+
+        // Restart Assessment
+        function restartAssessment() {
+            currentQuestion = 0;
+            responses = [];
+            isAssessmentActive = false;
+            
+            // Destroy existing charts
+            if (radarChart) {
+                radarChart.destroy();
+                radarChart = null;
+            }
+            if (barChart) {
+                barChart.destroy();
+                barChart = null;
+            }
+            
+            document.getElementById('results-container').style.display = 'none';
+            document.getElementById('assessment-start').style.display = 'block';
+        }
+
+        // Smooth Scrolling for Navigation Links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Header scroll effect
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.15)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
+            }
+        });
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('navLinks').classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>
