@@ -137,7 +137,12 @@
 
         .dimension-card p {
             color: #666;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
+            line-height: 1.5;
+        }
+        
+        .dimension-card p strong {
+            color: #333;
         }
 
         .practices-list {
@@ -316,48 +321,80 @@
                     <div class="dimension-card">
                         <h3>🔍 Dimension 1: CVI</h3>
                         <div class="dimension-subtitle">Cryptographic Visibility & Inventory</div>
-                        <p>Foundation: You cannot protect what you cannot see</p>
-                        <p>Comprehensive discovery and cataloging of all cryptographic assets across your organization.</p>
+                        <p><strong>Core Purpose:</strong> Discover and catalog every cryptographic asset across your organization</p>
+                        <p><strong>Business Value:</strong> Transforms invisible cryptographic dependencies into manageable assets, enabling proactive risk-based planning instead of reactive scrambling.</p>
+                        <p><strong>Key Outcomes:</strong></p>
+                        <ul style="list-style: disc; padding-left: 20px; margin: 10px 0; color: #666;">
+                            <li>Discover hidden vulnerabilities in legacy systems</li>
+                            <li>Map dependencies to prevent migration failures</li>
+                            <li>Enable data-driven prioritization</li>
+                            <li>Identify compliance gaps early</li>
+                        </ul>
+                        <p style="margin-top: 15px;"><strong>Practice Areas:</strong></p>
                         <ul class="practices-list">
-                            <li>Cryptographic Asset Discovery & Documentation</li>
-                            <li>Cryptographic Risk Assessment & Prioritization</li>
-                            <li>Cryptographic Dependencies & Supply Chain Management</li>
+                            <li>Cryptographic Discovery & Inventory Management</li>
+                            <li>Vulnerability Assessment & Classification</li>
+                            <li>Cryptographic Dependency Mapping</li>
                         </ul>
                     </div>
 
                     <div class="dimension-card">
                         <h3>⚖️ Dimension 2: SGRM</h3>
                         <div class="dimension-subtitle">Strategic Governance & Risk Management</div>
-                        <p>Leadership: Quantum readiness requires organizational commitment</p>
-                        <p>Executive leadership, policy framework, and strategic planning for quantum readiness.</p>
+                        <p><strong>Core Purpose:</strong> Establish executive leadership and organizational commitment for quantum readiness</p>
+                        <p><strong>Business Value:</strong> Transforms quantum security from an IT project into a strategic business imperative with board-level accountability and dedicated resources.</p>
+                        <p><strong>Key Outcomes:</strong></p>
+                        <ul style="list-style: disc; padding-left: 20px; margin: 10px 0; color: #666;">
+                            <li>Secure multi-year funding commitments</li>
+                            <li>Break down organizational silos</li>
+                            <li>Align with regulatory compliance</li>
+                            <li>Extend governance to supply chain</li>
+                        </ul>
+                        <p style="margin-top: 15px;"><strong>Practice Areas:</strong></p>
                         <ul class="practices-list">
-                            <li>Quantum Risk Governance & Leadership</li>
-                            <li>Quantum Readiness Strategy & Planning</li>
-                            <li>Quantum Risk Assessment & Management</li>
+                            <li>Executive Leadership & Policy Management</li>
+                            <li>Risk Assessment & Compliance Management</li>
+                            <li>Third-Party & Supply Chain Risk Management</li>
                         </ul>
                     </div>
 
                     <div class="dimension-card">
                         <h3>🛡️ Dimension 3: DPE</h3>
                         <div class="dimension-subtitle">Data Protection Engineering</div>
-                        <p>Protection: Securing data throughout its lifecycle</p>
-                        <p>Technical implementation of quantum-safe data protection throughout information lifecycle.</p>
+                        <p><strong>Core Purpose:</strong> Implement technical controls that protect sensitive data against quantum threats</p>
+                        <p><strong>Business Value:</strong> Addresses the "harvest now, decrypt later" threat by implementing quantum-resistant encryption that protects long-term sensitive data.</p>
+                        <p><strong>Key Outcomes:</strong></p>
+                        <ul style="list-style: disc; padding-left: 20px; margin: 10px 0; color: #666;">
+                            <li>Protect against future quantum attacks</li>
+                            <li>Establish cryptographic agility</li>
+                            <li>Maintain operational efficiency</li>
+                            <li>Ensure data protection compliance</li>
+                        </ul>
+                        <p style="margin-top: 15px;"><strong>Practice Areas:</strong></p>
                         <ul class="practices-list">
-                            <li>Data Classification & Quantum Risk Assessment</li>
-                            <li>Quantum-Safe Data Protection Implementation</li>
-                            <li>Data Lifecycle & Long-term Protection Management</li>
+                            <li>Data Classification & Protection Requirements</li>
+                            <li>Storage Security & Encryption Management</li>
+                            <li>Transit Security & Protocol Management</li>
                         </ul>
                     </div>
 
                     <div class="dimension-card">
                         <h3>⚙️ Dimension 4: ITR</h3>
                         <div class="dimension-subtitle">Implementation & Technical Readiness</div>
-                        <p>Execution: Translating strategy into technical reality</p>
-                        <p>Technical infrastructure and implementation capabilities for quantum-safe technology deployment.</p>
+                        <p><strong>Core Purpose:</strong> Bridge the gap between planning and reality with successful deployment capabilities</p>
+                        <p><strong>Business Value:</strong> Prevents implementation failures through systematic planning, testing, and operational excellence while maintaining business continuity.</p>
+                        <p><strong>Key Outcomes:</strong></p>
+                        <ul style="list-style: disc; padding-left: 20px; margin: 10px 0; color: #666;">
+                            <li>Prevent costly deployment failures</li>
+                            <li>Manage complex integrations</li>
+                            <li>Optimize system performance</li>
+                            <li>Build sustainable capabilities</li>
+                        </ul>
+                        <p style="margin-top: 15px;"><strong>Practice Areas:</strong></p>
                         <ul class="practices-list">
-                            <li>Quantum-Safe Technology Selection & Deployment</li>
-                            <li>Integration & Interoperability Management</li>
-                            <li>Performance & Operational Optimization</li>
+                            <li>Technology Infrastructure Assessment</li>
+                            <li>Integration Planning and Implementation</li>
+                            <li>Operational Readiness and Maintenance</li>
                         </ul>
                     </div>
                 </div>
@@ -402,8 +439,37 @@
                 </div>
             </section>
 
+            <!-- Why All Four Dimensions Matter -->
+            <section style="padding: 60px 0; background: #fff;">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem; color: #333;">Why All Four Dimensions Are Essential</h2>
+                <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+                    <p style="font-size: 1.2rem; color: #666; margin-bottom: 3rem;">
+                        Organizations often focus on just one or two areas, leaving critical gaps that undermine their entire quantum readiness effort. True resilience requires excellence across all four dimensions.
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-bottom: 3rem; text-align: left;">
+                        <div style="background: #f8f9fa; padding: 2rem; border-radius: 12px;">
+                            <h3 style="color: #667eea; margin-bottom: 1rem;">Without CVI: Flying Blind</h3>
+                            <p style="color: #666;">Unknown vulnerabilities, failed migrations, wasted resources, and emergency responses when quantum threats materialize.</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 2rem; border-radius: 12px;">
+                            <h3 style="color: #667eea; margin-bottom: 1rem;">Without SGRM: Initiative Failure</h3>
+                            <p style="color: #666;">Lack of resources, fragmented efforts, regulatory exposure, and competitive disadvantage.</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 2rem; border-radius: 12px;">
+                            <h3 style="color: #667eea; margin-bottom: 1rem;">Without DPE: Data Breaches</h3>
+                            <p style="color: #666;">Future decryption of sensitive data, intellectual property theft, regulatory penalties, and loss of trust.</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 2rem; border-radius: 12px;">
+                            <h3 style="color: #667eea; margin-bottom: 1rem;">Without ITR: Failed Deployments</h3>
+                            <p style="color: #666;">System instabilities, performance problems, extended vulnerabilities, and cost overruns.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Implementation Approach -->
-            <section style="padding: 40px 0;">
+            <section style="padding: 40px 0; background: #f8f9fa;">
                 <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem; color: #333;">Holistic Integration</h2>
                 <div style="text-align: center; margin-bottom: 3rem;">
                     <p style="font-size: 1.2rem; color: #666; max-width: 800px; margin: 0 auto;">
