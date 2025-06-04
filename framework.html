@@ -105,7 +105,7 @@
 
         .framework-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
             margin-bottom: 3rem;
         }
@@ -168,8 +168,20 @@
 
         .maturity-levels {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .maturity-levels-bottom {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+        
+        .maturity-level-5 {
+            max-width: 400px;
         }
 
         .maturity-card {
@@ -271,6 +283,12 @@
         }
 
         /* Responsive */
+        @media (max-width: 992px) {
+            .framework-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
         @media (max-width: 768px) {
             .nav-links {
                 display: none;
@@ -283,6 +301,14 @@
             .framework-grid,
             .maturity-levels {
                 grid-template-columns: 1fr;
+            }
+            
+            .maturity-levels-bottom {
+                width: 100%;
+            }
+            
+            .maturity-level-5 {
+                max-width: 100%;
             }
         }
     </style>
@@ -423,14 +449,16 @@
                             <div class="maturity-title">Established</div>
                             <div class="maturity-description">Systematic and consistent practices implemented organization-wide with comprehensive quantum readiness capabilities.</div>
                         </div>
-
+                        
                         <div class="maturity-card">
                             <div class="maturity-number">4</div>
                             <div class="maturity-title">Advanced</div>
                             <div class="maturity-description">Optimized processes with continuous improvement and industry leadership in quantum readiness practices.</div>
                         </div>
-
-                        <div class="maturity-card">
+                    </div>
+                    
+                    <div class="maturity-levels-bottom">
+                        <div class="maturity-card maturity-level-5">
                             <div class="maturity-number">5</div>
                             <div class="maturity-title">Optimizing</div>
                             <div class="maturity-description">Industry-leading practices with continuous innovation, external influence on standards, and transformative leadership.</div>
