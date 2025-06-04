@@ -1939,7 +1939,29 @@
                     <p><strong>${maturityLevel.label}</strong></p>
                     <p>${maturityLevel.description}</p>
                     
-                    <h3 style="margin-top: 20px;">Priority Recommendations</h3>
+                    <h3 style="margin-top: 20px;">QRAMM Maturity Levels</h3>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <p style="margin-bottom: 15px;"><strong>Understanding Your Score:</strong></p>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="margin-bottom: 8px; ${overallScore >= 1.0 && overallScore <= 1.5 ? 'font-weight: bold; color: #667eea;' : ''}">
+                                <strong>Level 1 - Basic (1.0-1.5):</strong> Ad-hoc practices, limited awareness • Most organizations today
+                            </li>
+                            <li style="margin-bottom: 8px; ${overallScore >= 1.6 && overallScore <= 2.5 ? 'font-weight: bold; color: #667eea;' : ''}">
+                                <strong>Level 2 - Developing (1.6-2.5):</strong> Initial structured approach emerging • Security-conscious enterprises
+                            </li>
+                            <li style="margin-bottom: 8px; ${overallScore >= 2.6 && overallScore <= 3.5 ? 'font-weight: bold; color: #667eea;' : ''}">
+                                <strong>Level 3 - Established (2.6-3.5):</strong> Systematic implementation organization-wide • Industry leaders
+                            </li>
+                            <li style="margin-bottom: 8px; ${overallScore >= 3.6 && overallScore <= 3.9 ? 'font-weight: bold; color: #667eea;' : ''}">
+                                <strong>Level 4 - Advanced (3.6-3.9):</strong> Optimized processes, continuous improvement • High-security sectors
+                            </li>
+                            <li style="margin-bottom: 8px; ${overallScore >= 4.0 ? 'font-weight: bold; color: #667eea;' : ''}">
+                                <strong>Level 5 - Optimizing (4.0):</strong> Industry leadership, innovation driver • Global security pioneers
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Priority Recommendations</h3>
                     <ul>
                         ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
                     </ul>
