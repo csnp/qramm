@@ -66,32 +66,79 @@ With quantum computers capable of breaking RSA-2048 encryption expected within 5
 ### Four Integrated Dimensions
 
 #### 🔍 **Dimension 1: Cryptographic Visibility & Inventory (CVI)**
-*Foundation: You cannot protect what you cannot see*
+*Foundation: Understanding and cataloging cryptographic assets across the organization*
 
-- **Practice 1.1**: Cryptographic Asset Discovery & Documentation
-- **Practice 1.2**: Quantum Risk Assessment & Prioritization  
-- **Practice 1.3**: Third-Party Cryptographic Management
+**What It Does**: CVI establishes comprehensive visibility into your cryptographic landscape—discovering every algorithm, key, certificate, and protocol across all systems. It transforms invisible cryptographic dependencies into a manageable asset inventory.
+
+**Why It's Critical**: Without knowing what cryptographic assets you have and where they're deployed, planning a quantum-safe transition becomes impossible. CVI enables proactive, risk-based planning instead of reactive scrambling.
+
+**Key Value**: 
+- Discovers hidden quantum vulnerabilities in legacy systems and third-party components
+- Maps cryptographic dependencies to prevent migration failures
+- Enables data-driven prioritization based on actual risk
+- Identifies compliance gaps before they become violations
+
+**Practice Areas**:
+- **Practice 1.1**: Cryptographic Discovery & Inventory Management
+- **Practice 1.2**: Vulnerability Assessment & Classification  
+- **Practice 1.3**: Cryptographic Dependency Mapping
 
 #### ⚖️ **Dimension 2: Strategic Governance & Risk Management (SGRM)**
-*Leadership: Quantum readiness requires organizational commitment*
+*Leadership: Leadership commitment and systematic risk management for quantum threats*
 
-- **Practice 2.1**: Executive Leadership & Governance Structures
-- **Practice 2.2**: Strategic Planning & Resource Allocation
-- **Practice 2.3**: Risk Integration & Management Frameworks
+**What It Does**: SGRM establishes the organizational foundation for quantum readiness through executive leadership, comprehensive policies, and integrated risk management. It transforms quantum security from an IT project into a strategic business imperative.
+
+**Why It's Critical**: Quantum-safe transformation requires years of sustained effort, significant investment, and enterprise-wide coordination. Without executive commitment and governance, initiatives fail to secure resources and organizational authority.
+
+**Key Value**:
+- Establishes board-level accountability for quantum security
+- Secures dedicated funding for multi-year transformation
+- Breaks down organizational silos for coordinated response
+- Aligns quantum readiness with regulatory compliance
+- Extends governance to supply chain partners
+
+**Practice Areas**:
+- **Practice 2.1**: Executive Leadership & Policy Management
+- **Practice 2.2**: Risk Assessment & Compliance Management
+- **Practice 2.3**: Third-Party & Supply Chain Risk Management
 
 #### 🛡️ **Dimension 3: Data Protection Engineering (DPE)**
-*Protection: Securing data throughout its lifecycle*
+*Protection: Technical implementation of quantum-safe data protection measures*
 
-- **Practice 3.1**: Data Classification & Quantum Risk Assessment
-- **Practice 3.2**: Quantum-Safe Protection Implementation
-- **Practice 3.3**: Lifecycle & Long-term Protection Management
+**What It Does**: DPE implements the technical controls that protect sensitive information against quantum threats across all data states—at rest, in transit, and in use. It delivers real security through quantum-resistant encryption and comprehensive key management.
+
+**Why It's Critical**: Data is the ultimate target. Current encryption will become vulnerable to quantum decryption, threatening everything from financial records to healthcare data. DPE addresses the "harvest now, decrypt later" threat.
+
+**Key Value**:
+- Protects long-term sensitive data against future quantum threats
+- Replaces vulnerable algorithms before they fail
+- Establishes cryptographic agility for evolving standards
+- Maintains operational efficiency with optimized implementations
+- Ensures compliance with data protection regulations
+
+**Practice Areas**:
+- **Practice 3.1**: Data Classification & Protection Requirements
+- **Practice 3.2**: Storage Security & Encryption Management
+- **Practice 3.3**: Transit Security & Protocol Management
 
 #### ⚙️ **Dimension 4: Implementation & Technical Readiness (ITR)**
-*Execution: Translating strategy into technical reality*
+*Execution: Execution capabilities for quantum-safe technology deployment*
 
-- **Practice 4.1**: Technology Selection & Deployment
-- **Practice 4.2**: Integration & Interoperability Management
-- **Practice 4.3**: Performance & Operational Optimization
+**What It Does**: ITR bridges the gap between planning and reality, ensuring successful deployment, integration, and maintenance of quantum-resistant technologies. It transforms strategic intentions into operational systems while maintaining business continuity.
+
+**Why It's Critical**: The best strategy fails without effective implementation. ITR prevents common failures—from performance problems to integration issues—that derail quantum initiatives. It makes the difference between talking about quantum security and achieving it.
+
+**Key Value**:
+- Prevents implementation failures through systematic planning
+- Manages complex integrations between new and legacy systems
+- Optimizes performance to maintain operational efficiency
+- Builds organizational capabilities for long-term success
+- Ensures smooth transitions without business disruption
+
+**Practice Areas**:
+- **Practice 4.1**: Technology Infrastructure Assessment
+- **Practice 4.2**: Integration Planning and Implementation
+- **Practice 4.3**: Operational Readiness and Maintenance
 
 ### Five-Level Maturity Model
 
