@@ -170,22 +170,44 @@
         /* Downloads Section */
         .downloads-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .download-card {
             background: white;
-            border-radius: 12px;
-            padding: 2rem;
+            border-radius: 16px;
+            padding: 2.5rem;
             text-align: center;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .download-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
             transition: transform 0.3s ease;
         }
 
         .download-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border-color: #e9ecef;
+        }
+        
+        .download-card:hover::before {
+            transform: scaleX(1);
         }
 
         .download-icon {
@@ -280,6 +302,12 @@
             }
             
             .resource-grid,
+            .downloads-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 992px) {
             .downloads-grid {
                 grid-template-columns: 1fr;
             }
