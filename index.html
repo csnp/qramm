@@ -1897,7 +1897,7 @@
             
             resultsContainer.innerHTML = `
                 <div class="score-display">
-                    <div class="score-number">${overallScore.toFixed(1)}</div>
+                    <div class="score-number">${overallScore.toFixed(1)} / 4.0</div>
                     <div class="score-label">Overall QRAMM Score</div>
                     <div style="margin-top: 15px; font-size: 1.1rem;">
                         ${maturityLevel.label}
@@ -1949,9 +1949,6 @@
                     <button onclick="restartAssessment()" class="btn btn-secondary">
                         Take Quick Assessment Again
                     </button>
-                    <a href="mailto:qramm@csnp.org?subject=QRAMM Assessment Results - Score ${overallScore.toFixed(1)}" class="btn btn-primary" style="margin-left: 1rem;">
-                        Get Detailed Analysis
-                    </a>
                 </div>
             `;
 
@@ -2001,7 +1998,7 @@
                     scales: {
                         r: {
                             beginAtZero: true,
-                            max: 4,
+                            max: 5,
                             ticks: {
                                 stepSize: 1
                             }
@@ -2057,7 +2054,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 4,
+                            max: 5,
                             ticks: {
                                 stepSize: 1
                             }
