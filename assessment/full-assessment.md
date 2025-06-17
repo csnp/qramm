@@ -812,9 +812,9 @@ For each question, select the option that best describes your organization's cur
 
 ---
 
-**Question: **How is cryptographic dependency information used to inform migration planning and operational risk management?
+**Question**:How is cryptographic dependency information used to inform migration planning and operational risk management?
 
-**Explanation: **This assesses whether your organization uses knowledge of cryptographic interdependencies—such as shared certificates, protocol chains, or API relationships—to guide transition sequencing, prevent cascading failures, and prioritize mitigation efforts.
+**Explanation**:This assesses whether your organization uses knowledge of cryptographic interdependencies—such as shared certificates, protocol chains, or API relationships—to guide transition sequencing, prevent cascading failures, and prioritize mitigation efforts.
 
 **Options**:
 
@@ -900,9 +900,9 @@ For each question, select the option that best describes your organization's cur
 
 ---
 
-**Question: **How are cryptographic dependencies evaluated for architectural complexity and transition fragility?
+**Question**:How are cryptographic dependencies evaluated for architectural complexity and transition fragility?
 
-**Explanation: **This assesses whether your organization evaluates how tightly coupled cryptographic components are across systems, and how susceptible the architecture is to cascading failures or upgrade bottlenecks during quantum-safe transitions.
+**Explanation**:This assesses whether your organization evaluates how tightly coupled cryptographic components are across systems, and how susceptible the architecture is to cascading failures or upgrade bottlenecks during quantum-safe transitions.
 
 **Options**:
 
@@ -954,7 +954,6 @@ For each question, select the option that best describes your organization's cur
 - Security controls in pipelines enforcing approved cryptographic algorithms for code signing and deployment
 
 - Automated tooling output showing real-time tracking or alerts on cryptographic changes in builds or dependencies
-
 
 - ---
 
@@ -1122,7 +1121,7 @@ For each question, select the option that best describes your organization's cur
 
 ---
 
-**Question: **How is quantum risk integrated into organizational strategy and long-term planning?
+**Question**:How is quantum risk integrated into organizational strategy and long-term planning?
 
 **Explanation:** This assesses how quantum computing risks and opportunities are embedded in strategic decision-making across business functions, including their inclusion in long-term roadmaps, corporate risk frameworks, and transformation initiatives beyond just security governance.
 
@@ -1152,9 +1151,9 @@ For each question, select the option that best describes your organization's cur
 
 ---
 
-**Question: **How are quantum security policies reviewed and maintained over time?
+**Question**:How are quantum security policies reviewed and maintained over time?
 
-**Explanation: **This assesses your organization's ability to ensure quantum-related policies remain current, accurate, and actionable as threats evolve and mitigation strategies advance.
+**Explanation**:This assesses your organization's ability to ensure quantum-related policies remain current, accurate, and actionable as threats evolve and mitigation strategies advance.
 
 **Options**:
 
@@ -3783,34 +3782,6 @@ Fallback mechanisms for ensuring operational continuity
 Algorithm selection frameworks based on system requirements
 
 Testing methodologies for cryptographic transitions
-
-# Alternate Questions
-
-**Question:** How does your organization manage protection requirements for code signing and software supply chain integrity?
-
-**Explanation:** This examines how your organization ensures that post-quantum cryptographic protections are applied to code-signing mechanisms, firmware update systems, and supply chain delivery processes. 
-
-**Options:**
-
-No protection controls exist for code signing or update mechanisms
-
-Basic signing processes are in place, but not quantum-resistant
-
-Structured controls applied to code signing and package validation systems with PQC or hybrid algorithms
-
-Automated enforcement of quantum-safe signing across software supply chains, including rollback protections and key agility
-
-**Evidence to Look For:**
-
-Inventory of code-signing mechanisms and associated keys, including signing tools, firmware pipelines, and CI/CD integration
-
-Documentation of post-quantum or hybrid signing algorithms used in production software and third-party packages
-
-Use of integrity verification systems that support short-lived or agile certificate updates
-
-Integration of PQC enforcement into build systems, developer workflows, or software distribution platforms
-
-
 
 ---
 
