@@ -307,4 +307,4 @@ QRAMM is released under the **MIT License**, providing:
 *QRAMM™ is a trademark of CyberSecurity NonProfit (CSNP)*  
 *© 2025 CSNP. All rights reserved.*
 
-</div>
+</div># Cache refresh trigger
