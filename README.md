@@ -5,11 +5,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/csnp/qramm.svg)](https://github.com/csnp/qramm/stargazers)
 [![NIST Aligned](https://img.shields.io/badge/NIST-Aligned-green.svg)](https://csrc.nist.gov/projects/post-quantum-cryptography)
-[![Enterprise Ready](https://img.shields.io/badge/Enterprise-Ready-purple.svg)](https://csnp.github.io/qramm)
+[![Enterprise Ready](https://img.shields.io/badge/Enterprise-Ready-purple.svg)](https://qramm.org)
 
 **The Industry-Leading Open Source Framework for Organizational Quantum Readiness**
 
-[**Visit Website**](https://csnp.github.io/qramm) | [**View Framework**](https://csnp.github.io/qramm/framework.html) | [**Download Templates**](https://github.com/csnp/qramm/tree/main/templates)
+[**Visit Website**](https://qramm.org) | [**View Framework**](https://qramm.org/framework.html) | [**Download Templates**](https://github.com/csnp/qramm/tree/main/templates)
 
 </div>
 
@@ -206,7 +206,7 @@ CSNP is developing a comprehensive Excel-based assessment toolkit featuring auto
 
 ### 1. Quick Assessment (Recommended First Step)
 **Time**: 15-20 minutes  
-**Link**: [https://csnp.github.io/qramm](https://csnp.github.io/qramm)  
+**Link**: [https://qramm.org](https://qramm.org)  
 **Output**: Instant maturity score, radar charts, priority recommendations
 
 ### 2. Download Resources
@@ -238,7 +238,7 @@ For questions about QRAMM implementation or framework guidance, contact: [qramm@
 
 ### Leadership Team
 
-**Emily Stamm** - *Author*  
+**Emily (Stamm) Fane** - *Author*  
 VP of CSNP Board  
 [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
 
@@ -270,10 +270,10 @@ QRAMM is released under the **MIT License**, providing:
 ```bibtex
 @software{qramm2025,
   title = {QRAMM: Quantum Readiness Assurance Maturity Model},
-  author = {Stamm, Emily and Fane, Abdel Sy},
+  author = {Fane, Emily and Fane, Abdel Sy},
   organization = {CyberSecurity NonProfit (CSNP)},
   year = {2025},
-  url = {https://github.com/csnp/qramm}
+  url = {https://qramm.org}
 }
 ```
 
@@ -297,7 +297,7 @@ QRAMM is released under the **MIT License**, providing:
 
 ### 🚀 **Start Your Quantum Readiness Journey Today**
 
-1. **[Take the Assessment](https://csnp.github.io/qramm)** - Get your baseline score in minutes
+1. **[Take the Assessment](https://qramm.org)** - Get your baseline score in minutes
 2. **[Download Templates](https://github.com/csnp/qramm/tree/main/templates)** - Accelerate implementation
 
 **The quantum threat is approaching. Organizations that act now will thrive in the post-quantum era.**

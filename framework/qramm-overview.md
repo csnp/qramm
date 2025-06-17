@@ -291,7 +291,7 @@ Regular framework updates incorporate:
 ### Contact and Support
 
 **Framework Authors:**
-- **Emily Stamm** - Strategic Planning & Executive Engagement: [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
+- **Emily Chen** - Strategic Planning & Executive Engagement: [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
 - **Abdel Sy Fane** - Technical Implementation & Risk Assessment: [LinkedIn](https://www.linkedin.com/in/abdelsyfane/)
 
 **General Inquiries:** qramm@csnp.org
@@ -323,6 +323,6 @@ The framework's open-source nature, combined with professional support options, 
 
 **Document Version**: 1.0  
 **Last Updated**: May 30, 2025  
-**Authors**: Emily Stamm, Abdel Sy Fane  
+**Authors**: Emily Chen, Abdel Sy Fane  
 **Organization**: CyberSecurity NonProfit (CSNP)  
 **Framework**: Quantum-Ready Assessment & Maturity Model (QRAMM)

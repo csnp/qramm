@@ -267,4 +267,4 @@ _(Attach supporting research and data)_
 
 ---
 
-*This report template is part of the QRAMM (Quantum Readiness Assurance Maturity Model) framework. For more information, visit https://csnp.github.io/qramm*
+*This report template is part of the QRAMM (Quantum Readiness Assurance Maturity Model) framework. For more information, visit https://qramm.org*

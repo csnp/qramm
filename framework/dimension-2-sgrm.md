@@ -565,6 +565,6 @@ Strong governance and risk management capabilities are essential for coordinatin
 
 **Document Version**: 1.0  
 **Last Updated**: May 30, 2025  
-**Authors**: Emily Stamm, Abdel Sy Fane  
+**Authors**: Emily Chen, Abdel Sy Fane  
 **Organization**: CyberSecurity NonProfit (CSNP)  
 **Framework**: Quantum-Ready Assessment & Maturity Model (QRAMM)
