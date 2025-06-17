@@ -243,4 +243,4 @@ _________________________________________________
 
 ---
 
-*This template is part of the QRAMM (Quantum Readiness Assurance Maturity Model) framework. For more information, visit https://csnp.github.io/qramm*
+*This template is part of the QRAMM (Quantum Readiness Assurance Maturity Model) framework. For more information, visit https://qramm.org*

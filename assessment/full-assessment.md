@@ -3824,8 +3824,8 @@ The QRAMM assessment uses a 5-point scale where:
 
 ## Assessment Completion
 
-This complete 120-question assessment provides comprehensive evaluation across all quantum readiness dimensions. For additional implementation guidance, please visit [https://csnp.github.io/qramm](https://csnp.github.io/qramm) or contact [qramm@csnp.org](mailto:qramm@csnp.org).
+This complete 120-question assessment provides comprehensive evaluation across all quantum readiness dimensions. For additional implementation guidance, please visit [https://qramm.org](https://qramm.org) or contact [qramm@csnp.org](mailto:qramm@csnp.org).
 
 ---
 
-*This assessment is part of the QRAMM (Quantum Readiness Assurance Maturity Model) framework. For more information, visit https://csnp.github.io/qramm*
+*This assessment is part of the QRAMM (Quantum Readiness Assurance Maturity Model) framework. For more information, visit https://qramm.org*

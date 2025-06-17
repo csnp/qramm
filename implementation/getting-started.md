@@ -12,7 +12,7 @@ This guide provides step-by-step instructions for implementing the Quantum-Ready
 **Purpose**: Quick organizational baseline and priority identification
 
 **Take the QRAMM Quick Assessment:**
-- Visit: [https://csnp.github.io/qramm](https://csnp.github.io/qramm)
+- Visit: [https://qramm.org](https://qramm.org)
 - Complete 12 questions covering all four dimensions
 - Receive immediate results with prioritized recommendations
 - Use results to plan comprehensive implementation
@@ -32,7 +32,7 @@ This guide provides step-by-step instructions for implementing the Quantum-Ready
 **Purpose**: Expert-guided implementation with customization
 
 **Contact QRAMM Authors:**
-- **Emily Stamm** - Strategic Planning: [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
+- **Emily Chen** - Strategic Planning: [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
 - **Abdel Sy Fane** - Technical Implementation: [LinkedIn](https://www.linkedin.com/in/abdelsyfane/)
 - **General Inquiries**: qramm@csnp.org
 
@@ -510,7 +510,7 @@ This guide provides step-by-step instructions for implementing the Quantum-Ready
 
 ### QRAMM Framework Authors
 
-**Emily Stamm - Strategic Planning & Executive Engagement**
+**Emily Chen - Strategic Planning & Executive Engagement**
 - Executive education and awareness programs
 - Strategic roadmap development and business case creation
 - Governance structure design and implementation
@@ -524,7 +524,7 @@ This guide provides step-by-step instructions for implementing the Quantum-Ready
 
 **Contact Information:**
 - **Professional Inquiries**: qramm@csnp.org
-- **Emily Stamm LinkedIn**: [https://www.linkedin.com/in/emily-stamm/](https://www.linkedin.com/in/emily-stamm/)
+- **Emily Chen LinkedIn**: [https://www.linkedin.com/in/emily-stamm/](https://www.linkedin.com/in/emily-stamm/)
 - **Abdel Sy Fane LinkedIn**: [https://www.linkedin.com/in/abdelsyfane/](https://www.linkedin.com/in/abdelsyfane/)
 
 ### Service Offerings
@@ -585,6 +585,6 @@ Implementing QRAMM provides organizations with a systematic approach to building
 
 **Document Version**: 1.0  
 **Last Updated**: May 30, 2025  
-**Authors**: Emily Stamm, Abdel Sy Fane  
+**Authors**: Emily Chen, Abdel Sy Fane  
 **Organization**: CyberSecurity NonProfit (CSNP)  
 **Framework**: Quantum-Ready Assessment & Maturity Model (QRAMM)
