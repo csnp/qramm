@@ -564,6 +564,6 @@ Without strong capabilities in Dimension 1, organizations cannot effectively pla
 
 **Document Version**: 1.0  
 **Last Updated**: May 30, 2025  
-**Authors**: Emily Chen, Abdel Sy Fane  
+**Authors**: Emily (Stamm) Fane, Abdel Sy Fane  
 **Organization**: CyberSecurity NonProfit (CSNP)  
 **Framework**: Quantum-Ready Assessment & Maturity Model (QRAMM)

@@ -32,7 +32,7 @@ This guide provides step-by-step instructions for implementing the Quantum-Ready
 **Purpose**: Expert-guided implementation with customization
 
 **Contact QRAMM Authors:**
-- **Emily Chen** - Strategic Planning: [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
+- **Emily (Stamm) Fane** - Strategic Planning: [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
 - **Abdel Sy Fane** - Technical Implementation: [LinkedIn](https://www.linkedin.com/in/abdelsyfane/)
 - **General Inquiries**: qramm@csnp.org
 
@@ -510,7 +510,7 @@ This guide provides step-by-step instructions for implementing the Quantum-Ready
 
 ### QRAMM Framework Authors
 
-**Emily Chen - Strategic Planning & Executive Engagement**
+**Emily (Stamm) Fane - Strategic Planning & Executive Engagement**
 - Executive education and awareness programs
 - Strategic roadmap development and business case creation
 - Governance structure design and implementation
@@ -524,7 +524,7 @@ This guide provides step-by-step instructions for implementing the Quantum-Ready
 
 **Contact Information:**
 - **Professional Inquiries**: qramm@csnp.org
-- **Emily Chen LinkedIn**: [https://www.linkedin.com/in/emily-stamm/](https://www.linkedin.com/in/emily-stamm/)
+- **Emily (Stamm) Fane LinkedIn**: [https://www.linkedin.com/in/emily-stamm/](https://www.linkedin.com/in/emily-stamm/)
 - **Abdel Sy Fane LinkedIn**: [https://www.linkedin.com/in/abdelsyfane/](https://www.linkedin.com/in/abdelsyfane/)
 
 ### Service Offerings
@@ -585,6 +585,6 @@ Implementing QRAMM provides organizations with a systematic approach to building
 
 **Document Version**: 1.0  
 **Last Updated**: May 30, 2025  
-**Authors**: Emily Chen, Abdel Sy Fane  
+**Authors**: Emily (Stamm) Fane, Abdel Sy Fane  
 **Organization**: CyberSecurity NonProfit (CSNP)  
 **Framework**: Quantum-Ready Assessment & Maturity Model (QRAMM)
