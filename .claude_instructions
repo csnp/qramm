@@ -1,0 +1,8 @@
+# Claude Instructions
+
+## Git Commit Rules
+- NEVER add Claude as a co-author in git commits
+- NEVER include "Co-Authored-By: Claude <noreply@anthropic.com>" in commit messages
+- NEVER add any attribution to Claude or AI in commit messages
+- NEVER include "🤖 Generated with [Claude Code]" or similar AI attribution
+- Keep commit messages clean and professional without AI references
