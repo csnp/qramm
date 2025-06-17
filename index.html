@@ -260,9 +260,15 @@
 
         .dimensions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
             margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .dimensions-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .dimension-box {
@@ -342,8 +348,14 @@
 
         .stakeholder-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .stakeholder-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .stakeholder-card {
@@ -455,10 +467,16 @@
 
         .regulatory-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 2rem;
             max-width: 1000px;
             margin: 0 auto;
+        }
+        
+        @media (max-width: 768px) {
+            .regulatory-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .regulatory-card {
@@ -830,8 +848,20 @@
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
+        }
+        
+        @media (max-width: 992px) {
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .feature-card {
@@ -882,10 +912,16 @@
 
         .adoption-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
             max-width: 800px;
             margin: 0 auto;
+        }
+        
+        @media (max-width: 768px) {
+            .adoption-stats {
+                grid-template-columns: 1fr;
+            }
         }
 
         .stat-card {
