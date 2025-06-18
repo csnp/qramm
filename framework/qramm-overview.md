@@ -1,9 +1,9 @@
 # QRAMM Framework Overview
-**Quantum-Ready Assessment & Maturity Model**
+**Quantum Readiness Assurance Maturity Model**
 
 ## Executive Summary
 
-The Quantum-Ready Assessment & Maturity Model (QRAMM) is a comprehensive framework designed to evaluate and improve organizational readiness for the post-quantum cryptography transition. As quantum computing advances threaten current cryptographic standards, QRAMM provides organizations with a systematic approach to assess quantum risks, plan migrations, and implement quantum-safe security measures.
+The Quantum Readiness Assurance Maturity Model (QRAMM) is a comprehensive framework designed to evaluate and improve organizational readiness for the post-quantum cryptography transition. As quantum computing advances threaten current cryptographic standards, QRAMM provides organizations with a systematic approach to assess quantum risks, plan migrations, and implement quantum-safe security measures.
 
 ## Why QRAMM Matters
 
@@ -325,4 +325,4 @@ The framework's open-source nature, combined with professional support options, 
 **Last Updated**: May 30, 2025  
 **Authors**: Emily (Stamm) Fane, Abdel Sy Fane  
 **Organization**: CyberSecurity NonProfit (CSNP)  
-**Framework**: Quantum-Ready Assessment & Maturity Model (QRAMM)
+**Framework**: Quantum Readiness Assurance Maturity Model (QRAMM)

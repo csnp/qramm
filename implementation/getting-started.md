@@ -3,7 +3,7 @@
 
 ## Overview
 
-This guide provides step-by-step instructions for implementing the Quantum-Ready Assessment & Maturity Model (QRAMM) in your organization. Whether you're beginning your quantum readiness journey or looking to formalize existing efforts, this guide will help you establish a foundation for systematic quantum preparedness.
+This guide provides step-by-step instructions for implementing the Quantum Readiness Assurance Maturity Model (QRAMM) in your organization. Whether you're beginning your quantum readiness journey or looking to formalize existing efforts, this guide will help you establish a foundation for systematic quantum preparedness.
 
 ## Quick Start Options
 
@@ -587,4 +587,4 @@ Implementing QRAMM provides organizations with a systematic approach to building
 **Last Updated**: May 30, 2025  
 **Authors**: Emily (Stamm) Fane, Abdel Sy Fane  
 **Organization**: CyberSecurity NonProfit (CSNP)  
-**Framework**: Quantum-Ready Assessment & Maturity Model (QRAMM)
+**Framework**: Quantum Readiness Assurance Maturity Model (QRAMM)
