@@ -1,4 +1,4 @@
-# QRAMM™: Quantum Readiness Assurance Maturity Model
+# QRAMM: Quantum Readiness Assurance Maturity Model
 
 <div align="center">
 
@@ -17,7 +17,7 @@
 
 ## Executive Summary
 
-The **Quantum Readiness Assurance Maturity Model (QRAMM™)** is an evidence-based framework designed to help enterprises systematically prepare for the quantum computing threat to current cryptographic systems. Developed by cybersecurity experts at CyberSecurity NonProfit (CSNP), QRAMM provides the structured approach organizations need to:
+The **Quantum Readiness Assurance Maturity Model (QRAMM)** is an evidence-based framework designed to help enterprises systematically prepare for the quantum computing threat to current cryptographic systems. Developed by cybersecurity experts at CyberSecurity NonProfit (CSNP), QRAMM provides the structured approach organizations need to:
 
 - **Assess** current quantum vulnerability across all cryptographic assets
 - **Plan** strategic transition to quantum-safe cryptography
@@ -304,7 +304,7 @@ QRAMM is released under the **MIT License**, providing:
 
 ---
 
-*QRAMM™ is a trademark of CyberSecurity NonProfit (CSNP)*  
+*QRAMM is a trademark of CyberSecurity NonProfit (CSNP)*  
 *© 2025 CSNP. All rights reserved.*
 
 </div>
