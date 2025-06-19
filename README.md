@@ -232,7 +232,6 @@ For questions about QRAMM implementation or framework guidance, contact: [qramm@
 
 ### Community Resources
 - **GitHub Discussions**: [Join the conversation](https://github.com/csnp/qramm/discussions)
-- **Documentation**: [Complete guides](https://github.com/csnp/qramm)
 
 ## Framework Development
 
@@ -254,8 +253,6 @@ QRAMM is an open-source initiative welcoming contributions from:
 - Quantum researchers
 - Enterprise architects
 - Compliance specialists
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License & Usage
 
