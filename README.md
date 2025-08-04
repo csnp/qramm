@@ -200,7 +200,7 @@ Maturity Level = Derived from overall score thresholds
 
 ## 🚀 Coming Soon: QRAMM Assessment Toolkit
 
-CSNP is developing a comprehensive Excel-based assessment toolkit featuring automated scoring and scorecards. This toolkit will streamline your quantum readiness assessment process with instant calculations and professional reporting. Expected release: July 2025, following initial community feedback.
+CSNP is developing a comprehensive Excel-based assessment toolkit featuring automated scoring and scorecards. This toolkit will streamline your quantum readiness assessment process with instant calculations and professional reporting. Expected release: August 2025, following initial community feedback.
 
 ## Getting Started
 
