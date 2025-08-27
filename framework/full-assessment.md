@@ -307,6 +307,8 @@ For each question, select the option that best describes your organization's cur
 
 3. **Established**: IoT and embedded devices are systematically inventoried with crypto attributes (e.g., algorithm, key size), and included in quantum upgrade plans
 
+4. **Advanced**: Real-time automated discovery and monitoring of all IoT and embedded devices with complete cryptographic visibility
+
 **Evidence to Look For**:
 
 
