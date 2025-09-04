@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRAMM Assessment Toolkit - Compliance Mapping</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Calibri', Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Header */
+        .header {
+            background-color: #217346;
+            color: white;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        /* Main content */
+        .content {
+            padding: 20px;
+        }
+        
+        .main-title {
+            color: #1f4788;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        
+        /* Framework selector */
+        .framework-selector {
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .framework-selector label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .framework-selector select {
+            padding: 5px 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            background-color: white;
+            min-width: 200px;
+        }
+        
+        /* Section styling */
+        .section {
+            background-color: #e7f0ff;
+            border: 1px solid #b8d4ff;
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+        
+        .section-title {
+            background-color: #d9e2f3;
+            margin: -15px -15px 15px -15px;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #1f4788;
+        }
+        
+        /* Overview cards */
+        .overview-cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            text-align: center;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+        }
+        
+        .card-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .card-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .card-percent {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Colors for values */
+        .value-high { color: #70ad47; }
+        .value-medium { color: #ffa500; }
+        .value-low { color: #ff6b6b; }
+        
+        /* Progress bar for overall score */
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        /* Category progress bars */
+        .category-item {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 15px;
+        }
+        
+        .category-label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .category-bar-container {
+            position: relative;
+            background-color: #e0e0e0;
+            height: 25px;
+            border: 1px solid #ccc;
+        }
+        
+        .category-bar {
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            transition: width 0.3s ease;
+        }
+        
+        .category-percent {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 25px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        /* Data table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        .data-table th {
+            background-color: #4472c4;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #3056a0;
+        }
+        
+        .data-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        
+        .data-table tr:nth-child(even) td {
+            background-color: #f8f8f8;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        /* Gap priority styling */
+        .gap-low {
+            background-color: #c6efce;
+            color: #006100;
+            padding: 2px 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .gap-medium {
+            background-color: #ffeb9c;
+            color: #9c5700;
+            padding: 2px 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .gap-high {
+            background-color: #ffc7ce;
+            color: #9c0006;
+            padding: 2px 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        /* Show gaps checkbox */
+        .show-gaps {
+            float: right;
+            font-weight: normal;
+            font-size: 13px;
+        }
+        
+        .show-gaps input {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            QRAMM Assessment Toolkit - Compliance Mapping
+        </div>
+        
+        <div class="content">
+            <h1 class="main-title">QRAMM Compliance Mapping</h1>
+            
+            <div class="framework-selector">
+                <label>Select Framework:</label>
+                <select id="frameworkSelect" onchange="updateFramework()">
+                    <option value="nist_csf">NIST CSF 2.0</option>
+                    <option value="nist_pqc">NIST PQC</option>
+                    <option value="cmmc">CMMC 2.0</option>
+                    <option value="fisma">FISMA</option>
+                    <option value="fedramp">FedRAMP</option>
+                    <option value="iso">ISO 27001</option>
+                    <option value="soc2">SOC2</option>
+                    <option value="cis">CIS v8</option>
+                </select>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    COMPLIANCE OVERVIEW - <span id="frameworkName">NIST CSF 2.0</span>
+                </div>
+                
+                <div class="overview-cards">
+                    <div class="card">
+                        <div class="card-label">Overall Score</div>
+                        <div class="card-value value-medium" id="overallScore">73%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="overallProgress" style="background-color: #ffa500; width: 73%;"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Mapped Controls</div>
+                        <div class="card-value" id="mappedControls" style="color: #4472c4;">42/58</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Full Coverage</div>
+                        <div class="card-value value-high" id="fullCoverage">28</div>
+                        <div class="card-percent" id="fullPercent">(48%)</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Partial Coverage</div>
+                        <div class="card-value value-medium" id="partialCoverage">14</div>
+                        <div class="card-percent" id="partialPercent">(24%)</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">No Coverage</div>
+                        <div class="card-value value-low" id="noCoverage">16</div>
+                        <div class="card-percent" id="noPercent">(28%)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section" id="categorySection">
+                <div class="section-title">Framework Category Coverage</div>
+                
+                <div id="categoryBars">
+                    <!-- Category bars will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">
+                    DETAILED MAPPING
+                </div>
+                
+                <!-- Relevance Score Legend -->
+                <div style="background-color: #f0f8ff; border: 1px solid #4472c4; padding: 10px; margin-bottom: 15px; font-size: 12px;">
+                    <strong>Relevance Score Guide:</strong>
+                    <span style="margin-left: 20px;">1.0 = Direct Match (QRAMM directly satisfies control)</span>
+                    <span style="margin-left: 15px;">0.8 = Strong Match</span>
+                    <span style="margin-left: 15px;">0.6 = Moderate</span>
+                    <span style="margin-left: 15px;">0.4 = Related</span>
+                    <span style="margin-left: 15px;">0.2 = Minimal</span>
+                </div>
+                
+                <table class="data-table" id="mappingTable">
+                    <thead>
+                        <tr>
+                            <th>QRAMM Practice</th>
+                            <th>Framework Control</th>
+                            <th>Relevance <span style="color: #87CEEB; cursor: help;" title="1.0=Direct Match | 0.8=Strong Match | 0.6=Moderate | 0.4=Related | 0.2=Minimal">(?)</span></th>
+                            <th>Your Score</th>
+                            <th>Coverage</th>
+                            <th>Gap Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mappingBody">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+    
+    <script>
+        // Framework data
+        const frameworkData = {
+            nist_csf: {
+                name: 'NIST CSF 2.0',
+                overallScore: 73,
+                totalControls: 58,
+                mappedControls: 42,
+                fullCoverage: 28,
+                partialCoverage: 14,
+                noCoverage: 16,
+                categories: [
+                    { name: 'Identify (ID)', percent: 85 },
+                    { name: 'Protect (PR)', percent: 70 },
+                    { name: 'Detect (DE)', percent: 60 },
+                    { name: 'Respond (RS)', percent: 75 },
+                    { name: 'Recover (RC)', percent: 65 }
+                ],
+                mappings: [
+                    { practice: 'CVI.1.1 - Cryptographic Discovery', control: 'ID.AM-1', weight: 1.0, score: 75, priority: 'Low' },
+                    { practice: 'CVI.1.1 - Cryptographic Discovery', control: 'ID.AM-2', weight: 1.0, score: 75, priority: 'Low' },
+                    { practice: 'CVI.1.2 - Vulnerability Assessment', control: 'ID.RA-1', weight: 1.0, score: 60, priority: 'Medium' },
+                    { practice: 'CVI.1.2 - Vulnerability Assessment', control: 'ID.RA-3', weight: 1.0, score: 60, priority: 'Medium' },
+                    { practice: 'SGRM.2.1 - Executive Leadership', control: 'GV.OC-1', weight: 1.0, score: 40, priority: 'HIGH ⚠' },
+                    { practice: 'SGRM.2.1 - Executive Leadership', control: 'GV.OC-2', weight: 1.0, score: 40, priority: 'HIGH ⚠' }
+                ]
+            },
+            nist_pqc: {
+                name: 'NIST PQC',
+                overallScore: 65,
+                totalControls: 45,
+                mappedControls: 38,
+                fullCoverage: 22,
+                partialCoverage: 16,
+                noCoverage: 7,
+                categories: [
+                    { name: 'Algorithm Assessment', percent: 78 },
+                    { name: 'Migration Planning', percent: 62 },
+                    { name: 'Implementation', percent: 55 },
+                    { name: 'Validation', percent: 68 }
+                ],
+                mappings: [
+                    { practice: 'CVI.1.1 - Cryptographic Discovery', control: '1.1.1', weight: 1.0, score: 75, priority: 'Low' },
+                    { practice: 'CVI.1.2 - Vulnerability Assessment', control: '2.1.1', weight: 1.0, score: 60, priority: 'Medium' },
+                    { practice: 'CVI.1.3 - Dependency Mapping', control: '3.1.1', weight: 0.8, score: 55, priority: 'Medium' },
+                    { practice: 'DPE.3.1 - Data Classification', control: '5.1.1', weight: 1.0, score: 50, priority: 'HIGH ⚠' },
+                    { practice: 'ITR.4.1 - Infrastructure Assessment', control: '6.1.1', weight: 0.8, score: 45, priority: 'HIGH ⚠' }
+                ]
+            },
+            cmmc: {
+                name: 'CMMC 2.0',
+                overallScore: 78,
+                totalControls: 110,
+                mappedControls: 92,
+                fullCoverage: 65,
+                partialCoverage: 27,
+                noCoverage: 18,
+                categories: [
+                    { name: 'Access Control (AC)', percent: 82 },
+                    { name: 'Configuration Mgmt (CM)', percent: 75 },
+                    { name: 'Risk Assessment (RA)', percent: 70 },
+                    { name: 'System & Comm (SC)', percent: 78 },
+                    { name: 'Incident Response (IR)', percent: 85 }
+                ],
+                mappings: [
+                    { practice: 'CVI.1.1 - Cryptographic Discovery', control: 'AC.L1-3.1.1', weight: 0.8, score: 75, priority: 'Low' },
+                    { practice: 'CVI.1.1 - Cryptographic Discovery', control: 'CM.L2-3.4.1', weight: 1.0, score: 75, priority: 'Low' },
+                    { practice: 'CVI.1.2 - Vulnerability Assessment', control: 'RA.L2-3.11.2', weight: 1.0, score: 60, priority: 'Medium' },
+                    { practice: 'DPE.3.2 - Key Management', control: 'SC.L2-3.13.10', weight: 1.0, score: 55, priority: 'HIGH ⚠' },
+                    { practice: 'ITR.4.3 - Incident Response', control: 'IR.L2-3.6.1', weight: 1.0, score: 85, priority: 'Low' }
+                ]
+            },
+            iso: {
+                name: 'ISO 27001',
+                overallScore: 81,
+                totalControls: 93,
+                mappedControls: 87,
+                fullCoverage: 72,
+                partialCoverage: 15,
+                noCoverage: 6,
+                categories: [
+                    { name: 'A.5 Organizational', percent: 88 },
+                    { name: 'A.8 Asset Mgmt', percent: 85 },
+                    { name: 'A.9 Access Control', percent: 82 },
+                    { name: 'A.10 Cryptography', percent: 75 },
+                    { name: 'A.12 Operations', percent: 78 }
+                ],
+                mappings: [
+                    { practice: 'CVI.1.1 - Cryptographic Discovery', control: 'A.8.1.1', weight: 1.0, score: 75, priority: 'Low' },
+                    { practice: 'CVI.1.1 - Cryptographic Discovery', control: 'A.8.1.2', weight: 0.8, score: 75, priority: 'Low' },
+                    { practice: 'DPE.3.1 - Encryption Implementation', control: 'A.10.1.1', weight: 1.0, score: 65, priority: 'Medium' },
+                    { practice: 'DPE.3.2 - Key Management', control: 'A.10.1.2', weight: 1.0, score: 55, priority: 'HIGH ⚠' },
+                    { practice: 'SGRM.2.1 - Executive Leadership', control: 'A.5.1.1', weight: 1.0, score: 40, priority: 'HIGH ⚠' }
+                ]
+            }
+        };
+        
+        // Set default data for other frameworks
+        ['fisma', 'fedramp', 'soc2', 'cis'].forEach(fw => {
+            frameworkData[fw] = {
+                ...frameworkData.nist_csf,
+                name: fw.toUpperCase(),
+                overallScore: Math.floor(Math.random() * 20) + 65
+            };
+        });
+        
+        function updateFramework() {
+            const select = document.getElementById('frameworkSelect');
+            const framework = frameworkData[select.value];
+            
+            // Update title
+            document.getElementById('frameworkName').textContent = framework.name;
+            
+            // Update overview cards
+            document.getElementById('overallScore').textContent = framework.overallScore + '%';
+            document.getElementById('overallProgress').style.width = framework.overallScore + '%';
+            
+            // Update score color
+            const scoreElement = document.getElementById('overallScore');
+            const progressElement = document.getElementById('overallProgress');
+            if (framework.overallScore >= 80) {
+                scoreElement.className = 'card-value value-high';
+                progressElement.style.backgroundColor = '#70ad47';
+            } else if (framework.overallScore >= 60) {
+                scoreElement.className = 'card-value value-medium';
+                progressElement.style.backgroundColor = '#ffa500';
+            } else {
+                scoreElement.className = 'card-value value-low';
+                progressElement.style.backgroundColor = '#ff6b6b';
+            }
+            
+            document.getElementById('mappedControls').textContent = `${framework.mappedControls}/${framework.totalControls}`;
+            document.getElementById('fullCoverage').textContent = framework.fullCoverage;
+            document.getElementById('fullPercent').textContent = `(${Math.round(framework.fullCoverage / framework.totalControls * 100)}%)`;
+            document.getElementById('partialCoverage').textContent = framework.partialCoverage;
+            document.getElementById('partialPercent').textContent = `(${Math.round(framework.partialCoverage / framework.totalControls * 100)}%)`;
+            document.getElementById('noCoverage').textContent = framework.noCoverage;
+            document.getElementById('noPercent').textContent = `(${Math.round(framework.noCoverage / framework.totalControls * 100)}%)`;
+            
+            // Update category bars
+            updateCategoryBars(framework.categories);
+            
+            // Update mapping table
+            updateMappingTable(framework.mappings);
+        }
+        
+        function updateCategoryBars(categories) {
+            const container = document.getElementById('categoryBars');
+            container.innerHTML = '';
+            
+            categories.forEach(cat => {
+                const item = document.createElement('div');
+                item.className = 'category-item';
+                
+                let barColor = '#70ad47';
+                if (cat.percent < 80 && cat.percent >= 60) barColor = '#ffa500';
+                else if (cat.percent < 60) barColor = '#ff6b6b';
+                
+                item.innerHTML = `
+                    <div class="category-label">${cat.name}</div>
+                    <div class="category-bar-container">
+                        <div class="category-bar" style="width: ${cat.percent}%; background-color: ${barColor};"></div>
+                        <div class="category-percent">${cat.percent}%</div>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+        
+        function updateMappingTable(mappings) {
+            const tbody = document.getElementById('mappingBody');
+            tbody.innerHTML = '';
+            
+            mappings.forEach(mapping => {
+                const row = document.createElement('tr');
+                const coverage = mapping.weight * mapping.score;
+                
+                let priorityClass = 'gap-low';
+                if (mapping.priority.includes('HIGH')) priorityClass = 'gap-high';
+                else if (mapping.priority === 'Medium') priorityClass = 'gap-medium';
+                
+                row.innerHTML = `
+                    <td>${mapping.practice}</td>
+                    <td>${mapping.control}</td>
+                    <td class="text-center">${mapping.weight}</td>
+                    <td class="text-center">${mapping.score}%</td>
+                    <td class="text-center">${coverage}%</td>
+                    <td><div class="${priorityClass}">${mapping.priority}</div></td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        function filterTable() {
+            const showGapsOnly = document.getElementById('showGapsOnly').checked;
+            const rows = document.querySelectorAll('#mappingTable tbody tr');
+            
+            rows.forEach(row => {
+                const priority = row.cells[5].textContent;
+                if (showGapsOnly && priority.includes('Low')) {
+                    row.style.display = 'none';
+                } else {
+                    row.style.display = '';
+                }
+            });
+        }
+        
+        // Initialize with default framework
+        updateFramework();
+    </script>
+</body>
+</html>

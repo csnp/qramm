@@ -9,7 +9,7 @@
 
 **The Industry-Leading Open Source Framework for Organizational Quantum Readiness**
 
-[**Visit Website**](https://qramm.org) | [**View Framework**](https://qramm.org/framework.html) | [**Download Templates**](https://github.com/csnp/qramm/tree/main/templates)
+[**Visit Website**](https://qramm.org) | [**Toolkit Overview**](toolkit/toolkit-overview.md) | [**Download Toolkit**](toolkit/QRAMM_Assessment_Toolkit.xlsx) | [**Download Sample Toolkit**](toolkit/Sample_Assessment.xlsx) | [**Resources**](https://qramm.org/resources.html)
 
 </div>
 
@@ -198,9 +198,41 @@ Maturity Level = Derived from overall score thresholds
 - **Level 4 (Advanced)**: Score 3.6 - 3.9
 - **Level 5 (Optimizing)**: Score 4.0 (Perfect score demonstrating excellence)
 
-## 🚀 Coming Soon: QRAMM Assessment Toolkit
+## 🚀 QRAMM Assessment Toolkit Now Available!
 
-CSNP is developing a comprehensive Excel-based assessment toolkit featuring automated scoring and scorecards. This toolkit will streamline your quantum readiness assessment process with instant calculations and professional reporting. Expected release: August 2025, following initial community feedback.
+The comprehensive Excel-based QRAMM Assessment Toolkit is now available for download! This toolkit features:
+- **Automated Scoring**: Instant calculation of raw and weighted scores across all dimensions
+- **Dynamic Scorecards**: Professional visualizations including charts, graphs, and maturity distribution
+- **Organization Profile Multiplier**: Risk-adjusted scoring based on your industry and context
+- **Compliance Mapping**: Automatic mapping to 8 major frameworks (NIST, CMMC, ISO, etc.)
+- **120 Assessment Questions**: Complete coverage across 4 dimensions and 12 practices
+- **Executive Reporting**: Board-ready dashboards with benchmarking and recommendations
+
+[**Download the Toolkit**](toolkit/QRAMM_Assessment_Toolkit.xlsx) | [**View Sample Assessment**](toolkit/Sample_Assessment.xlsx) | [**Read Toolkit Overview**](toolkit/toolkit-overview.md)
+
+## 📊 Toolkit Visual Examples
+
+### Scorecard Dashboard
+<div align="center">
+  <img src="assets/toolkit-visuals/qramm-scorecard-dimension-summary.png" alt="QRAMM Scorecard Dimension Summary" width="800">
+  <p><em>Comprehensive scorecard showing dimension scores, weighted adjustments, and maturity visualization</em></p>
+</div>
+
+<div align="center">
+  <img src="assets/toolkit-visuals/qramm-scorecard-practice-level-heatmap.png" alt="QRAMM Practice Level Heatmap" width="800">
+  <p><em>Detailed practice-level analysis with maturity distribution and improvement recommendations</em></p>
+</div>
+
+### Compliance Mapping
+<div align="center">
+  <img src="assets/toolkit-visuals/qramm-compliance-mapping-nist-pqc.png" alt="NIST PQC Compliance Mapping" width="800">
+  <p><em>NIST Post-Quantum Cryptography framework mapping with coverage analysis</em></p>
+</div>
+
+<div align="center">
+  <img src="assets/toolkit-visuals/qramm-compliance-mapping-fedramp.png" alt="FedRAMP Compliance Mapping" width="800">
+  <p><em>FedRAMP compliance mapping showing 95% coverage across security controls</em></p>
+</div>
 
 ## Getting Started
 
@@ -241,7 +273,7 @@ For questions about QRAMM implementation or framework guidance, contact: [qramm@
 VP of CSNP Board  
 [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
 
-**Abdel Sy Fane** - *Co-Author*  
+**Abdel Fane** - *Co-Author*  
 Executive Director of CSNP  
 [LinkedIn](https://www.linkedin.com/in/abdelsyfane/)
 
@@ -267,7 +299,7 @@ QRAMM is released under the **MIT License**, providing:
 ```bibtex
 @software{qramm2025,
   title = {QRAMM: Quantum Readiness Assurance Maturity Model},
-  author = {Fane, Emily and Fane, Abdel Sy},
+  author = {Fane, Emily and Fane, Abdel},
   organization = {CyberSecurity NonProfit (CSNP)},
   year = {2025},
   url = {https://qramm.org}

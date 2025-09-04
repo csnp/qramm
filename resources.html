@@ -72,6 +72,44 @@
             color: #667eea;
         }
 
+        /* Dropdown Hint for Toolkit */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-hint {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+            white-space: nowrap;
+            margin-top: 5px;
+            z-index: 1001;
+        }
+
+        .dropdown:hover .dropdown-hint {
+            display: block;
+        }
+
+        .dropdown-hint::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 5px solid white;
+        }
+
         /* Main Content */
         .main-content {
             background: white;
@@ -321,9 +359,11 @@
         <nav class="nav container">
             <a href="index.html" class="logo">QRAMM</a>
             <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
+                <li class="dropdown">
+                    <a href="toolkit/QRAMM_Assessment_Toolkit.xlsx" download>Download Toolkit</a>
+                    <span class="dropdown-hint">See <a href="toolkit/Sample_Assessment.xlsx" style="color: #667eea; text-decoration: underline;">Sample Assessment</a> first</span>
+                </li>
                 <li><a href="index.html#assessment">Quick Assessment</a></li>
-                <li><a href="framework.html">Framework</a></li>
                 <li><a href="resources.html">Resources</a></li>
                 <li><a href="https://github.com/csnp/qramm" target="_blank">GitHub</a></li>
             </ul>
@@ -356,15 +396,9 @@
                     </div>
 
                     <div class="resource-card">
-                        <h3>Full QRAMM Assessment Guide</h3>
-                        <p>Comprehensive 120-question assessment with detailed evidence requirements and maturity level descriptions for thorough evaluation.</p>
-                        <a href="https://github.com/csnp/qramm/blob/main/assessment/full-assessment.md" target="_blank" class="resource-link">View Full Assessment →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>Framework Overview</h3>
-                        <p>Complete technical documentation of the QRAMM methodology, including dimensional integration and implementation guidance.</p>
-                        <a href="framework.html" class="resource-link">Explore Framework →</a>
+                        <h3>QRAMM Assessment Toolkit</h3>
+                        <p>Excel-based assessment with 120 questions, automated scoring, dynamic scorecards, and compliance mapping to 8 major frameworks.</p>
+                        <a href="toolkit/QRAMM_Assessment_Toolkit.xlsx" download class="resource-link">Download Assessment Toolkit →</a>
                     </div>
 
                     <div class="resource-card">
@@ -373,38 +407,14 @@
                         <a href="https://github.com/csnp/qramm/blob/main/implementation/getting-started.md" target="_blank" class="resource-link">Get Started →</a>
                     </div>
 
-                    <div class="resource-card" style="background: linear-gradient(135deg, #fff8e1, #ffecb3); border-left-color: #ff9800;">
-                        <h3>Coming Soon: QRAMM Assessment Toolkit</h3>
-                        <p>Excel-based assessment tool with automated scoring, professional scorecards, and instant calculations. Streamline your quantum readiness evaluation process.</p>
-                        <p style="font-weight: 600; color: #ff6f00; margin-top: 10px;">Expected Release: August 2025</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Educational Resources -->
-            <section class="resource-section">
-                <h2>Educational Resources</h2>
-                <p class="section-description">
-                    Deepen your understanding of post-quantum cryptography and quantum readiness with expert insights and executive briefings.
-                </p>
-                
-                <div class="resource-grid">
-                    <div class="resource-card">
-                        <h3>Post-Quantum Cryptography: Executive Briefing</h3>
-                        <p>Strategic overview of quantum computing threats and post-quantum cybersecurity strategies for organizational leaders. Essential reading for executives preparing for the quantum era.</p>
-                        <a href="https://www.csnp.org/post/post-quantum-cryptography-an-executive-briefing-on-securing-the-future-of-digital-communication" target="_blank" class="resource-link">Read Executive Briefing →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>Post-Quantum Cryptography Explained</h3>
-                        <p>Watch Emily (Stamm) Fane, Lead Cryptography Application Engineer at Niobium, explain quantum computing impacts on cryptographic systems and explore PQC solutions. Covers basics, real-world adoption, and organizational preparation strategies.</p>
-                        <a href="https://youtu.be/olfgCsxDZTg?si=Yjex966ciYHzbIZQ&t=279" target="_blank" class="resource-link">Watch Video →</a>
-                    </div>
-
-                    <div class="resource-card">
-                        <h3>Quantum Computing Timeline</h3>
-                        <p>Industry projections and expert analysis on when quantum computers will pose a real threat to current encryption methods.</p>
-                        <a href="index.html#timeline" class="resource-link">View Timeline →</a>
+                    <div class="resource-card" style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-left-color: #4caf50;">
+                        <h3>🎉 QRAMM Assessment Toolkit - Now Available!</h3>
+                        <p>The comprehensive Excel-based assessment toolkit is here! Features automated scoring, professional scorecards, compliance mapping to 8 frameworks, and instant calculations across all 120 questions. Streamline your quantum readiness evaluation with dynamic visualizations and executive reporting.</p>
+                        <p style="margin-top: 15px;">
+                            <a href="toolkit/QRAMM_Assessment_Toolkit.xlsx" style="background: #4caf50; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; margin-right: 10px;">Download Toolkit</a>
+                            <a href="toolkit/Sample_Assessment.xlsx" style="background: #2196f3; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; margin-right: 10px;">View Sample</a>
+                            <a href="toolkit/toolkit-overview.md" style="background: #9c27b0; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block;">Toolkit Overview</a>
+                        </p>
                     </div>
                 </div>
             </section>
@@ -447,6 +457,148 @@
                 </div>
             </section>
 
+            <!-- Toolkit Visual Examples -->
+            <section class="resource-section">
+                <h2>QRAMM Toolkit Visual Examples</h2>
+                <p class="section-description">
+                    Explore the comprehensive Excel-based QRAMM Assessment Toolkit with automated scoring, dynamic visualizations, and compliance mapping.
+                </p>
+                
+                <style>
+                    .toolkit-visual-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+                        gap: 2rem;
+                        margin-top: 3rem;
+                    }
+                    
+                    .visual-card {
+                        background: white;
+                        border-radius: 12px;
+                        overflow: hidden;
+                        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+                        transition: transform 0.3s ease, box-shadow 0.3s ease;
+                    }
+                    
+                    .visual-card:hover {
+                        transform: translateY(-5px);
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                    }
+                    
+                    .visual-card img {
+                        width: 100%;
+                        height: auto;
+                        display: block;
+                    }
+                    
+                    .visual-card-content {
+                        padding: 1.5rem;
+                    }
+                    
+                    .visual-card h3 {
+                        color: #333;
+                        font-size: 1.2rem;
+                        margin-bottom: 0.75rem;
+                    }
+                    
+                    .visual-card p {
+                        color: #666;
+                        font-size: 0.95rem;
+                        line-height: 1.6;
+                    }
+                    
+                    .visual-section-title {
+                        font-size: 1.5rem;
+                        color: #667eea;
+                        margin-top: 3rem;
+                        margin-bottom: 1.5rem;
+                        padding-left: 1rem;
+                        border-left: 4px solid #667eea;
+                    }
+                </style>
+                
+                <h3 class="visual-section-title">Scorecard Dashboard Views</h3>
+                <div class="toolkit-visual-grid">
+                    <div class="visual-card">
+                        <img src="assets/toolkit-visuals/qramm-scorecard-dimension-summary.png" alt="QRAMM Scorecard Dimension Summary">
+                        <div class="visual-card-content">
+                            <h3>Dimension Summary Dashboard</h3>
+                            <p>Comprehensive scorecard displaying all four dimension scores with both raw and weighted adjustments. Features spider chart visualization for at-a-glance maturity assessment and color-coded maturity levels for each dimension.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="visual-card">
+                        <img src="assets/toolkit-visuals/qramm-scorecard-practice-level-heatmap.png" alt="QRAMM Practice Level Heatmap">
+                        <div class="visual-card-content">
+                            <h3>Practice-Level Heatmap Analysis</h3>
+                            <p>Detailed breakdown showing all 12 practice areas with color-coded maturity levels. Includes maturity distribution charts, improvement recommendations, and granular scores for targeted enhancement planning.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="visual-section-title">Compliance Mapping Views</h3>
+                <div class="toolkit-visual-grid">
+                    <div class="visual-card">
+                        <img src="assets/toolkit-visuals/qramm-compliance-mapping-nist-pqc.png" alt="NIST PQC Compliance Mapping">
+                        <div class="visual-card-content">
+                            <h3>NIST Post-Quantum Cryptography Mapping</h3>
+                            <p>Automated mapping to NIST PQC framework requirements with coverage analysis. Shows how QRAMM dimensions align with NIST standards and identifies gaps in post-quantum cryptography readiness.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="visual-card">
+                        <img src="assets/toolkit-visuals/qramm-compliance-mapping-fedramp.png" alt="FedRAMP Compliance Mapping">
+                        <div class="visual-card-content">
+                            <h3>FedRAMP Security Control Mapping</h3>
+                            <p>Comprehensive FedRAMP compliance mapping showing 95% coverage across security control categories. Demonstrates how QRAMM practices support federal security authorization requirements.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="visual-card">
+                        <img src="assets/toolkit-visuals/qramm-compliance-mapping-nist-csf.png" alt="NIST Cybersecurity Framework Compliance Mapping">
+                        <div class="visual-card-content">
+                            <h3>NIST Cybersecurity Framework Mapping</h3>
+                            <p>Complete mapping to NIST CSF core functions (Identify, Protect, Detect, Respond, Recover) showing how QRAMM dimensions align with established cybersecurity practices and controls.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: #f0f7ff; padding: 2rem; border-radius: 12px; margin-top: 3rem; text-align: center;">
+                    <h3 style="color: #333; margin-bottom: 1rem;">Ready to Use the Full Toolkit?</h3>
+                    <p style="color: #666; margin-bottom: 1.5rem;">Download the complete Excel-based assessment toolkit with all these features and more.</p>
+                    <a href="toolkit/QRAMM_Assessment_Toolkit.xlsx" class="btn btn-primary" style="margin-right: 1rem;">Download Full Toolkit</a>
+                    <a href="toolkit/Sample_Assessment.xlsx" class="btn btn-white">View Sample Assessment</a>
+                </div>
+            </section>
+
+            <!-- Educational Resources -->
+            <section class="resource-section">
+                <h2>Educational Resources</h2>
+                <p class="section-description">
+                    Deepen your understanding of post-quantum cryptography and quantum readiness with expert insights and executive briefings.
+                </p>
+                
+                <div class="resource-grid">
+                    <div class="resource-card">
+                        <h3>Post-Quantum Cryptography: Executive Briefing</h3>
+                        <p>Strategic overview of quantum computing threats and post-quantum cybersecurity strategies for organizational leaders. Essential reading for executives preparing for the quantum era.</p>
+                        <a href="https://www.csnp.org/post/post-quantum-cryptography-an-executive-briefing-on-securing-the-future-of-digital-communication" target="_blank" class="resource-link">Read Executive Briefing →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Post-Quantum Cryptography Explained</h3>
+                        <p>Watch Emily (Stamm) Fane, Lead Cryptography Application Engineer at Niobium, explain quantum computing impacts on cryptographic systems and explore PQC solutions. Covers basics, real-world adoption, and organizational preparation strategies.</p>
+                        <a href="https://youtu.be/olfgCsxDZTg?si=Yjex966ciYHzbIZQ&t=279" target="_blank" class="resource-link">Watch Video →</a>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3>Quantum Computing Timeline</h3>
+                        <p>Industry projections and expert analysis on when quantum computers will pose a real threat to current encryption methods.</p>
+                        <a href="index.html#timeline" class="resource-link">View Timeline →</a>
+                    </div>
+                </div>
+            </section>
+
             <!-- Community & Support -->
             <section class="resource-section">
                 <h2>Community & Support</h2>
@@ -466,7 +618,7 @@
                         <p>Connect with the QRAMM framework development team for specialized guidance and collaboration opportunities.</p>
                         <div style="margin-top: 15px;">
                             <a href="https://www.linkedin.com/in/emily-stamm/" target="_blank" class="resource-link">Emily Fane - LinkedIn →</a><br>
-                            <a href="https://www.linkedin.com/in/abdelsyfane/" target="_blank" class="resource-link">Abdel Sy Fane - LinkedIn →</a>
+                            <a href="https://www.linkedin.com/in/abdelsyfane/" target="_blank" class="resource-link">Abdel Fane - LinkedIn →</a>
                         </div>
                     </div>
 

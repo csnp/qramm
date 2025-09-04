@@ -93,6 +93,44 @@
             width: 100%;
         }
 
+        /* Dropdown Hint for Toolkit */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-hint {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+            white-space: nowrap;
+            margin-top: 5px;
+            z-index: 1001;
+        }
+
+        .dropdown:hover .dropdown-hint {
+            display: block;
+        }
+
+        .dropdown-hint::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 5px solid white;
+        }
+
         /* Mobile Menu */
         .mobile-menu-toggle {
             display: none;
@@ -890,6 +928,118 @@
             line-height: 1.6;
         }
 
+        /* Toolkit Visual Showcase */
+        .toolkit-showcase {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .toolkit-showcase h2 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .showcase-subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+        }
+
+        .showcase-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .tab-button {
+            padding: 12px 30px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+
+        .tab-button:hover:not(.active) {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .showcase-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .showcase-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .showcase-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .showcase-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .showcase-item h3 {
+            padding: 1rem 1.5rem 0.5rem;
+            color: #333;
+            font-size: 1.3rem;
+        }
+
+        .showcase-item p {
+            padding: 0 1.5rem 1.5rem;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .showcase-cta {
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .showcase-cta .btn {
+            margin: 0 0.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .showcase-images {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Industry Adoption Section */
         .industry-adoption {
             padding: 80px 0;
@@ -1138,9 +1288,11 @@
         <nav class="nav container">
             <a href="#home" class="logo">QRAMM</a>
             <ul class="nav-links" id="navLinks">
-                <li><a href="#home">Home</a></li>
+                <li class="dropdown">
+                    <a href="toolkit/QRAMM_Assessment_Toolkit.xlsx" download>Download Toolkit</a>
+                    <span class="dropdown-hint">See <a href="toolkit/Sample_Assessment.xlsx" style="color: #667eea; text-decoration: underline;">Sample Assessment</a> first</span>
+                </li>
                 <li><a href="#assessment">Quick Assessment</a></li>
-                <li><a href="./framework.html">Framework</a></li>
                 <li><a href="./resources.html">Resources</a></li>
                 <li><a href="https://github.com/csnp/qramm" target="_blank">GitHub</a></li>
             </ul>
@@ -1172,8 +1324,8 @@
                 <a href="#assessment" class="btn btn-primary btn-large">
                     Start Quick Assessment
                 </a>
-                <a href="#framework-overview" class="btn btn-secondary btn-large">
-                    Explore Framework
+                <a href="toolkit/Sample_Assessment.xlsx" download class="btn btn-secondary btn-large">
+                    Download Sample Assessment
                 </a>
             </div>
         </div>
@@ -1361,6 +1513,59 @@
             </div>
         </section>
 
+        <!-- Toolkit Visual Showcase -->
+        <section class="toolkit-showcase">
+            <div class="container">
+                <h2>See the QRAMM Toolkit in Action</h2>
+                <p class="showcase-subtitle">Professional scorecards and compliance mapping built into Excel</p>
+                
+                <div class="showcase-tabs">
+                    <button class="tab-button active" onclick="showTab('scorecard')">Scorecard Dashboard</button>
+                    <button class="tab-button" onclick="showTab('compliance')">Compliance Mapping</button>
+                </div>
+                
+                <div id="scorecard" class="tab-content active">
+                    <div class="showcase-images">
+                        <div class="showcase-item">
+                            <img src="assets/toolkit-visuals/qramm-scorecard-dimension-summary.png" alt="QRAMM Scorecard Dimension Summary" loading="lazy">
+                            <h3>Dimension-Level Analysis</h3>
+                            <p>View raw and weighted scores across all four dimensions with industry benchmarking and spider chart visualization</p>
+                        </div>
+                        <div class="showcase-item">
+                            <img src="assets/toolkit-visuals/qramm-scorecard-practice-level-heatmap.png" alt="QRAMM Practice Level Heatmap" loading="lazy">
+                            <h3>Practice-Level Heatmap</h3>
+                            <p>Detailed breakdown of all 12 practices with color-coded maturity levels and targeted improvement recommendations</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="compliance" class="tab-content">
+                    <div class="showcase-images">
+                        <div class="showcase-item">
+                            <img src="assets/toolkit-visuals/qramm-compliance-mapping-nist-pqc.png" alt="NIST PQC Compliance Mapping" loading="lazy">
+                            <h3>NIST PQC Mapping</h3>
+                            <p>Automated mapping to NIST Post-Quantum Cryptography standards with detailed control coverage analysis</p>
+                        </div>
+                        <div class="showcase-item">
+                            <img src="assets/toolkit-visuals/qramm-compliance-mapping-fedramp.png" alt="FedRAMP Compliance Mapping" loading="lazy">
+                            <h3>FedRAMP Alignment</h3>
+                            <p>Comprehensive FedRAMP control mapping showing 95%+ coverage across security categories</p>
+                        </div>
+                        <div class="showcase-item">
+                            <img src="assets/toolkit-visuals/qramm-compliance-mapping-nist-csf.png" alt="NIST CSF Compliance Mapping" loading="lazy">
+                            <h3>NIST CSF Mapping</h3>
+                            <p>Complete alignment with NIST Cybersecurity Framework core functions for holistic security</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="showcase-cta">
+                    <a href="toolkit/QRAMM_Assessment_Toolkit.xlsx" class="btn btn-primary" download>Download Full Toolkit</a>
+                    <a href="toolkit/Sample_Assessment.xlsx" class="btn btn-secondary" download>View Sample Assessment</a>
+                </div>
+            </div>
+        </section>
+
         <!-- Implementation Roadmap -->
         <section class="roadmap-section">
             <div class="container">
@@ -1540,7 +1745,7 @@
                     <h3>Framework Authors</h3>
                     <p style="color: #ccc; margin-bottom: 1rem;">CyberSecurity NonProfit (CSNP)</p>
                     <a href="https://www.linkedin.com/in/emily-stamm/" target="_blank">Emily Fane - LinkedIn</a>
-                    <a href="https://www.linkedin.com/in/abdelsyfane/" target="_blank">Abdel Sy Fane - LinkedIn</a>
+                    <a href="https://www.linkedin.com/in/abdelsyfane/" target="_blank">Abdel Fane - LinkedIn</a>
                     <a href="https://csnp.org" target="_blank">CSNP.org</a>
                 </div>
                 <div class="footer-section">
