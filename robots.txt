@@ -1,0 +1,39 @@
+# Robots.txt for QRAMM.org
+# Last updated: 2025-09-04
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Optimize crawl efficiency
+Crawl-delay: 1
+
+# Block access to internal directories (if any)
+Disallow: /admin/
+Disallow: /temp/
+Disallow: /private/
+
+# Point to sitemap
+Sitemap: https://qramm.org/sitemap.xml
+
+# Specific bot instructions
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
