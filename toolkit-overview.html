@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRAMM Toolkit Overview - Quantum Readiness Assessment Features</title>
+    <meta name="description" content="Comprehensive guide to the QRAMM Assessment Toolkit features, scoring methodology, and compliance capabilities">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 20px;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            opacity: 0.95;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-hero {
+            padding: 12px 28px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-hero-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-hero-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        /* Content Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 60px;
+        }
+
+        .section h2 {
+            font-size: 2.2rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .section h3 {
+            font-size: 1.5rem;
+            color: #444;
+            margin: 2rem 0 1rem;
+        }
+
+        .section p {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* Scoring Table */
+        .scoring-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            margin: 2rem 0;
+        }
+
+        .scoring-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .scoring-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .scoring-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .scoring-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Visual Examples */
+        .visual-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .visual-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .visual-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .visual-card-content {
+            padding: 1.5rem;
+        }
+
+        .visual-card h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .visual-card p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Compliance Grid */
+        .compliance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .compliance-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .compliance-item h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .compliance-item p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Call to Action */
+        .cta-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 20px;
+            margin: 60px 0;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            border: none;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        /* Footer */
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .visual-examples {
+                grid-template-columns: 1fr;
+            }
+
+            .scoring-table {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="index.html" class="logo">QRAMM</a>
+            <div class="nav-links">
+                <a href="index.html#assessment">Quick Assessment</a>
+                <a href="resources.html">Resources</a>
+                <a href="https://github.com/csnp/qramm" target="_blank">GitHub</a>
+                <a href="toolkit/QRAMM_Assessment_Toolkit.xlsx" class="btn-primary" download>Download Toolkit</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>QRAMM Assessment Toolkit</h1>
+        <p>Comprehensive Excel-based tool for evaluating organizational quantum readiness across 120 questions with automated scoring, dynamic visualizations, and compliance mapping to 8 major frameworks</p>
+        <div class="hero-buttons">
+            <a href="toolkit/QRAMM_Assessment_Toolkit.xlsx" download class="btn-hero btn-hero-primary">Download Full Toolkit</a>
+            <a href="toolkit/Sample_Assessment.xlsx" download class="btn-hero btn-hero-secondary">View Sample Assessment</a>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Overview Section -->
+        <section class="section">
+            <h2>Toolkit Overview</h2>
+            <p>The QRAMM Assessment Toolkit is a professional Excel-based tool designed to help organizations systematically evaluate their quantum computing readiness and cryptographic security posture. Developed by cybersecurity experts at CyberSecurity NonProfit (CSNP), this toolkit transforms complex quantum readiness assessment into a structured, measurable process.</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h4>120 Assessment Questions</h4>
+                    <p>Comprehensive evaluation across 4 dimensions and 12 practice areas with evidence-based scoring</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h4>Automated Scoring</h4>
+                    <p>Instant calculation of raw and weighted scores with risk-adjusted multipliers</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h4>Dynamic Visualizations</h4>
+                    <p>Professional charts, spider diagrams, and maturity heatmaps for executive reporting</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h4>Compliance Mapping</h4>
+                    <p>Automatic alignment with NIST PQC, FedRAMP, ISO 27001, and 5 other frameworks</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Framework Structure -->
+        <section class="section">
+            <h2>Framework Structure</h2>
+            <p>QRAMM evaluates quantum readiness across four critical dimensions, each containing three specialized practice areas:</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h4>Cryptographic Visibility & Inventory (CVI)</h4>
+                    <p>Discovery and cataloging of all cryptographic assets, vulnerability assessment, and dependency mapping across the enterprise</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚖️</div>
+                    <h4>Strategic Governance & Risk Management (SGRM)</h4>
+                    <p>Executive leadership commitment, policy frameworks, risk assessment, and third-party supply chain management</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h4>Data Protection Engineering (DPE)</h4>
+                    <p>Technical implementation of quantum-safe encryption for data at rest, in transit, and in use</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <h4>Implementation & Technical Readiness (ITR)</h4>
+                    <p>Infrastructure assessment, integration planning, and operational readiness for quantum-safe technologies</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scoring System -->
+        <section class="section">
+            <h2>Scoring Methodology</h2>
+            <p>The toolkit uses a sophisticated dual-scoring system that provides both raw capability assessment and risk-adjusted weighted scores:</p>
+            
+            <h3>Maturity Levels</h3>
+            <div class="scoring-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Level</th>
+                            <th>Name</th>
+                            <th>Score Range</th>
+                            <th>Characteristics</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1</strong></td>
+                            <td><strong>Basic</strong></td>
+                            <td>1.0 - 1.5</td>
+                            <td>Initial awareness, ad-hoc practices, limited quantum threat understanding</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2</strong></td>
+                            <td><strong>Developing</strong></td>
+                            <td>1.6 - 2.5</td>
+                            <td>Structured approaches emerging, initial assessments begun</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3</strong></td>
+                            <td><strong>Established</strong></td>
+                            <td>2.6 - 3.5</td>
+                            <td>Systematic practices, organization-wide implementation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4</strong></td>
+                            <td><strong>Advanced</strong></td>
+                            <td>3.6 - 3.9</td>
+                            <td>Optimized processes, continuous improvement, industry leadership</td>
+                        </tr>
+                        <tr>
+                            <td><strong>5</strong></td>
+                            <td><strong>Optimizing</strong></td>
+                            <td>4.0</td>
+                            <td>Perfect score demonstrating excellence and innovation</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Profile Multiplier System</h3>
+            <p>Your organization's unique context is captured through a profile multiplier (0.8-1.5x) that adjusts raw scores based on industry requirements, regulatory obligations, organizational scale, data sensitivity, and technology complexity. High-risk organizations (healthcare, finance, government) may see weighted scores exceeding 4.0, reflecting their need for higher quantum readiness standards.</p>
+        </section>
+
+        <!-- Scorecard Features -->
+        <section class="section">
+            <h2>Scorecard Dashboard</h2>
+            <p>The Scorecard tab provides comprehensive visualization and analysis of your assessment results:</p>
+            
+            <div class="tabs">
+                <button class="tab-button active" onclick="showTab('scorecard')">Scorecard Features</button>
+                <button class="tab-button" onclick="showTab('visualizations')">Visual Analytics</button>
+            </div>
+
+            <div id="scorecard" class="tab-content active">
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>Overall QRAMM Score</h4>
+                        <p>Combined maturity score across all dimensions with weighted adjustments</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Dimension Analysis</h4>
+                        <p>Individual scores for CVI, SGRM, DPE, and ITR with maturity levels</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Practice Heatmap</h4>
+                        <p>Color-coded visualization of all 12 practice areas for quick gap identification</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Progress Tracking</h4>
+                        <p>Assessment completion status and timeline for quantum threat relevance</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Industry Benchmarking</h4>
+                        <p>Comparison against sector-specific quantum readiness standards</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>Dynamic Recommendations</h4>
+                        <p>Context-specific improvement guidance based on your unique profile</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="visualizations" class="tab-content">
+                <div class="visual-examples">
+                    <div class="visual-card">
+                        <img src="assets/toolkit-visuals/qramm-scorecard-dimension-summary.png" alt="Dimension Summary">
+                        <div class="visual-card-content">
+                            <h4>Dimension Summary Dashboard</h4>
+                            <p>Comprehensive scorecard with spider chart visualization showing raw and weighted scores across all four dimensions</p>
+                        </div>
+                    </div>
+                    <div class="visual-card">
+                        <img src="assets/toolkit-visuals/qramm-scorecard-practice-level-heatmap.png" alt="Practice Heatmap">
+                        <div class="visual-card-content">
+                            <h4>Practice-Level Heatmap</h4>
+                            <p>Detailed breakdown of all 12 practices with color-coded maturity levels and improvement priorities</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Compliance Mapping -->
+        <section class="section">
+            <h2>Compliance Mapping</h2>
+            <p>The toolkit automatically maps your assessment responses to 8 major compliance frameworks, providing coverage analysis and gap identification:</p>
+            
+            <div class="compliance-grid">
+                <div class="compliance-item">
+                    <h4>NIST PQC Standards</h4>
+                    <p>Alignment with NIST post-quantum cryptography algorithms and migration guidance</p>
+                </div>
+                <div class="compliance-item">
+                    <h4>NSM 10 Requirements</h4>
+                    <p>U.S. National Security Memorandum quantum readiness mandates</p>
+                </div>
+                <div class="compliance-item">
+                    <h4>CNSA 2.0 Guidelines</h4>
+                    <p>NSA Commercial National Security Algorithm Suite specifications</p>
+                </div>
+                <div class="compliance-item">
+                    <h4>ISO/IEC 27001:2022</h4>
+                    <p>Information security management with quantum considerations</p>
+                </div>
+                <div class="compliance-item">
+                    <h4>FedRAMP Controls</h4>
+                    <p>Federal Risk and Authorization Management Program requirements</p>
+                </div>
+                <div class="compliance-item">
+                    <h4>NIST CSF</h4>
+                    <p>Cybersecurity Framework core functions and quantum readiness</p>
+                </div>
+                <div class="compliance-item">
+                    <h4>CMMC Standards</h4>
+                    <p>Cybersecurity Maturity Model Certification alignment</p>
+                </div>
+                <div class="compliance-item">
+                    <h4>PCI DSS v4.0</h4>
+                    <p>Payment Card Industry cryptographic requirements</p>
+                </div>
+            </div>
+
+            <div class="visual-examples" style="margin-top: 3rem;">
+                <div class="visual-card">
+                    <img src="assets/toolkit-visuals/qramm-compliance-mapping-nist-pqc.png" alt="NIST PQC Mapping">
+                    <div class="visual-card-content">
+                        <h4>NIST PQC Compliance Analysis</h4>
+                        <p>Detailed mapping showing alignment with NIST post-quantum cryptography standards</p>
+                    </div>
+                </div>
+                <div class="visual-card">
+                    <img src="assets/toolkit-visuals/qramm-compliance-mapping-fedramp.png" alt="FedRAMP Mapping">
+                    <div class="visual-card-content">
+                        <h4>FedRAMP Control Mapping</h4>
+                        <p>95% coverage across FedRAMP security control categories</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Getting Started -->
+        <section class="section">
+            <h2>Getting Started</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>1. Download the Toolkit</h4>
+                    <p>Access the Excel-based assessment tool with all features pre-configured</p>
+                </div>
+                <div class="feature-card">
+                    <h4>2. Complete Organization Profile</h4>
+                    <p>Define your industry, scale, and risk factors for accurate scoring</p>
+                </div>
+                <div class="feature-card">
+                    <h4>3. Conduct Assessment</h4>
+                    <p>Answer questions with stakeholder input, providing evidence where available</p>
+                </div>
+                <div class="feature-card">
+                    <h4>4. Review Scorecard</h4>
+                    <p>Analyze results, identify gaps, and understand improvement priorities</p>
+                </div>
+                <div class="feature-card">
+                    <h4>5. Plan Improvements</h4>
+                    <p>Use recommendations to build your quantum readiness roadmap</p>
+                </div>
+                <div class="feature-card">
+                    <h4>6. Track Progress</h4>
+                    <p>Regular reassessment to measure advancement toward quantum readiness</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <h2>Ready to Assess Your Quantum Readiness?</h2>
+            <p>Download the complete QRAMM Assessment Toolkit and begin your journey to quantum-safe security</p>
+            <div class="hero-buttons">
+                <a href="toolkit/QRAMM_Assessment_Toolkit.xlsx" download class="btn-hero btn-hero-primary">Download Toolkit Now</a>
+                <a href="toolkit/Sample_Assessment.xlsx" download class="btn-hero btn-hero-secondary">Review Sample First</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2025 CyberSecurity NonProfit (CSNP). QRAMM is released under the MIT License.</p>
+        <p style="margin-top: 1rem;">
+            <a href="https://github.com/csnp/qramm" target="_blank">GitHub</a> • 
+            <a href="mailto:qramm@csnp.org">Contact</a> • 
+            <a href="https://csnp.org" target="_blank">CSNP.org</a>
+        </p>
+    </footer>
+
+    <!-- JavaScript for Tabs -->
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => button.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
