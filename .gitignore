@@ -114,3 +114,14 @@ secrets.txt
 *.pem
 *.p12
 *.pfx
+
+# =============================================================================
+# GITHUB TRAFFIC DATA (PRIVATE)
+# =============================================================================
+# Keep traffic analytics private - do not commit to public repo
+traffic-data/
+traffic-snapshots/
+*.traffic.json
+*_traffic.json
+TRAFFIC_REPORT.md
+traffic-reports/
