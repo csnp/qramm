@@ -2090,6 +2090,19 @@
 
         // Start Assessment Function
         function startAssessment() {
+            // Track assessment start event
+            gtag('event', 'assessment_start', {
+                event_category: 'User Engagement',
+                event_label: 'Quick Assessment Started',
+                custom_parameters: {
+                    page_title: document.title,
+                    page_location: window.location.href,
+                    user_action: 'start_quick_assessment'
+                }
+            });
+            
+            console.log('Quick Assessment started - event tracked');
+            
             isAssessmentActive = true;
             currentQuestion = 0;
             responses = [];
@@ -2183,6 +2196,20 @@
 
         // Complete Assessment Function
         function completeAssessment() {
+            // Track assessment completion event
+            gtag('event', 'assessment_complete', {
+                event_category: 'User Engagement',
+                event_label: 'Quick Assessment Completed',
+                custom_parameters: {
+                    page_title: document.title,
+                    page_location: window.location.href,
+                    user_action: 'complete_quick_assessment',
+                    questions_answered: responses.length
+                }
+            });
+            
+            console.log('Quick Assessment completed - event tracked');
+            
             calculateResults();
             displayResults();
             
