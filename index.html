@@ -2564,6 +2564,51 @@
                 document.getElementById('navLinks').classList.remove('active');
             });
         });
+
+        // Enhanced Download Tracking for QRAMM Toolkit
+        function trackDownload(fileName, linkText, linkUrl) {
+            // Track download event in Google Analytics
+            gtag('event', 'file_download', {
+                file_name: fileName,
+                file_extension: fileName.split('.').pop(),
+                link_text: linkText || '',
+                link_url: linkUrl || '',
+                event_category: 'Downloads',
+                event_label: fileName,
+                custom_parameters: {
+                    download_type: fileName.includes('Sample') ? 'sample' : 'full_toolkit',
+                    page_title: document.title,
+                    page_location: window.location.href
+                }
+            });
+            
+            console.log('Download tracked:', fileName);
+        }
+
+        // Add download tracking to all download links
+        document.addEventListener('DOMContentLoaded', function() {
+            // Track all existing download links
+            document.querySelectorAll('a[download]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const fileName = this.href.split('/').pop();
+                    const linkText = this.innerText || this.textContent;
+                    const linkUrl = this.href;
+                    
+                    trackDownload(fileName, linkText, linkUrl);
+                });
+            });
+
+            // Also track download links without download attribute but ending in .xlsx
+            document.querySelectorAll('a[href$=".xlsx"]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const fileName = this.href.split('/').pop();
+                    const linkText = this.innerText || this.textContent;
+                    const linkUrl = this.href;
+                    
+                    trackDownload(fileName, linkText, linkUrl);
+                });
+            });
+        });
     </script>
 </body>
 </html>
