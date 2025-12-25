@@ -9,7 +9,7 @@
 
 **The Industry-Leading Open Source Framework for Organizational Quantum Readiness**
 
-[**Visit Website**](https://qramm.org) | [**Toolkit Overview**](https://qramm.org/toolkit-overview.html) | [**Download Toolkit**](toolkit/QRAMM_Assessment_Toolkit.xlsx) | [**Sample Toolkit**](toolkit/Sample_Assessment.xlsx) | [**Resources**](https://qramm.org/resources.html)
+[**Visit Website**](https://qramm.org) | [**Download Toolkit**](toolkit/QRAMM_Assessment_Toolkit.xlsx) | [**Sample Toolkit**](toolkit/Sample_Assessment.xlsx) | [**Framework Docs**](framework/qramm-overview.md)
 
 </div>
 
