@@ -98,9 +98,9 @@ QRAMM maps to 8 major frameworks and standards:
 3. **CNSA 2.0 Guidelines**: NSA's Commercial National Security Algorithm Suite
 4. **ISO/IEC 27001:2022**: Information security management with quantum considerations
 5. **ETSI Quantum-Safe Standards**: European quantum security specifications
-6. **PCI DSS v4.0**: Payment card industry quantum readiness requirements
-7. **Common Criteria**: Security evaluation with post-quantum considerations
-8. **BSI TR-02102**: German Federal Office quantum-safe recommendations
+6. **CMMC**: Cybersecurity Maturity Model Certification requirements
+7. **FedRAMP**: Federal Risk and Authorization Management Program controls
+8. **NIST Cybersecurity Framework (CSF)**: Core security function alignment
 
 ## Business Value
 ### Immediate Benefits
@@ -143,7 +143,7 @@ QRAMM maps to 8 major frameworks and standards:
 
 ---
 
-**QRAMM Version**: 1.0  
-**Release Date**: August 2025  
-**Developed by**: CyberSecurity NonProfit (CSNP)  
-**Purpose**: Helping organizations prepare for the post-quantum cryptography era
+**QRAMM Version**: 1.1
+**Last Updated**: December 2025
+**Developed by**: CyberSecurity NonProfit (CSNP)
+**Website**: [https://qramm.org](https://qramm.org)

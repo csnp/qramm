@@ -583,8 +583,8 @@ Implementing QRAMM provides organizations with a systematic approach to building
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: May 30, 2025  
-**Authors**: Emily (Stamm) Fane, Abdel Sy Fane  
-**Organization**: CyberSecurity NonProfit (CSNP)  
-**Framework**: Quantum Readiness Assurance Maturity Model (QRAMM)
+**Document Version**: 1.1
+**Last Updated**: December 2025
+**Authors**: Emily (Stamm) Fane, Abdel Sy Fane
+**Organization**: CyberSecurity NonProfit (CSNP)
+**Website**: [https://qramm.org](https://qramm.org)

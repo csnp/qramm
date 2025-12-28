@@ -9,9 +9,23 @@
 
 **The Industry-Leading Open Source Framework for Organizational Quantum Readiness**
 
-[**Visit Website**](https://qramm.org) | [**Download Toolkit**](toolkit/QRAMM_Assessment_Toolkit.xlsx) | [**Sample Toolkit**](toolkit/Sample_Assessment.xlsx) | [**Framework Docs**](framework/qramm-overview.md)
+[**Visit Website**](https://qramm.org) | [**Download Toolkit**](toolkit/QRAMM_Assessment_Toolkit.xlsx) | [**Sample Toolkit**](toolkit/Sample_Assessment.xlsx) | [**Toolkit Overview**](toolkit/toolkit-overview.md) | [**Framework Docs**](framework/qramm-overview.md)
 
 </div>
+
+---
+
+## Open Source Tools
+
+QRAMM provides a suite of open source tools to support your quantum readiness journey:
+
+| Tool | Description | Repository |
+|------|-------------|------------|
+| **CryptoScan** | Cryptographic discovery scanner - scans codebases for quantum-vulnerable algorithms with SARIF and CBOM output | [GitHub](https://github.com/csnp/qramm-cryptoscan) |
+| **TLS Analyzer** | TLS/SSL configuration analyzer - evaluates cipher suites and certificates with CNSA 2.0 compliance tracking | [GitHub](https://github.com/csnp/qramm-tls-analyzer) |
+| **CryptoDeps** | Dependency crypto analyzer - identifies quantum-vulnerable algorithms in your software supply chain | [GitHub](https://github.com/csnp/qramm-cryptodeps) |
+
+These tools integrate with the QRAMM framework to provide automated discovery and assessment capabilities for Dimension 1 (Cryptographic Visibility & Inventory). See the [Open Source Tools page](https://qramm.org/open-source-tools.html) for detailed guides.
 
 ---
 
@@ -237,8 +251,8 @@ The comprehensive Excel-based QRAMM Assessment Toolkit is now available for down
 ## Getting Started
 
 ### 1. Quick Assessment (Recommended First Step)
-**Time**: 15-20 minutes  
-**Link**: [https://qramm.org](https://qramm.org)  
+**Time**: 5-10 minutes
+**Link**: [https://qramm.org](https://qramm.org)
 **Output**: Instant maturity score, radar charts, priority recommendations
 
 ### 2. Download Resources
@@ -252,11 +266,47 @@ The comprehensive Excel-based QRAMM Assessment Toolkit is now available for down
 - Establish quantum readiness working group
 - Allocate initial resources for planning phase
 
+## Repository Structure
+
+```
+qramm/
+├── framework/              # Framework documentation
+│   ├── qramm-overview.md       # Executive framework summary
+│   ├── maturity-levels.md      # 5-level maturity progression
+│   ├── scoring-methodology.md  # Scoring system details
+│   ├── compliance-mapping.md   # Standards alignment details
+│   └── Complete_QRAMM_Questions.md  # All 120 assessment questions
+├── toolkit/                # Assessment tools
+│   ├── QRAMM_Assessment_Toolkit.xlsx  # Main Excel assessment tool
+│   ├── Sample_Assessment.xlsx         # Pre-filled example
+│   └── toolkit-overview.md            # Feature documentation
+├── implementation/         # Implementation guidance
+│   └── getting-started.md      # Getting started guide
+├── templates/              # Ready-to-use templates
+│   ├── executive-report-template.md
+│   ├── asset-inventory-template.md
+│   ├── vendor-questionnaire-template.md
+│   └── evidence-collection-template.md
+├── assets/                 # Visual assets
+│   └── toolkit-visuals/        # Scorecard and compliance screenshots
+└── toolkit-specs/          # Technical specifications (internal)
+```
+
 ## Regulatory Compliance & Standards
 
 ### Standards Alignment
-- **NIST Post-Quantum Cryptography**: Full alignment with NIST standards
-- **ISO/IEC Standards**: Compatible with ISO 27001/27002
+The QRAMM Toolkit maps to 8 major frameworks and standards:
+
+| Framework | Description |
+|-----------|-------------|
+| **NIST PQC** | NIST Post-Quantum Cryptography Standards |
+| **NSM 10** | National Security Memorandum quantum readiness mandates |
+| **CNSA 2.0** | NSA Commercial National Security Algorithm Suite |
+| **ISO/IEC 27001:2022** | Information security management |
+| **ETSI QSC** | European quantum-safe cryptography standards |
+| **CMMC** | Cybersecurity Maturity Model Certification |
+| **FedRAMP** | Federal Risk and Authorization Management Program |
+| **NIST CSF** | NIST Cybersecurity Framework |
 
 ## Support & Resources
 
@@ -309,7 +359,7 @@ QRAMM is released under the **MIT License**, providing:
 ## Frequently Asked Questions
 
 ### Q: How long does a QRAMM assessment take?
-**A**: Quick assessment: 15-20 minutes. Comprehensive assessment: 2-3 hours with evidence gathering.
+**A**: Quick assessment: 5-10 minutes. Comprehensive assessment: 2-4 hours with stakeholder input and evidence gathering.
 
 ### Q: Is QRAMM suitable for small organizations?
 **A**: Yes. QRAMM scales from small businesses to global enterprises with tailored implementation paths.
