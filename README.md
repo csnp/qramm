@@ -71,7 +71,7 @@ With quantum computers capable of breaking RSA-2048 encryption expected within 5
 | **2029-2032** | Quantum computers emerge | Current encryption vulnerable |
 | **2033+** | Widespread quantum computing | Unprepared organizations at severe risk |
 
-**⚠️ Critical: Data encrypted today can be harvested now and decrypted later**
+**CRITICAL: Data encrypted today can be harvested now and decrypted later**
 
 </div>
 
@@ -79,7 +79,7 @@ With quantum computers capable of breaking RSA-2048 encryption expected within 5
 
 ### Four Integrated Dimensions
 
-#### 🔍 **Dimension 1: Cryptographic Visibility & Inventory (CVI)**
+#### **Dimension 1: Cryptographic Visibility & Inventory (CVI)**
 *Foundation: Understanding and cataloging cryptographic assets across the organization*
 
 **What It Does**: CVI establishes comprehensive visibility into your cryptographic landscape—discovering every algorithm, key, certificate, and protocol across all systems. It transforms invisible cryptographic dependencies into a manageable asset inventory.
@@ -97,7 +97,7 @@ With quantum computers capable of breaking RSA-2048 encryption expected within 5
 - **Practice 1.2**: Vulnerability Assessment & Classification  
 - **Practice 1.3**: Cryptographic Dependency Mapping
 
-#### ⚖️ **Dimension 2: Strategic Governance & Risk Management (SGRM)**
+#### **Dimension 2: Strategic Governance & Risk Management (SGRM)**
 *Leadership: Leadership commitment and systematic risk management for quantum threats*
 
 **What It Does**: SGRM establishes the organizational foundation for quantum readiness through executive leadership, comprehensive policies, and integrated risk management. It transforms quantum security from an IT project into a strategic business imperative.
@@ -116,7 +116,7 @@ With quantum computers capable of breaking RSA-2048 encryption expected within 5
 - **Practice 2.2**: Risk Assessment & Compliance Management
 - **Practice 2.3**: Third-Party & Supply Chain Risk Management
 
-#### 🛡️ **Dimension 3: Data Protection Engineering (DPE)**
+#### **Dimension 3: Data Protection Engineering (DPE)**
 *Protection: Technical implementation of quantum-safe data protection measures*
 
 **What It Does**: DPE implements the technical controls that protect sensitive information against quantum threats across all data states—at rest, in transit, and in use. It delivers real security through quantum-resistant encryption and comprehensive key management.
@@ -135,7 +135,7 @@ With quantum computers capable of breaking RSA-2048 encryption expected within 5
 - **Practice 3.2**: Storage Security & Encryption Management
 - **Practice 3.3**: Transit Security & Protocol Management
 
-#### ⚙️ **Dimension 4: Implementation & Technical Readiness (ITR)**
+#### **Dimension 4: Implementation & Technical Readiness (ITR)**
 *Execution: Execution capabilities for quantum-safe technology deployment*
 
 **What It Does**: ITR bridges the gap between planning and reality, ensuring successful deployment, integration, and maintenance of quantum-resistant technologies. It transforms strategic intentions into operational systems while maintaining business continuity.
@@ -212,7 +212,7 @@ Maturity Level = Derived from overall score thresholds
 - **Level 4 (Advanced)**: Score 3.6 - 3.9
 - **Level 5 (Optimizing)**: Score 4.0 (Perfect score demonstrating excellence)
 
-## 🚀 QRAMM Assessment Toolkit Now Available!
+## QRAMM Assessment Toolkit Now Available
 
 The comprehensive Excel-based QRAMM Assessment Toolkit is now available for download! This toolkit features:
 - **Automated Scoring**: Instant calculation of raw and weighted scores across all dimensions
@@ -224,7 +224,7 @@ The comprehensive Excel-based QRAMM Assessment Toolkit is now available for down
 
 [**Download the Toolkit**](toolkit/QRAMM_Assessment_Toolkit.xlsx) | [**View Sample Assessment**](toolkit/Sample_Assessment.xlsx) | [**Read Toolkit Overview**](toolkit/toolkit-overview.md)
 
-## 📊 Toolkit Visual Examples
+## Toolkit Visual Examples
 
 ### Scorecard Dashboard
 <div align="center">
@@ -339,11 +339,11 @@ QRAMM is an open-source initiative welcoming contributions from:
 ## License & Usage
 
 QRAMM is released under the **MIT License**, providing:
-- ✅ Commercial use
-- ✅ Modification
-- ✅ Distribution
-- ✅ Patent use
-- ✅ Private use
+- Commercial use
+- Modification
+- Distribution
+- Patent use
+- Private use
 
 ### Citation
 ```bibtex
@@ -374,7 +374,7 @@ QRAMM is released under the **MIT License**, providing:
 
 <div align="center">
 
-### 🚀 **Start Your Quantum Readiness Journey Today**
+### Start Your Quantum Readiness Journey Today
 
 1. **[Take the Assessment](https://qramm.org)** - Get your baseline score in minutes
 2. **[Download Templates](https://github.com/csnp/qramm/tree/main/templates)** - Accelerate implementation
