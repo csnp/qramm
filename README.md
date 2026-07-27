@@ -17,16 +17,33 @@
 
 ## Open Source Tools
 
-QRAMM provides a suite of open source tools to support your quantum readiness journey:
+QRAMM provides a suite of open source tools to support your quantum readiness journey.
+
+### Maintained by CSNP
+
+These are built and maintained alongside the framework, and CSNP stands behind them.
 
 | Tool | Description | Repository |
 |------|-------------|------------|
-| **CryptoScan** | Cryptographic discovery scanner - scans codebases for quantum-vulnerable algorithms with SARIF and CBOM output | [GitHub](https://github.com/csnp/qramm-cryptoscan) |
-| **TLS Analyzer** | TLS/SSL configuration analyzer - evaluates cipher suites and certificates with CNSA 2.0 compliance tracking | [GitHub](https://github.com/csnp/qramm-tls-analyzer) |
-| **CryptoDeps** | Dependency crypto analyzer - identifies quantum-vulnerable algorithms in your software supply chain | [GitHub](https://github.com/csnp/qramm-cryptodeps) |
-| **pqc-tools** | Open-source scanner and CycloneDX CBOM generator for post-quantum readiness. Finds quantum-vulnerable cryptography (RSA/ECDH/ECDSA/DH) in code and gives NIST ML-KEM/ML-DSA/SLH-DSA migration guidance. CLI, MCP server, and GitHub Action. | [GitHub](https://github.com/quantakrypto/pqc-tools) |
+| **CryptoScan** | Cryptographic discovery scanner - scans codebases for quantum-vulnerable algorithms with SARIF and CBOM output | [GitHub](https://github.com/csnp/cryptoscan) |
+| **TLS Analyzer** | TLS/SSL configuration analyzer - evaluates cipher suites and key exchange, detects hybrid ML-KEM key exchange, and tracks CNSA 2.0 compliance | [GitHub](https://github.com/csnp/tls-analyzer) |
+| **CryptoDeps** | Dependency crypto analyzer - identifies quantum-vulnerable algorithms in your software supply chain | [GitHub](https://github.com/csnp/cryptodeps) |
 
 These tools integrate with the QRAMM framework to provide automated discovery and assessment capabilities for Dimension 1 (Cryptographic Visibility & Inventory). See the [Open Source Tools page](https://qramm.org/open-source-tools.html) for detailed guides.
+
+### Community and third-party tools
+
+Tools from the wider community that people using QRAMM may find useful. They are
+not maintained by CSNP, are not part of the QRAMM toolkit, and listing one here
+is not an endorsement or a security review. Evaluate any of them the same way you
+would evaluate any other third-party dependency.
+
+| Tool | Description | Maintainer | Repository |
+|------|-------------|------------|------------|
+| **pqc-tools** | Scanner and CycloneDX CBOM generator for post-quantum readiness. Finds quantum-vulnerable cryptography (RSA/ECDH/ECDSA/DH) in code and gives NIST ML-KEM/ML-DSA/SLH-DSA migration guidance. CLI, MCP server, and GitHub Action. | quantakrypto | [GitHub](https://github.com/quantakrypto/pqc-tools) |
+
+To propose a tool for this table, open a pull request. Please include the license,
+who maintains it, and a link to its documentation.
 
 ---
 
