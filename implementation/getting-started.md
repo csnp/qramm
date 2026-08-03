@@ -32,7 +32,7 @@ This guide provides step-by-step instructions for implementing the Quantum Readi
 **Purpose**: Expert-guided implementation with customization
 
 **Contact QRAMM Authors:**
-- **Emily (Stamm) Fane** - Strategic Planning: [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
+- **Emily (Stamm) Fane** - Strategic Planning: [LinkedIn](https://www.linkedin.com/in/emilyfane/)
 - **Abdel Sy Fane** - Technical Implementation: [LinkedIn](https://www.linkedin.com/in/abdelsyfane/)
 - **General Inquiries**: qramm@csnp.org
 
@@ -524,7 +524,7 @@ This guide provides step-by-step instructions for implementing the Quantum Readi
 
 **Contact Information:**
 - **Professional Inquiries**: qramm@csnp.org
-- **Emily (Stamm) Fane LinkedIn**: [https://www.linkedin.com/in/emily-stamm/](https://www.linkedin.com/in/emily-stamm/)
+- **Emily (Stamm) Fane LinkedIn**: [https://www.linkedin.com/in/emilyfane/](https://www.linkedin.com/in/emilyfane/)
 - **Abdel Sy Fane LinkedIn**: [https://www.linkedin.com/in/abdelsyfane/](https://www.linkedin.com/in/abdelsyfane/)
 
 ### Service Offerings

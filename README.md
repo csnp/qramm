@@ -339,7 +339,7 @@ For questions about QRAMM implementation or framework guidance, contact: [qramm@
 
 **Emily (Stamm) Fane** - *Author*  
 VP of CSNP Board  
-[LinkedIn](https://www.linkedin.com/in/emily-stamm/)
+[LinkedIn](https://www.linkedin.com/in/emilyfane/)
 
 **Abdel Fane** - *Co-Author*  
 Executive Director of CSNP  
