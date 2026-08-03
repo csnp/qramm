@@ -291,7 +291,7 @@ Regular framework updates incorporate:
 ### Contact and Support
 
 **Framework Authors:**
-- **Emily (Stamm) Fane** - Strategic Planning & Executive Engagement: [LinkedIn](https://www.linkedin.com/in/emily-stamm/)
+- **Emily (Stamm) Fane** - Strategic Planning & Executive Engagement: [LinkedIn](https://www.linkedin.com/in/emilyfane/)
 - **Abdel Sy Fane** - Technical Implementation & Risk Assessment: [LinkedIn](https://www.linkedin.com/in/abdelsyfane/)
 
 **General Inquiries:** qramm@csnp.org
