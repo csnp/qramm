@@ -166,7 +166,7 @@ GeoScope = Data!$G$2:$G$5
 RegulatoryReqs = Data!$K$2:$K$5
 ```
 
-Profile!D15 (data sensitivity) has no validation list in the shipped workbook.
+Profile!D15 (data sensitivity) uses a list validation that refers to Data!$I$2:$I$5 directly; that list has no defined name.
 
 ## Special Calculations
 
