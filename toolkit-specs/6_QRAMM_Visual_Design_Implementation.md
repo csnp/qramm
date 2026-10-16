@@ -88,13 +88,18 @@ Show value: Yes
 
 ## Protection Settings
 
+Sheet and workbook protection in this toolkit is a guard against accidental edits. It is not
+a security control: anyone can remove it, and reviewers are meant to be able to, because the
+formulas are part of what the toolkit publishes. Protection is applied without a password.
+Do not set one, and do not record one in this repository.
+
 ### Workbook Level
 - Structure: Protected
 - Windows: Protected
-- Password: QRAMM2025
+- Password: None
 
 ### Worksheet Level
-All sheets protected with password, allowing users to:
+All sheets protected without a password, allowing users to:
 - Select locked cells: Yes
 - Select unlocked cells: Yes
 - Format cells: No
