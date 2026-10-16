@@ -158,7 +158,7 @@ The CVI score of 2.56 falls in the Established range in the table below.
 | 2.5 to below 3.5 | **Level 3: Established** | Systematic and consistent practices |
 | 3.5 to 4.0 | **Level 4: Advanced** | Optimized processes with continuous improvement |
 
-The toolkit's Scorecard labels each dimension score and the overall score with these four levels, using the unadjusted scores. Level 5, Optimizing, is described below, but the toolkit does not assign it from a score: a score of 4.0 is labelled Advanced.
+The toolkit's Scorecard labels each dimension score and the overall score with these four levels, using the unadjusted scores. A dimension or overall score of 4.0 is labelled Advanced. The Scorecard's Maturity Distribution chart (Scorecard!L21:M26) sorts the 12 practice scores with other cut-offs (1.6, 2.6, 3.6 and 4) and counts a practice score of 4 as Level 5, Optimizing, which is described below.
 
 ### Detailed Maturity Level Descriptions
 
@@ -239,7 +239,7 @@ The toolkit's Scorecard labels each dimension score and the overall score with t
 - Establish thought leadership in quantum readiness
 
 #### Level 5: Optimizing
-The toolkit does not assign this level from a score. The highest level it shows is Level 4, Advanced.
+The toolkit does not assign this level to a dimension score or the overall score. Its Maturity Distribution chart counts a practice score of 4 as Optimizing.
 
 **Characteristics:**
 - Mature practices with continuous innovation
