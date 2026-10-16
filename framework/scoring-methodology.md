@@ -7,6 +7,8 @@ The QRAMM scoring methodology provides a systematic approach to evaluating organ
 
 ## Scoring Structure
 
+The QRAMM Assessment Toolkit workbook, [`toolkit/QRAMM_Assessment_Toolkit.xlsx`](../toolkit/QRAMM_Assessment_Toolkit.xlsx), is the reference for how QRAMM scores are calculated. This section describes the calculation that workbook performs.
+
 ### Assessment Question Scoring
 
 Each assessment question uses a **4-point scale** corresponding to the response options:
@@ -16,56 +18,134 @@ Each assessment question uses a **4-point scale** corresponding to the response 
 - **Score 3**: Intermediate capability level (typically structured or systematic approaches)
 - **Score 4**: Highest capability level (typically advanced or comprehensive implementations)
 
+A question with no answer is left out of the calculation. It does not count as zero.
+
 ### Practice-Level Scoring
 
-Each practice contains **10 questions** (5 in Stream A: Foundation, 5 in Stream B: Advanced).
+Each practice contains **10 questions**: 5 in Stream A (Foundation) and 5 in Stream B (Advanced). Foundation answers count for 60 percent of the practice score and Advanced answers for 40 percent.
 
 **Practice Score Calculation:**
 ```
-Practice Score = (Sum of all 10 question scores) ÷ 10
+Practice Score = (average of the answered Foundation questions × 0.6)
+               + (average of the answered Advanced questions × 0.4)
 ```
 
+Each average uses only the questions that have an answer. A practice has a score once at least one Foundation question and at least one Advanced question are answered. Until then the toolkit shows "-" for that practice.
+
 **Example Calculation:**
-- Stream A Questions (1-5): Scores of 3, 2, 3, 4, 2 = Total 14
-- Stream B Questions (6-10): Scores of 2, 3, 2, 3, 1 = Total 11
-- Practice Score = (14 + 11) ÷ 10 = 2.5
+- Stream A (Foundation) scores: 3, 2, 3, 4, 2, average 2.8
+- Stream B (Advanced) scores: 2, 3, 2, 3, 1, average 2.2
+- Practice Score = (2.8 × 0.6) + (2.2 × 0.4) = 1.68 + 0.88 = 2.56
 
 ### Dimension-Level Scoring
 
-Each dimension contains **3 practices**. Dimension scoring uses the **"weakest link" principle** to ensure balanced capability development.
+Each dimension contains **3 practices**. The dimension score is the weighted sum of its three practice scores. Each practice has a fixed weight, and the three weights in a dimension add up to 1.00.
 
 **Dimension Score Calculation:**
 ```
-Dimension Score = MIN(Practice 1 Score, Practice 2 Score, Practice 3 Score)
+Dimension Score = (Practice 1 Score × Weight 1)
+                + (Practice 2 Score × Weight 2)
+                + (Practice 3 Score × Weight 3)
 ```
 
-**Rationale for Minimum Scoring:**
-- Prevents organizations from achieving high dimension scores while having significant gaps
-- Encourages balanced development across all practices within a dimension
-- Reflects the interconnected nature of quantum readiness capabilities
-- Aligns with risk management principles where the weakest area determines overall vulnerability
+**Practice weights:**
+
+| Dimension | First practice | Second practice | Third practice |
+|-----------|----------------|-----------------|----------------|
+| 1. Cryptographic Visibility & Inventory (CVI) | 1.1: 0.35 | 1.2: 0.35 | 1.3: 0.30 |
+| 2. Strategic Governance & Risk Management (SGRM) | 2.1: 0.40 | 2.2: 0.35 | 2.3: 0.25 |
+| 3. Data Protection Engineering (DPE) | 3.1: 0.40 | 3.2: 0.35 | 3.3: 0.25 |
+| 4. Implementation & Technical Readiness (ITR) | 4.1: 0.35 | 4.2: 0.35 | 4.3: 0.30 |
+
+A dimension has a score once all three of its practices have a score. Because each practice carries a fixed share, a strong practice can lift the dimension score while another practice stays low. Read the practice scores, not only the dimension score, to find gaps.
 
 **Example Calculation:**
-- Practice 1.1 Score: 3.2
-- Practice 1.2 Score: 2.8
-- Practice 1.3 Score: 3.5
-- Dimension 1 Score = MIN(3.2, 2.8, 3.5) = 2.8
+- Practice 1.1 Score: 3.2 (weight 0.35)
+- Practice 1.2 Score: 2.8 (weight 0.35)
+- Practice 1.3 Score: 3.5 (weight 0.30)
+- Dimension 1 Score = (3.2 × 0.35) + (2.8 × 0.35) + (3.5 × 0.30) = 1.12 + 0.98 + 1.05 = 3.15
 
 ### Overall QRAMM Score
 
-The overall organizational score represents the average across all four dimensions.
+The overall organizational score is the average of the four dimension scores. The organization profile does not change it.
 
 **Overall QRAMM Score Calculation:**
 ```
 Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
 ```
 
+The toolkit shows an overall score once all four dimensions have a score.
+
 **Example Calculation:**
-- Dimension 1 (CVI): 2.8
+- Dimension 1 (CVI): 3.15
 - Dimension 2 (SGRM): 3.1
 - Dimension 3 (DPE): 2.5
 - Dimension 4 (ITR): 2.9
-- Overall QRAMM Score = (2.8 + 3.1 + 2.5 + 2.9) ÷ 4 = 2.8
+- Overall QRAMM Score = (3.15 + 3.1 + 2.5 + 2.9) ÷ 4 = 2.9125
+
+### Profile-adjusted score
+
+The toolkit also shows a profile-adjusted score for each dimension. It is the dimension score multiplied by a profile multiplier between 1.00 and 1.50. The multiplier comes from five answers on the toolkit's Profile tab, and it is higher for organizations with more exposure to quantum risk.
+
+**Adjusted score calculation:**
+```
+Adjusted Dimension Score = Dimension Score × Profile Multiplier
+```
+
+**Profile multiplier calculation:**
+
+Each profile answer has a risk value of 1.0, 1.3 or 1.5, and each of the five profile questions has a fixed factor:
+
+| Profile question | Factor | Risk value 1.5 | Risk value 1.3 | Risk value 1.0 |
+|------------------|--------|----------------|----------------|----------------|
+| Industry | 0.30 | Financial Services, Healthcare, Defense/Military | Technology, Energy/Utilities | Manufacturing, Retail, Government, Education, Telecommunications, Transportation, Other |
+| Data sensitivity | 0.25 | Highly Classified/Secret | Confidential/Sensitive | Internal Use Only, Public/Non-sensitive |
+| Regulatory requirements | 0.20 | Multiple Major Frameworks | Single Major Framework | Industry Standards Only, Minimal Requirements |
+| Geographic scope | 0.15 | Global (10+ countries) | Multi-region (3-9 countries) | Regional (2 countries), Single Country |
+| Organization size | 0.10 | Fortune 500/Global Enterprise | Large Enterprise (1000+ employees) | Mid-Market (100-999 employees), Small Business (under 100 employees) |
+
+```
+Profile Multiplier = sum of (risk value × factor) for the five answers,
+                     rounded to 2 decimal places
+```
+
+The factors add up to 1.00, so the multiplier is 1.00 when every answer has a risk value of 1.0 and 1.50 when every answer has a risk value of 1.5. The toolkit calculates it once all five profile questions are answered.
+
+**How to read the adjusted score:**
+- It can be higher than 4, the top of the question scale. A dimension score of 3.4 with a multiplier of 1.5 gives an adjusted score of 5.1. In the sample assessment, Dimension 4 has a score of 3.958 and an adjusted score of 3.958 × 1.23 = 4.86834.
+- It is not a maturity level. Maturity levels and the overall QRAMM score use the unadjusted scores.
+- It is not a headline figure. Report the overall score, the dimension scores and their maturity levels as the result of an assessment. The adjusted score shows the same dimension score scaled by the organization's risk profile.
+- The toolkit's Scorecard also shows an adjusted overall score, the average of the four adjusted dimension scores. The same points apply to it.
+
+### Worked example from the sample assessment
+
+The toolkit ships with a completed sample assessment. The example below follows Dimension 1 of that sample from its answers to its scores. The script `scripts/check-scoring-example.py` checks the practice scores, the dimension score and the multiplier shown here against the values saved in the sample workbook.
+
+Worked example from [`toolkit/Sample_Assessment.xlsx`](../toolkit/Sample_Assessment.xlsx), Dimension 1 (CVI):
+
+```text
+Profile: Healthcare, Confidential/Sensitive data, Minimal Requirements,
+         Regional (2 countries), Mid-Market (100-999 employees)
+
+Practice 1.1   Foundation answers 3, 2, 2, 2, 4   average 2.6
+               Advanced answers   1, 4, 4, 4, 4   average 3.4
+Practice 1.2   Foundation answers 4, 2, 3, 3, 1   average 2.6
+               Advanced answers   1, 1, 2, 3, 1   average 1.6
+Practice 1.3   Foundation answers 2, 3, 4, 2, 3   average 2.8
+               Advanced answers   1, 4, 2, 3, 1   average 2.2
+
+Practice 1.1 score  = 2.6 × 0.6 + 3.4 × 0.4                    = 2.92
+Practice 1.2 score  = 2.6 × 0.6 + 1.6 × 0.4                    = 2.2
+Practice 1.3 score  = 2.8 × 0.6 + 2.2 × 0.4                    = 2.56
+CVI score           = 2.92 × 0.35 + 2.2 × 0.35 + 2.56 × 0.30  = 2.56
+
+Profile sum         = 1.5 × 0.30 + 1.3 × 0.25 + 1.0 × 0.20
+                      + 1.0 × 0.15 + 1.0 × 0.10                = 1.225
+Profile multiplier  = 1.225 rounded to 2 decimal places        = 1.23
+Adjusted CVI score  = 2.56 × 1.23                              = 3.1488
+```
+
+The CVI score of 2.56 falls in the Established range in the table below.
 
 ## Maturity Level Interpretation
 
@@ -73,15 +153,16 @@ Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
 
 | Score Range | Maturity Level | Interpretation |
 |-------------|----------------|----------------|
-| 1.0 - 1.4 | **Level 1: Basic** | Initial awareness and ad-hoc practices |
-| 1.5 - 2.4 | **Level 2: Developing** | Structured approaches beginning to emerge |
-| 2.5 - 3.4 | **Level 3: Established** | Systematic and consistent practices |
-| 3.5 - 3.9 | **Level 4: Advanced** | Optimized processes with continuous improvement |
-| 4.0 | **Level 5: Optimizing** | Industry-leading practices and innovation |
+| Below 1.5 | **Level 1: Basic** | Initial awareness and ad-hoc practices |
+| 1.5 to below 2.5 | **Level 2: Developing** | Structured approaches beginning to emerge |
+| 2.5 to below 3.5 | **Level 3: Established** | Systematic and consistent practices |
+| 3.5 to 4.0 | **Level 4: Advanced** | Optimized processes with continuous improvement |
+
+The toolkit's Scorecard labels each dimension score and the overall score with these four levels, using the unadjusted scores. Level 5, Optimizing, is described below, but the toolkit does not assign it from a score: a score of 4.0 is labelled Advanced.
 
 ### Detailed Maturity Level Descriptions
 
-#### Level 1: Basic (1.0 - 1.4)
+#### Level 1: Basic (below 1.5)
 **Characteristics:**
 - Limited awareness of quantum threats and their implications
 - Ad-hoc or informal approaches to cryptographic management
@@ -100,7 +181,7 @@ Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
 - Build executive awareness and commitment
 - Create initial quantum readiness planning processes
 
-#### Level 2: Developing (1.5 - 2.4)
+#### Level 2: Developing (1.5 to below 2.5)
 **Characteristics:**
 - Growing awareness and initial systematic approaches
 - Basic processes documented but not fully implemented
@@ -119,7 +200,7 @@ Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
 - Strengthen governance structures and policy frameworks
 - Build technical capabilities for quantum-safe implementations
 
-#### Level 3: Established (2.5 - 3.4)
+#### Level 3: Established (2.5 to below 3.5)
 **Characteristics:**
 - Systematic and consistent quantum readiness practices
 - Comprehensive processes with regular execution
@@ -138,12 +219,12 @@ Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
 - Expand third-party and supply chain risk management
 - Strengthen integration with business planning and operations
 
-#### Level 4: Advanced (3.5 - 3.9)
+#### Level 4: Advanced (3.5 to 4.0)
 **Characteristics:**
 - Optimized processes with continuous improvement
 - Advanced analytics and predictive capabilities
 - Proactive risk management with scenario planning
-- Industry-leading practices with measurable outcomes
+- Mature practices with measurable outcomes
 
 **Typical Organizational State:**
 - Automated cryptographic discovery and vulnerability management
@@ -154,12 +235,14 @@ Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
 **Strategic Focus:**
 - Drive innovation in quantum security practices
 - Contribute to industry standards and best practices
-- Develop cutting-edge capabilities and technologies
+- Develop new capabilities and technologies
 - Establish thought leadership in quantum readiness
 
-#### Level 5: Optimizing (4.0)
+#### Level 5: Optimizing
+The toolkit does not assign this level from a score. The highest level it shows is Level 4, Advanced.
+
 **Characteristics:**
-- Industry-leading practices with continuous innovation
+- Mature practices with continuous innovation
 - Comprehensive integration across all organizational aspects
 - Significant contribution to industry knowledge and standards
 - Strategic advantage through quantum readiness leadership
@@ -190,7 +273,7 @@ Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
 
 **Strategic Improvement Approach:**
 1. **Foundation First**: Ensure strong Stream A capabilities before advancing Stream B
-2. **Balanced Development**: Address dimension-level gaps to avoid minimum score constraints
+2. **Balanced Development**: Address the lowest practice scores in each dimension, since a strong practice can hide a weak one in the weighted dimension score
 3. **Risk-Based Prioritization**: Focus on areas with highest quantum vulnerability
 4. **Incremental Progress**: Plan staged improvements with measurable milestones
 
@@ -371,8 +454,8 @@ The QRAMM scoring methodology provides a comprehensive framework for evaluating 
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: May 30, 2025  
+**Document Version**: 1.1  
+**Last Updated**: October 16, 2026  
 **Authors**: Emily (Stamm) Fane, Abdel Sy Fane  
 **Organization**: CyberSecurity NonProfit (CSNP)  
 **Framework**: Quantum Readiness Assurance Maturity Model (QRAMM)

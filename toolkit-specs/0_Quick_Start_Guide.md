@@ -22,7 +22,7 @@ An Excel assessment tool that evaluates organizational quantum computing readine
 1. Create Profile tab with organization inputs
 2. Implement ProfileMultiplier calculation (critical!)
 3. Test with different organization profiles
-4. This multiplier affects ALL scoring - must work perfectly
+4. This multiplier sets the profile-adjusted dimension scores - must work perfectly
 
 ### Phase 3: Assessment Tabs (3 hours)
 1. Build template for one dimension tab
@@ -56,13 +56,19 @@ An Excel assessment tool that evaluates organizational quantum computing readine
 
 ### The ProfileMultiplier
 - This is THE most important calculation
-- It adjusts all scores based on organization risk
-- Range: 0.8 to 1.5
-- Must be calculated before any scoring
+- It turns each dimension score into a profile-adjusted score based on organization risk
+- The practice scores, dimension scores, overall score and maturity levels do not use it
+- Range: 1.00 to 1.50, so an adjusted score can be higher than 4
+- Must be calculated before the adjusted scores
 
 ### Scoring Hierarchy
 ```
-Question (1-4) → Practice (avg) → Dimension (avg) → Overall (avg × multiplier)
+Question (1-4)
+  → Practice  = avg(answered Foundation) × 0.6 + avg(answered Advanced) × 0.4
+  → Dimension = sum of (practice score × practice weight) over 3 practices
+  → Overall   = avg(4 dimension scores)
+
+Adjusted dimension score = dimension score × ProfileMultiplier
 ```
 
 ### Empty Answer Handling
@@ -77,7 +83,7 @@ Question (1-4) → Practice (avg) → Dimension (avg) → Overall (avg × multip
 
 ## Common Pitfalls to Avoid
 
-1. **Forgetting ProfileMultiplier** - All scores must be adjusted
+1. **Applying ProfileMultiplier too widely** - Only the adjusted dimension scores and their average use it
 2. **Including empty answers in averages** - Will skew results
 3. **Hard-coding values** - Use Data tab references
 4. **Circular references** - Check calculation order
@@ -86,7 +92,7 @@ Question (1-4) → Practice (avg) → Dimension (avg) → Overall (avg × multip
 ## Testing Checklist
 
 Before delivery, verify:
-- [ ] ProfileMultiplier calculates correctly (0.8-1.5 range)
+- [ ] ProfileMultiplier calculates correctly (1.00 to 1.50 range)
 - [ ] Empty assessment shows "Not Started" not errors
 - [ ] Partial completion calculates correct averages
 - [ ] All charts update automatically
