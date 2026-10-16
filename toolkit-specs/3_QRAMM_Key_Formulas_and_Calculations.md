@@ -1,80 +1,84 @@
 # QRAMM Excel Toolkit - Key Formulas and Calculations
 
+The Profile Tab Formulas, the Question Tab Formulas, and the overall score, adjusted overall score and Maturity Level Text sections under Scorecard Tab Formulas match the shipped workbook `toolkit/QRAMM_Assessment_Toolkit.xlsx`: the same cells and the same formulas, with line breaks and spacing aside. The other formulas in this document come from the original build plan. They have not been checked against the workbook, and some of them use names or cells the workbook does not have (for example `Dim1_Score`).
+
 ## Profile Tab Formulas
 
-### Profile Multiplier Calculation (Cell K20)
+### Profile Multiplier Calculation (Cell D21, named ProfileMultiplier)
 ```excel
-=ROUND(
-    VLOOKUP(B5, RiskMatrix, 3, FALSE) * VLOOKUP(B5, RiskMatrix, 2, FALSE) +
-    VLOOKUP(B9, RiskMatrix, 3, FALSE) * VLOOKUP(B9, RiskMatrix, 2, FALSE) +
-    VLOOKUP(B11, RiskMatrix, 3, FALSE) * VLOOKUP(B11, RiskMatrix, 2, FALSE) +
-    VLOOKUP(B7, RiskMatrix, 3, FALSE) * VLOOKUP(B7, RiskMatrix, 2, FALSE) +
-    VLOOKUP(B6, RiskMatrix, 3, FALSE) * VLOOKUP(B6, RiskMatrix, 2, FALSE),
-    2)
+=IFERROR(ROUND(
+    VLOOKUP(D9, RiskMatrix, 3, FALSE) * VLOOKUP(D9, RiskMatrix, 2, FALSE) +
+    VLOOKUP(D11, RiskMatrix, 3, FALSE) * VLOOKUP(D11, RiskMatrix, 2, FALSE) +
+    VLOOKUP(D13, RiskMatrix, 3, FALSE) * VLOOKUP(D13, RiskMatrix, 2, FALSE) +
+    VLOOKUP(D15, RiskMatrix, 3, FALSE) * VLOOKUP(D15, RiskMatrix, 2, FALSE) +
+    VLOOKUP(D17, RiskMatrix, 3, FALSE) * VLOOKUP(D17, RiskMatrix, 2, FALSE),
+    2),"-")
 ```
 
-### Regulatory Requirement Score (Cell B11)
-```excel
-=IF(COUNTIF(D5:D14, TRUE) >= 3, "Multiple Major Frameworks",
-    IF(COUNTIF(D5:D14, TRUE) >= 1, "Single Major Framework",
-        "Minimal Requirements"))
-```
+The inputs are industry (D9), organization size (D11), geographic scope (D13), data sensitivity (D15) and regulatory requirements (D17). `RiskMatrix` column 2 is the factor (0.30, 0.10, 0.15, 0.25 and 0.20 for those five inputs) and column 3 is the risk value (1.0, 1.3 or 1.5). The result runs from 1.00 to 1.50, and it is "-" until all five inputs are set.
+
+### Regulatory requirements (cell D17)
+D17 is a dropdown that uses the `RegulatoryReqs` list. It has no formula.
 
 ## Question Tab Formulas (Dimensions 1-4)
 
-### Individual Question Score (Column D, starting at D5)
+### Individual Question Score (Column I, starting at I9)
+The answer is in column G, and each answer option's text starts with its score.
 ```excel
-=IF(C5="", "", MATCH(C5, AnswerOptions, 0))
+=IFERROR(IF(G9="","",INT(LEFT(G9,1))),"")
 ```
 
-### Practice Score Calculation (E15, E25, E35)
+### Practice Score Calculation (L7, L64, L121)
+Foundation questions are worth 60 percent and Advanced questions 40 percent. Each average uses only answered questions. L7 for the first practice:
 ```excel
-=IF(COUNTIF(D5:D14, ">0") = 0, "",
-    AVERAGE(IF(D5:D14>0, D5:D14)))
+=IFERROR(
+    IF(COUNTIF(I9:I32, ">0") = 0, "", AVERAGE(IF(I9:I29>0, I9:I29))) * 0.6
+  + IF(COUNTIF(I37:I57, ">0") = 0, "", AVERAGE(IF(I37:I57>0, I37:I57))) * 0.4,
+"-")
+```
+L64 and L121 follow the same pattern for the second and third practices. When a stream has no answer, the practice score is "-".
+
+### Weighted Practice Score (N7, N64, N121)
+```excel
+=IF(L7="-", "-", L7 * VLOOKUP(TRIM(B6), PracticeData, 3, FALSE))
 ```
 
-### Weighted Practice Score (F15, F25, F35)
+### Dimension Score (L5, named CVI_Score, SGRM_Score, DPE_Score or ITR_Score)
 ```excel
-=IF(E15="", "", E15 * VLOOKUP("CVI_1", PracticeData, 3, FALSE))
+=IFERROR(N7+N64+N121,"-")
 ```
 
-### Dimension Score (E46)
+### Adjusted Dimension Score (N5, named CVI_Score_Adj, SGRM_Score_Adj, DPE_Score_Adj or ITR_Score_Adj)
 ```excel
-=IF(COUNTIF(E15:E35, ">0") = 0, "",
-    AVERAGE(IF(E15:E35>0, E15:E35)))
+=IFERROR(L5*ProfileMultiplier,"-")
 ```
+The adjusted score can be higher than 4.
 
-### Adjusted Dimension Score (F46)
+### Answered questions (N2)
 ```excel
-=IF(E46="", "", E46 * ProfileMultiplier)
+=COUNTIFS(I7:I171,">0",I7:I171,"<>Rating")
 ```
-
-### Progress Percentage (H2)
-```excel
-=COUNTIF(C5:C34, "<>""") / 30
-```
-
-### Questions Remaining (H3)
-```excel
-=30 - COUNTIF(C5:C34, "<>""")
-```
+The percent complete for the whole assessment is Welcome!J5 (named PctComplete), the sum of the four N2 cells divided by 120 and rounded to 2 decimal places.
 
 ## Scorecard Tab Formulas
 
-### Overall Maturity Score (B3)
+### Overall score (E14)
+E9:E12 hold the four dimension scores. The overall score is not multiplied by ProfileMultiplier.
 ```excel
-=IF(COUNTIF(Dim1_Score:Dim4_Score, ">0") = 0, "Not Started",
-    AVERAGE(IF({Dim1_Score;Dim2_Score;Dim3_Score;Dim4_Score}>0,
-        {Dim1_Score;Dim2_Score;Dim3_Score;Dim4_Score})))
+=IF(COUNTIF(E9:E12,"=-")>0,"-",AVERAGE(E9:E12))
 ```
 
-### Maturity Level Text (B4)
+### Adjusted overall score (F14)
+F9:F12 hold the four adjusted dimension scores.
 ```excel
-=IF(ISNUMBER(B3),
-    LOOKUP(B3, {0,1.6,2.6,3.6,4.0}, 
-        {"Basic","Developing","Established","Advanced","Optimizing"}),
-    "")
+=IF(COUNTIF(F9:F12,"=-")>0,"-",AVERAGE(F9:F12))
 ```
+
+### Maturity Level Text (H14, and H9:H12 for the dimensions)
+```excel
+=IFS(E14="-", "Incomplete Assessment", E14>=3.5,"Advanced",E14>=2.5,"Established",E14>=1.5,"Developing",1=1,"Basic")
+```
+There is no "Optimizing" label: a score of 4.0 is "Advanced".
 
 ### Top Strength Practice (D8)
 ```excel
