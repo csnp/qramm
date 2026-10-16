@@ -132,22 +132,33 @@ Each practice is evaluated using two complementary streams:
 
 ### Scoring Methodology
 
-#### Practice-Level Scoring
-Each practice score is calculated as the average of all 10 questions within that practice:
+The QRAMM Assessment Toolkit workbook calculates the scores. The [Scoring Methodology](scoring-methodology.md) describes that calculation in full, with the practice weights, the profile-adjusted score and a worked example from the sample assessment.
 
-**Practice Score = (Sum of all 10 question scores) ÷ 10**
+#### Practice-Level Scoring
+Each practice score combines its two streams. The average of the answered Foundation questions counts for 60 percent and the average of the answered Advanced questions counts for 40 percent. A question with no answer is left out of the average.
+
+```
+Practice Score = (average of the answered Foundation questions × 0.6)
+               + (average of the answered Advanced questions × 0.4)
+```
 
 #### Dimension-Level Scoring
-Dimension scores use the "weakest link" principle, taking the minimum score across the three practices:
+Each dimension score is the weighted sum of its three practice scores. Each practice has a fixed weight, and the three weights in a dimension add up to 1.00. The weights are listed in the [Scoring Methodology](scoring-methodology.md#dimension-level-scoring).
 
-**Dimension Score = MIN(Practice 1, Practice 2, Practice 3)**
+```
+Dimension Score = (Practice 1 Score × Weight 1)
+                + (Practice 2 Score × Weight 2)
+                + (Practice 3 Score × Weight 3)
+```
 
-This approach ensures that organizations cannot achieve high dimension scores while having significant gaps in critical areas.
+Because each practice carries a fixed share, a strong practice can lift the dimension score while another practice stays low. Read the practice scores, not only the dimension score, to find gaps.
 
 #### Overall QRAMM Score
 The overall organizational score averages all four dimension scores:
 
-**Overall QRAMM Score = (CVI + SGRM + DPE + ITR) ÷ 4**
+```
+Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
+```
 
 ### Evidence-Based Evaluation
 
