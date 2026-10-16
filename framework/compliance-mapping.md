@@ -29,6 +29,9 @@ This document provides comprehensive mapping between QRAMM practices and key fed
 - **FIPS 199**: Standards for Security Categorization
 - **FIPS 200**: Minimum Security Requirements
 
+### Related model, not a compliance target: PKI Consortium PQCMM
+The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readiness of a product or service, while QRAMM scores an organization. It is listed here as a sibling model, not as a framework QRAMM maps compliance to. See [QRAMM beside PQCMM](pqcmm-comparison.md) for how the two fit together.
+
 ---
 
 ## Compliance Mapping Structure

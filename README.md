@@ -293,6 +293,7 @@ qramm/
 │   ├── maturity-levels.md      # 5-level maturity progression
 │   ├── scoring-methodology.md  # Scoring system details
 │   ├── compliance-mapping.md   # Standards alignment details
+│   ├── pqcmm-comparison.md     # QRAMM beside the PKI Consortium PQCMM (product scale)
 │   └── Complete_QRAMM_Questions.md  # All 120 assessment questions
 ├── toolkit/                # Assessment tools
 │   ├── QRAMM_Assessment_Toolkit.xlsx  # Main Excel assessment tool
