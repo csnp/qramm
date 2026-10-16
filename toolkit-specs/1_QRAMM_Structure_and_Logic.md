@@ -73,7 +73,7 @@ The factors add up to 1.00 and every risk value is 1.0, 1.3 or 1.5, so the multi
 - Org Size (Profile!D11): Fortune 500/Global Enterprise = 1.5; Large Enterprise (1000+ employees) = 1.3; Mid-Market (100-999 employees), Small Business (<100 employees) = 1.0
 
 ### 4. Maturity Level Mapping
-The Scorecard labels each dimension score and the overall score (Scorecard!H9:H12 and H14). There is no "Optimizing" label: a score of 4.0 is "Advanced".
+The Scorecard labels each dimension score and the overall score (Scorecard!H9:H12 and H14). These labels have no "Optimizing": a dimension or overall score of 4.0 is "Advanced". The Scorecard's Maturity Distribution chart (Scorecard!L21:M26) sorts the 12 practice scores with other cut-offs (1.6, 2.6, 3.6 and 4) and counts a practice score of 4 as "Optimizing".
 ```excel
 =IFS(Score="-", "Incomplete Assessment",
      Score>=3.5, "Advanced",
