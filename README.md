@@ -1,35 +1,35 @@
 # QRAMM: Quantum Readiness Assurance Maturity Model
 
-<div align="center">
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/csnp/qramm.svg)](https://github.com/csnp/qramm/stargazers)
-[![NIST Aligned](https://img.shields.io/badge/NIST-Aligned-green.svg)](https://csrc.nist.gov/projects/post-quantum-cryptography)
-[![Enterprise Ready](https://img.shields.io/badge/Enterprise-Ready-purple.svg)](https://qramm.org)
 
-**The Industry-Leading Open Source Framework for Organizational Quantum Readiness**
+> Part of the **QRAMM** toolkit by CSNP: [CryptoScan](https://github.com/csnp/cryptoscan), [CryptoDeps](https://github.com/csnp/cryptodeps), [TLS Analyzer](https://github.com/csnp/tls-analyzer). Framework: [qramm.org](https://qramm.org).
 
-[**Visit Website**](https://qramm.org) | [**Download Toolkit**](toolkit/QRAMM_Assessment_Toolkit.xlsx) | [**Sample Toolkit**](toolkit/Sample_Assessment.xlsx) | [**Toolkit Overview**](toolkit/toolkit-overview.md) | [**Framework Docs**](framework/qramm-overview.md)
+[Website](https://qramm.org) · [Toolkit](toolkit/toolkit-overview.md) · [Quick assessment](https://qramm.org/quick-assessment.html)
 
-</div>
+QRAMM is a free and open framework that helps an organization find out how ready it is for quantum computers and plan its move to quantum-safe cryptography. It looks at four dimensions, places each one on five maturity levels through 120 assessment questions, and comes with an Excel toolkit that does the scoring for you.
 
----
+Start with [the four dimensions](framework/qramm-overview.md#the-4-dimensions) in the framework overview. They are what you rate your organization against.
 
-## Open Source Tools
+CryptoScan automates part of Dimension 1: it inventories the cryptography in a code repository and maps each finding to practice 1.1, 1.2 or 1.3 ([CryptoScan guide](https://qramm.org/learn/cryptoscan-guide.html)):
 
-QRAMM provides a suite of open source tools to support your quantum readiness journey.
+```bash
+go install github.com/csnp/cryptoscan/cmd/cryptoscan@latest
+cryptoscan scan .
+```
+
+## Open source tools
+
+These tools automate parts of a QRAMM assessment. The [Open Source Tools page](https://qramm.org/open-source-tools.html) has a guide for each one.
 
 ### Maintained by CSNP
 
-These are built and maintained alongside the framework, and CSNP stands behind them.
+These are built and maintained alongside the framework, and CSNP stands behind them. They support Dimension 1 (Cryptographic Visibility & Inventory).
 
 | Tool | Description | Repository |
 |------|-------------|------------|
-| **CryptoScan** | Cryptographic discovery scanner - scans codebases for quantum-vulnerable algorithms with SARIF and CBOM output | [GitHub](https://github.com/csnp/cryptoscan) |
-| **TLS Analyzer** | TLS/SSL configuration analyzer - evaluates cipher suites and key exchange, detects hybrid ML-KEM key exchange, and tracks CNSA 2.0 compliance | [GitHub](https://github.com/csnp/tls-analyzer) |
-| **CryptoDeps** | Dependency crypto analyzer - identifies quantum-vulnerable algorithms in your software supply chain | [GitHub](https://github.com/csnp/cryptodeps) |
-
-These tools integrate with the QRAMM framework to provide automated discovery and assessment capabilities for Dimension 1 (Cryptographic Visibility & Inventory). See the [Open Source Tools page](https://qramm.org/open-source-tools.html) for detailed guides.
+| **CryptoScan** | Cryptographic discovery scanner: scans codebases for quantum-vulnerable algorithms with SARIF and CBOM output | [GitHub](https://github.com/csnp/cryptoscan) |
+| **TLS Analyzer** | TLS/SSL configuration analyzer: evaluates cipher suites and key exchange, detects hybrid ML-KEM key exchange, and tracks CNSA 2.0 compliance | [GitHub](https://github.com/csnp/tls-analyzer) |
+| **CryptoDeps** | Dependency crypto analyzer: identifies quantum-vulnerable algorithms in your software supply chain | [GitHub](https://github.com/csnp/cryptodeps) |
 
 ### Community and third-party tools
 
@@ -40,331 +40,63 @@ would evaluate any other third-party dependency.
 
 | Tool | Description | Maintainer | Repository |
 |------|-------------|------------|------------|
-| **pqc-tools** | Scanner and CycloneDX CBOM generator for post-quantum readiness. Finds quantum-vulnerable cryptography (RSA/ECDH/ECDSA/DH) in code and gives NIST ML-KEM/ML-DSA/SLH-DSA migration guidance. CLI, MCP server, and GitHub Action. | quantakrypto | [GitHub](https://github.com/quantakrypto/pqc-tools) |
+| **pqc-tools** | Finds quantum-vulnerable cryptography in code, writes CycloneDX CBOMs and gives NIST migration guidance. CLI, MCP server and GitHub Action. | quantakrypto | [GitHub](https://github.com/quantakrypto/pqc-tools) |
 
 To propose a tool for this table, open a pull request. Please include the license,
 who maintains it, and a link to its documentation.
 
----
+## The framework
 
-## Executive Summary
+QRAMM looks at four dimensions, each with three practices. The [framework overview](framework/qramm-overview.md) describes every one of them.
 
-The **Quantum Readiness Assurance Maturity Model (QRAMM)** is an evidence-based framework designed to help enterprises systematically prepare for the quantum computing threat to current cryptographic systems. Developed by cybersecurity experts at CyberSecurity NonProfit (CSNP), QRAMM provides the structured approach organizations need to:
+1. **Cryptographic Visibility & Inventory (CVI)**: find and list the cryptography your systems use.
+2. **Strategic Governance & Risk Management (SGRM)**: leadership, policy and risk management for the move.
+3. **Data Protection Engineering (DPE)**: protect data at rest, in transit and in use.
+4. **Implementation & Technical Readiness (ITR)**: deploy, integrate and maintain quantum-safe technology.
 
-- **Assess** current quantum vulnerability across all cryptographic assets
-- **Plan** strategic transition to quantum-safe cryptography
-- **Implement** post-quantum security measures with minimal disruption
-- **Validate** quantum readiness through continuous monitoring
+Your answers place you on [five maturity levels](framework/maturity-levels.md), from Basic to Optimizing. The [scoring methodology](framework/scoring-methodology.md) explains how answers become scores.
 
-With quantum computers capable of breaking RSA-2048 encryption expected within 5-10 years, organizations must act now to protect long-term sensitive data and maintain business continuity.
+## Assessment toolkit
 
-## Business Value Proposition
+The Excel toolkit holds all 120 questions, scores your answers for you, adjusts the result for your organization's risk profile, and maps it to eight compliance frameworks.
 
-### For Executive Leadership
-- **Clear ROI**: Quantifiable risk reduction and compliance assurance
-- **Competitive Advantage**: Early adoption positions your organization as a security leader
-- **Board-Ready Reporting**: Executive dashboards and maturity visualizations
-- **Regulatory Compliance**: Meet emerging quantum security requirements
+- [Download the toolkit](toolkit/QRAMM_Assessment_Toolkit.xlsx)
+- [Sample assessment](toolkit/Sample_Assessment.xlsx), already filled in
+- [Toolkit overview](toolkit/toolkit-overview.md)
+- [Screenshots of the scorecards and compliance views](docs/toolkit-visuals.md)
 
-### For Security Professionals
-- **Comprehensive Coverage**: Only framework addressing all aspects of quantum readiness
-- **Technical Depth**: Detailed implementation guidance and best practices
-- **Tool Integration**: Compatible with existing security infrastructure
-- **Community Support**: Active community of practitioners and experts
+## Getting started
 
-### For Compliance Teams
-- **Standards Alignment**: Full compatibility with NIST, ISO, and industry standards
-- **Audit Trail**: Complete documentation for regulatory assessments
-- **Risk Frameworks**: Integrated with enterprise risk management
-- **Evidence Collection**: Systematic approach to compliance demonstration
+1. Take the [quick assessment](https://qramm.org/quick-assessment.html) for a first maturity score in 5 to 10 minutes.
+2. Follow the [getting started guide](implementation/getting-started.md) to plan a full assessment.
+3. Use the [templates](templates/) for an executive report, asset inventory, vendor questionnaire and evidence collection.
 
-## The Quantum Threat Timeline
+## Compliance mapping
 
-<div align="center">
+The toolkit maps QRAMM to eight frameworks and standards, including NIST PQC, NSM 10, CNSA 2.0, CMMC and FedRAMP ([full list](docs/overview.md#regulatory-compliance--standards)). The [compliance mapping](framework/compliance-mapping.md) shows practice by practice how QRAMM supports NIST PQC, CMMC, FedRAMP and FISMA, and the [coverage summary](framework/compliance-coverage-summary.md) gives a quick reference.
 
-| Timeline | Event | Impact |
-|----------|-------|---------|
-| **2024-2025** | Initial assessments begin | Organizations start quantum readiness journey |
-| **2026-2028** | NIST standards adoption | Regulatory requirements emerge |
-| **2029-2032** | Quantum computers emerge | Current encryption vulnerable |
-| **2033+** | Widespread quantum computing | Unprepared organizations at severe risk |
+## Documentation
 
-**CRITICAL: Data encrypted today can be harvested now and decrypted later**
+- [Overview](docs/overview.md): business value, architecture, roadmap, scoring and standards
+- [Frequently asked questions](docs/faq.md)
+- [Framework overview](framework/qramm-overview.md)
+- [All 120 assessment questions](framework/Complete_QRAMM_Questions.md)
+- [Full assessment](framework/full-assessment.md)
+- [Maturity levels](framework/maturity-levels.md) and [scoring methodology](framework/scoring-methodology.md)
+- [Toolkit overview](toolkit/toolkit-overview.md) and [toolkit screenshots](docs/toolkit-visuals.md)
+- [Getting started guide](implementation/getting-started.md)
+- [Templates](templates/)
 
-</div>
+## Contributing
 
-## QRAMM Framework Architecture
+QRAMM welcomes contributions from security professionals, quantum researchers, enterprise architects and compliance specialists. Open an issue or a pull request, or join [GitHub Discussions](https://github.com/csnp/qramm/discussions). For questions about the framework, write to [qramm@csnp.org](mailto:qramm@csnp.org).
 
-### Four Integrated Dimensions
+QRAMM is written by Emily (Stamm) Fane, author, and Abdel Fane, co-author, of [CyberSecurity NonProfit (CSNP)](https://csnp.org). See [Framework Development](docs/overview.md#framework-development).
 
-#### **Dimension 1: Cryptographic Visibility & Inventory (CVI)**
-*Foundation: Understanding and cataloging cryptographic assets across the organization*
+## License
 
-**What It Does**: CVI establishes comprehensive visibility into your cryptographic landscape—discovering every algorithm, key, certificate, and protocol across all systems. It transforms invisible cryptographic dependencies into a manageable asset inventory.
+QRAMM is released under the [MIT License](LICENSE). To cite it:
 
-**Why It's Critical**: Without knowing what cryptographic assets you have and where they're deployed, planning a quantum-safe transition becomes impossible. CVI enables proactive, risk-based planning instead of reactive scrambling.
-
-**Key Value**: 
-- Discovers hidden quantum vulnerabilities in legacy systems and third-party components
-- Maps cryptographic dependencies to prevent migration failures
-- Enables data-driven prioritization based on actual risk
-- Identifies compliance gaps before they become violations
-
-**Practice Areas**:
-- **Practice 1.1**: Cryptographic Discovery & Inventory Management
-- **Practice 1.2**: Vulnerability Assessment & Classification  
-- **Practice 1.3**: Cryptographic Dependency Mapping
-
-#### **Dimension 2: Strategic Governance & Risk Management (SGRM)**
-*Leadership: Leadership commitment and systematic risk management for quantum threats*
-
-**What It Does**: SGRM establishes the organizational foundation for quantum readiness through executive leadership, comprehensive policies, and integrated risk management. It transforms quantum security from an IT project into a strategic business imperative.
-
-**Why It's Critical**: Quantum-safe transformation requires years of sustained effort, significant investment, and enterprise-wide coordination. Without executive commitment and governance, initiatives fail to secure resources and organizational authority.
-
-**Key Value**:
-- Establishes board-level accountability for quantum security
-- Secures dedicated funding for multi-year transformation
-- Breaks down organizational silos for coordinated response
-- Aligns quantum readiness with regulatory compliance
-- Extends governance to supply chain partners
-
-**Practice Areas**:
-- **Practice 2.1**: Executive Leadership & Policy Management
-- **Practice 2.2**: Risk Assessment & Compliance Management
-- **Practice 2.3**: Third-Party & Supply Chain Risk Management
-
-#### **Dimension 3: Data Protection Engineering (DPE)**
-*Protection: Technical implementation of quantum-safe data protection measures*
-
-**What It Does**: DPE implements the technical controls that protect sensitive information against quantum threats across all data states—at rest, in transit, and in use. It delivers real security through quantum-resistant encryption and comprehensive key management.
-
-**Why It's Critical**: Data is the ultimate target. Current encryption will become vulnerable to quantum decryption, threatening everything from financial records to healthcare data. DPE addresses the "harvest now, decrypt later" threat.
-
-**Key Value**:
-- Protects long-term sensitive data against future quantum threats
-- Replaces vulnerable algorithms before they fail
-- Establishes cryptographic agility for evolving standards
-- Maintains operational efficiency with optimized implementations
-- Ensures compliance with data protection regulations
-
-**Practice Areas**:
-- **Practice 3.1**: Data Classification & Protection Requirements
-- **Practice 3.2**: Storage Security & Encryption Management
-- **Practice 3.3**: Transit Security & Protocol Management
-
-#### **Dimension 4: Implementation & Technical Readiness (ITR)**
-*Execution: Execution capabilities for quantum-safe technology deployment*
-
-**What It Does**: ITR bridges the gap between planning and reality, ensuring successful deployment, integration, and maintenance of quantum-resistant technologies. It transforms strategic intentions into operational systems while maintaining business continuity.
-
-**Why It's Critical**: The best strategy fails without effective implementation. ITR prevents common failures—from performance problems to integration issues—that derail quantum initiatives. It makes the difference between talking about quantum security and achieving it.
-
-**Key Value**:
-- Prevents implementation failures through systematic planning
-- Manages complex integrations between new and legacy systems
-- Optimizes performance to maintain operational efficiency
-- Builds organizational capabilities for long-term success
-- Ensures smooth transitions without business disruption
-
-**Practice Areas**:
-- **Practice 4.1**: Technology Infrastructure Assessment
-- **Practice 4.2**: Integration Planning and Implementation
-- **Practice 4.3**: Operational Readiness and Maintenance
-
-### Five-Level Maturity Model
-
-| Level | Name | Characteristics | Typical Organizations |
-|-------|------|-----------------|----------------------|
-| **1** | **Basic** | Ad-hoc practices, limited awareness | Most organizations today |
-| **2** | **Developing** | Initial structured approach emerging | Security-conscious enterprises |
-| **3** | **Established** | Systematic implementation organization-wide | Industry leaders |
-| **4** | **Advanced** | Optimized processes, continuous improvement | High-security sectors |
-| **5** | **Optimizing** | Industry leadership, innovation driver | Global security pioneers |
-
-## Implementation Roadmap
-
-### Phase 1: Discovery & Assessment (3-6 months)
-- Complete QRAMM assessment across all dimensions
-- Identify cryptographic assets and vulnerabilities
-- Establish baseline maturity levels
-- Develop executive briefing materials
-
-### Phase 2: Planning & Prioritization (2-4 months)
-- Create quantum readiness strategy
-- Prioritize critical systems and data
-- Allocate resources and budget
-- Obtain executive approval
-
-### Phase 3: Pilot Implementation (6-12 months)
-- Deploy quantum-safe technologies in test environments
-- Validate performance and compatibility
-- Refine processes and procedures
-- Build organizational capabilities
-
-### Phase 4: Enterprise Rollout (12-24 months)
-- Systematic deployment across organization
-- Continuous monitoring and optimization
-- Regular maturity reassessment
-- Industry collaboration and knowledge sharing
-
-## Scoring System & Methodology
-
-### Assessment Structure
-- **120 Total Questions**: Complete assessment framework
-- **30 Questions per Dimension**: In-depth evaluation of each area
-- **10 Questions per Practice**: Detailed assessment of 12 practices
-- **4 Answer Options**: Each question has 4 options mapping to 5 maturity levels
-
-### Scoring Calculation
-```
-Dimension Score = Average of practice scores within dimension
-Overall QRAMM Score = Average of all dimension scores
-Maturity Level = Derived from overall score thresholds
-```
-
-### Maturity Thresholds
-- **Level 1 (Basic)**: Score 1.0 - 1.5
-- **Level 2 (Developing)**: Score 1.6 - 2.5
-- **Level 3 (Established)**: Score 2.6 - 3.5
-- **Level 4 (Advanced)**: Score 3.6 - 3.9
-- **Level 5 (Optimizing)**: Score 4.0 (Perfect score demonstrating excellence)
-
-## QRAMM Assessment Toolkit Now Available
-
-The comprehensive Excel-based QRAMM Assessment Toolkit is now available for download! This toolkit features:
-- **Automated Scoring**: Instant calculation of raw and weighted scores across all dimensions
-- **Dynamic Scorecards**: Professional visualizations including charts, graphs, and maturity distribution
-- **Organization Profile Multiplier**: Risk-adjusted scoring based on your industry and context
-- **Compliance Mapping**: Automatic mapping to 8 major frameworks (NIST, CMMC, ISO, etc.)
-- **120 Assessment Questions**: Complete coverage across 4 dimensions and 12 practices
-- **Executive Reporting**: Board-ready dashboards with benchmarking and recommendations
-
-[**Download the Toolkit**](toolkit/QRAMM_Assessment_Toolkit.xlsx) | [**View Sample Assessment**](toolkit/Sample_Assessment.xlsx) | [**Read Toolkit Overview**](toolkit/toolkit-overview.md)
-
-## Toolkit Visual Examples
-
-### Scorecard Dashboard
-<div align="center">
-  <img src="assets/toolkit-visuals/qramm-scorecard-dimension-summary.png" alt="QRAMM Scorecard Dimension Summary" width="800">
-  <p><em>Comprehensive scorecard showing dimension scores, weighted adjustments, and maturity visualization</em></p>
-</div>
-
-<div align="center">
-  <img src="assets/toolkit-visuals/qramm-scorecard-practice-level-heatmap.png" alt="QRAMM Practice Level Heatmap" width="800">
-  <p><em>Detailed practice-level analysis with maturity distribution and improvement recommendations</em></p>
-</div>
-
-### Compliance Mapping
-<div align="center">
-  <img src="assets/toolkit-visuals/qramm-compliance-mapping-nist-pqc.png" alt="NIST PQC Compliance Mapping" width="800">
-  <p><em>NIST Post-Quantum Cryptography framework mapping with coverage analysis</em></p>
-</div>
-
-<div align="center">
-  <img src="assets/toolkit-visuals/qramm-compliance-mapping-fedramp.png" alt="FedRAMP Compliance Mapping" width="800">
-  <p><em>FedRAMP compliance mapping showing 95% coverage across security controls</em></p>
-</div>
-
-## Getting Started
-
-### 1. Quick Assessment (Recommended First Step)
-**Time**: 5-10 minutes
-**Link**: [https://qramm.org](https://qramm.org)
-**Output**: Instant maturity score, radar charts, priority recommendations
-
-### 2. Download Resources
-- [Executive Report Template](https://github.com/csnp/qramm/blob/main/templates/executive-report-template.md)
-- [Asset Inventory Template](https://github.com/csnp/qramm/blob/main/templates/asset-inventory-template.md)
-- [Vendor Assessment Questionnaire](https://github.com/csnp/qramm/blob/main/templates/vendor-questionnaire-template.md)
-- [Evidence Collection Template](https://github.com/csnp/qramm/blob/main/templates/evidence-collection-template.md)
-
-### 3. Engage Stakeholders
-- Present assessment results to executive leadership
-- Establish quantum readiness working group
-- Allocate initial resources for planning phase
-
-## Repository Structure
-
-```
-qramm/
-├── framework/              # Framework documentation
-│   ├── qramm-overview.md       # Executive framework summary
-│   ├── maturity-levels.md      # 5-level maturity progression
-│   ├── scoring-methodology.md  # Scoring system details
-│   ├── compliance-mapping.md   # Standards alignment details
-│   ├── pqcmm-comparison.md     # QRAMM beside the PKI Consortium PQCMM (product scale)
-│   └── Complete_QRAMM_Questions.md  # All 120 assessment questions
-├── toolkit/                # Assessment tools
-│   ├── QRAMM_Assessment_Toolkit.xlsx  # Main Excel assessment tool
-│   ├── Sample_Assessment.xlsx         # Pre-filled example
-│   └── toolkit-overview.md            # Feature documentation
-├── implementation/         # Implementation guidance
-│   └── getting-started.md      # Getting started guide
-├── templates/              # Ready-to-use templates
-│   ├── executive-report-template.md
-│   ├── asset-inventory-template.md
-│   ├── vendor-questionnaire-template.md
-│   └── evidence-collection-template.md
-├── assets/                 # Visual assets
-│   └── toolkit-visuals/        # Scorecard and compliance screenshots
-└── toolkit-specs/          # Technical specifications (internal)
-```
-
-## Regulatory Compliance & Standards
-
-### Standards Alignment
-The QRAMM Toolkit maps to 8 major frameworks and standards:
-
-| Framework | Description |
-|-----------|-------------|
-| **NIST PQC** | NIST Post-Quantum Cryptography Standards |
-| **NSM 10** | National Security Memorandum quantum readiness mandates |
-| **CNSA 2.0** | NSA Commercial National Security Algorithm Suite |
-| **ISO/IEC 27001:2022** | Information security management |
-| **ETSI QSC** | European quantum-safe cryptography standards |
-| **CMMC** | Cybersecurity Maturity Model Certification |
-| **FedRAMP** | Federal Risk and Authorization Management Program |
-| **NIST CSF** | NIST Cybersecurity Framework |
-
-## Support & Resources
-
-For questions about QRAMM implementation or framework guidance, contact: [qramm@csnp.org](mailto:qramm@csnp.org)
-
-### Community Resources
-- **GitHub Discussions**: [Join the conversation](https://github.com/csnp/qramm/discussions)
-
-## Framework Development
-
-### Leadership Team
-
-**Emily (Stamm) Fane** - *Author*  
-VP of CSNP Board  
-[LinkedIn](https://www.linkedin.com/in/emilyfane/)
-
-**Abdel Fane** - *Co-Author*  
-Executive Director of CSNP  
-[LinkedIn](https://www.linkedin.com/in/abdelsyfane/)
-
-**Organization**: [CyberSecurity NonProfit (CSNP)](https://csnp.org)
-
-### Contributing
-QRAMM is an open-source initiative welcoming contributions from:
-- Security professionals
-- Quantum researchers
-- Enterprise architects
-- Compliance specialists
-
-## License & Usage
-
-QRAMM is released under the **MIT License**, providing:
-- Commercial use
-- Modification
-- Distribution
-- Patent use
-- Private use
-
-### Citation
 ```bibtex
 @software{qramm2025,
   title = {QRAMM: Quantum Readiness Assurance Maturity Model},
@@ -375,34 +107,5 @@ QRAMM is released under the **MIT License**, providing:
 }
 ```
 
-## Frequently Asked Questions
-
-### Q: How long does a QRAMM assessment take?
-**A**: Quick assessment: 5-10 minutes. Comprehensive assessment: 2-4 hours with stakeholder input and evidence gathering.
-
-### Q: Is QRAMM suitable for small organizations?
-**A**: Yes. QRAMM scales from small businesses to global enterprises with tailored implementation paths.
-
-### Q: How often should we reassess?
-**A**: Quarterly for critical systems, annually for full organizational assessment.
-
-### Q: Do we need quantum experts?
-**A**: No. QRAMM provides all necessary guidance. Expert consultation available for complex implementations.
-
-## Next Steps
-
-<div align="center">
-
-### Start Your Quantum Readiness Journey Today
-
-1. **[Take the Assessment](https://qramm.org)** - Get your baseline score in minutes
-2. **[Download Templates](https://github.com/csnp/qramm/tree/main/templates)** - Accelerate implementation
-
-**The quantum threat is approaching. Organizations that act now will thrive in the post-quantum era.**
-
----
-
 *QRAMM is a trademark of CyberSecurity NonProfit (CSNP)*  
 *© 2025 CSNP. All rights reserved.*
-
-</div>
