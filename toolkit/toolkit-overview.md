@@ -94,13 +94,13 @@ QRAMM provides two assessment entry points:
 QRAMM maps to 8 major frameworks and standards:
 
 1. **NIST Post-Quantum Cryptography Standards**: Alignment with NIST's quantum-safe algorithms
-2. **NSM 10 Requirements**: U.S. National Security Memorandum quantum readiness mandates
-3. **CNSA 2.0 Guidelines**: NSA's Commercial National Security Algorithm Suite
-4. **ISO/IEC 27001:2022**: Information security management with quantum considerations
-5. **ETSI Quantum-Safe Standards**: European quantum security specifications
-6. **CMMC**: Cybersecurity Maturity Model Certification requirements
-7. **FedRAMP**: Federal Risk and Authorization Management Program controls
-8. **NIST Cybersecurity Framework (CSF)**: Core security function alignment
+2. **NIST Cybersecurity Framework (CSF)**: Core security function alignment
+3. **CMMC**: Cybersecurity Maturity Model Certification requirements
+4. **FISMA**: Federal Information Security Modernization Act requirements
+5. **FedRAMP**: Federal Risk and Authorization Management Program controls
+6. **ISO 27001**: Information security management
+7. **SOC 2**: AICPA System and Organization Controls report for service organizations
+8. **CIS Controls**: Center for Internet Security Critical Security Controls
 
 ## Business Value
 ### Immediate Benefits

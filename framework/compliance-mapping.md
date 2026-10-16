@@ -11,18 +11,18 @@ This document provides comprehensive mapping between QRAMM practices and key fed
 - **FIPS 203**: Module-Lattice-Based Key-Encapsulation Mechanism (ML-KEM)
 - **FIPS 204**: Module-Lattice-Based Digital Signature Standard (ML-DSA)  
 - **FIPS 205**: Stateless Hash-Based Digital Signature Standard (SLH-DSA)
-- **NIST SP 800-131A Rev. 2**: Transitioning the Use of Cryptographic Algorithms
-- **NIST IR 8547**: Transition to Post-Quantum Cryptography Standards
+- **NIST SP 800-131A Rev. 2**: Transitioning the Use of Cryptographic Algorithms (Rev. 3 initial public draft, October 2024, under review)
+- **NIST IR 8547 (initial public draft, November 2024)**: Transition to Post-Quantum Cryptography Standards
 
 ### 2. CMMC 2.0 (Cybersecurity Maturity Model Certification)
-- **Level 1**: Foundational (17 practices)
+- **Level 1**: Foundational (15 security requirements from FAR 52.204-21)
 - **Level 2**: Advanced (110 practices based on NIST SP 800-171)
-- **Level 3**: Expert (110+ practices based on NIST SP 800-172)
+- **Level 3**: Expert (Level 2 plus 24 selected requirements from NIST SP 800-172)
 
 ### 3. FedRAMP (Federal Risk and Authorization Management Program)
-- **FedRAMP Low**: 125 controls
-- **FedRAMP Moderate**: 325 controls
-- **FedRAMP High**: 421 controls
+- **FedRAMP Low**
+- **FedRAMP Moderate**
+- **FedRAMP High**
 
 ### 4. FISMA (Federal Information Security Management Act)
 - **NIST SP 800-53 Rev. 5**: Security and Privacy Controls
