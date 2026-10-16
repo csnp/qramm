@@ -21,7 +21,7 @@ This summary shows how QRAMM dimensions and practices align with major complianc
 
 #### NIST Post-Quantum Cryptography Standards
 - **Primary Standards**: FIPS 203, 204, 205
-- **Supporting Documents**: SP 800-131A, IR 8547, M-23-02
+- **Supporting Documents**: SP 800-131A, NIST IR 8547 (initial public draft, November 2024), M-23-02
 - **QRAMM Coverage**: 100% - Designed specifically for PQC readiness
 
 #### CMMC 2.0 (Cybersecurity Maturity Model Certification)

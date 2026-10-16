@@ -233,13 +233,13 @@ The QRAMM Toolkit maps to 8 major frameworks and standards:
 | Framework | Description |
 |-----------|-------------|
 | **NIST PQC** | NIST Post-Quantum Cryptography Standards |
-| **NSM 10** | National Security Memorandum quantum readiness mandates |
-| **CNSA 2.0** | NSA Commercial National Security Algorithm Suite |
-| **ISO/IEC 27001:2022** | Information security management |
-| **ETSI QSC** | European quantum-safe cryptography standards |
-| **CMMC** | Cybersecurity Maturity Model Certification |
-| **FedRAMP** | Federal Risk and Authorization Management Program |
 | **NIST CSF** | NIST Cybersecurity Framework |
+| **CMMC** | Cybersecurity Maturity Model Certification |
+| **FISMA** | Federal Information Security Modernization Act |
+| **FedRAMP** | Federal Risk and Authorization Management Program |
+| **ISO 27001** | Information security management |
+| **SOC 2** | AICPA System and Organization Controls report for service organizations |
+| **CIS Controls** | Center for Internet Security Critical Security Controls |
 
 ## Framework Development
 

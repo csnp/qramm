@@ -73,7 +73,7 @@ The Excel toolkit holds all 120 questions, scores your answers for you, adjusts 
 
 ## Compliance mapping
 
-The toolkit maps QRAMM to eight frameworks and standards, including NIST PQC, NSM 10, CNSA 2.0, CMMC and FedRAMP ([full list](docs/overview.md#regulatory-compliance--standards)). The [compliance mapping](framework/compliance-mapping.md) shows practice by practice how QRAMM supports NIST PQC, CMMC, FedRAMP and FISMA, and the [coverage summary](framework/compliance-coverage-summary.md) gives a quick reference.
+The toolkit maps QRAMM to eight frameworks and standards: NIST PQC, NIST CSF, CMMC, FISMA, FedRAMP, ISO 27001, SOC 2 and CIS Controls ([descriptions](docs/overview.md#regulatory-compliance--standards)). The [compliance mapping](framework/compliance-mapping.md) shows practice by practice how QRAMM supports NIST PQC, CMMC, FedRAMP and FISMA, and the [coverage summary](framework/compliance-coverage-summary.md) gives a quick reference.
 
 ## Documentation
 
