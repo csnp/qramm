@@ -38,7 +38,8 @@ library only.
 
 Exit status: 0 when the documents agree with the workbook, 1 when they do
 not or the workbook does not have the form described above, 2 on a usage
-error.
+error. --help (or -h) prints the usage line and this text on stderr and
+exits 2.
 """
 
 import os
@@ -281,6 +282,11 @@ def check_document(path, lines, lowest, highest, problems):
 
 
 def main(argv):
+    if "--help" in argv or "-h" in argv:
+        print(USAGE, file=sys.stderr)
+        print(file=sys.stderr)
+        print(__doc__.strip(), file=sys.stderr)
+        return 2
     if any(arg.startswith("-") for arg in argv):
         print(USAGE, file=sys.stderr)
         return 2

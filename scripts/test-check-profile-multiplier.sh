@@ -40,7 +40,10 @@
 #  10. A workbook in which the organization size answers carry the factor
 #      0.15, as the geographic scope answers do: exit 1, one FAIL line that
 #      says the rows cannot be grouped into profile questions by factor.
-#  11. An option such as --help: exit 2, usage on stderr.
+#  11. An option such as --help: exit 2, usage on stderr, then the checker's
+#      header text.
+#  12. -h: exit 2, usage on stderr, then the checker's header text.
+#  13. An unknown option, --verbose: exit 2, only the usage line on stderr.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -265,6 +268,21 @@ end_case
 start_case "case 11: option argument" "$checker" --help
 expect "exit status is 2" '[ "$status" -eq 2 ]'
 expect "usage on stderr" 'printf "%s\n" "$err" | grep -q "^usage:"'
+expect "header text on stderr" \
+  'printf "%s\n" "$err" | grep -qx "Checks that documents giving the range of the QRAMM profile multiplier"'
+end_case
+
+start_case "case 12: -h" "$checker" -h
+expect "exit status is 2" '[ "$status" -eq 2 ]'
+expect "usage on stderr" 'printf "%s\n" "$err" | grep -q "^usage:"'
+expect "header text on stderr" \
+  'printf "%s\n" "$err" | grep -qx "Checks that documents giving the range of the QRAMM profile multiplier"'
+end_case
+
+start_case "case 13: unknown option" "$checker" --verbose
+expect "exit status is 2" '[ "$status" -eq 2 ]'
+expect "only the usage line on stderr" \
+  '[ "$err" = "usage: python3 -I scripts/check-profile-multiplier.py [file ...]" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
