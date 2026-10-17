@@ -165,7 +165,8 @@ def shown_value(block, label):
 def main(argv):
     if argv:
         print("usage: python3 -I scripts/check-scoring-example.py", file=sys.stderr)
-        if "--help" in argv or "-h" in argv:
+        # __doc__ is None when python3 -OO removes docstrings.
+        if ("--help" in argv or "-h" in argv) and __doc__:
             print(file=sys.stderr)
             print(__doc__.strip(), file=sys.stderr)
         return 2
