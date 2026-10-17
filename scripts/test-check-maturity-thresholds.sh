@@ -18,12 +18,18 @@
 #      exit 1, a FAIL line that says there is no score range for Advanced.
 #   5. The Scorecard cut-offs, plus other cut-offs inside a fenced code
 #      block: exit 0, the code block is not checked.
-#   6. An option such as --help: exit 2, usage on stderr.
+#   6. An option such as --help: exit 2, usage on stderr, then the checker's
+#      header text.
 #   7. Ranges at the end of a sentence, such as "score is 3.6 to 3.9." for
 #      Advanced: exit 1, a FAIL line for each of the three ranges that are
 #      not the Scorecard's, a PASS line for "1.5 to below 2.5." for
 #      Developing, and no line for "1.6 to 2.4.2." or "**2.5.1**", which are
 #      not read in part.
+#   8. An empty file argument: exit 1, "FAIL '': no file name given", no
+#      "cannot read" line.
+#
+# The temporary directory is made under .tmp-tests/ at the repository root,
+# and the cleanup removes only a directory under it.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -31,9 +37,17 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 checker="$here/check-maturity-thresholds.py"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/check-maturity-thresholds.XXXXXX")"
-work="$(cd "$work" && pwd -P)"
-trap 'rm -rf "$work"' EXIT
+tmp_root="$(cd "$here/.." && pwd -P)/.tmp-tests"
+mkdir -p "$tmp_root"
+work="$(mktemp -d "$tmp_root/check-maturity-thresholds.XXXXXX")"
+cleanup() {
+  case "$work" in
+    "$tmp_root"/?*) rm -rf -- "$work" ;;
+    *) exit 1 ;;
+  esac
+  rmdir "$tmp_root" 2> /dev/null || true
+}
+trap cleanup EXIT
 
 failed=0
 
@@ -172,6 +186,8 @@ end_case
 start_case "case 6: option argument" --help
 expect "exit status is 2" '[ "$status" -eq 2 ]'
 expect "usage on stderr" 'printf "%s\n" "$err" | grep -q "^usage:"'
+expect "header text on stderr" \
+  'printf "%s\n" "$err" | grep -qx "Checks that documents giving score ranges for the QRAMM maturity levels"'
 end_case
 
 printf '%s\n' \
@@ -202,6 +218,13 @@ expect "1.6 to 2.4.2 is not read as 1.6 to 2.4" \
   '! printf "%s\n" "$out" | grep -q "line 10: "'
 expect "**2.5.1** is not read as 2.5" \
   '! printf "%s\n" "$out" | grep -q "line 11: "'
+end_case
+
+start_case "case 8: an empty file argument" ""
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL says no file name was given" \
+  'printf "%s\n" "$out" | grep -qxF "  FAIL '"''"': no file name given"'
+expect "no cannot read line" '! printf "%s\n" "$out" | grep -q "cannot read"'
 end_case
 
 if [ "$failed" -eq 0 ]; then

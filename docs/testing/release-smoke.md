@@ -1,51 +1,77 @@
-# Release Smoke Test: qramm
+# Release smoke test: qramm
 
-Manual pre-release walkthrough. Run this before every deploy or publish.
-Use real keyboard and mouse input, not synthetic events. Record the actual
-output, not a summary.
+Manual pre-release walkthrough. Run this before every release of the
+framework documents or the toolkit workbooks. Use real keyboard and mouse
+input, not synthetic events. Record the actual output, not a summary.
 
-## 1. Build and start clean
+The repository has no build step and no package.json. The runnable code is
+the checkers and their test scripts under `scripts/`. They need bash and
+python3 and use the Python standard library only.
 
-- [ ] Fresh install succeeds (`npm ci` or equivalent) with no errors.
-- [ ] Build succeeds (`npm run build`).
-- [ ] App starts locally (`npm run dev`) with no console errors.
+## 1. Checkers and test scripts
 
-## 2. Core user paths
+Run from the repository root.
 
-List the three most important things a real visitor does on this site or
-with this tool, then walk each one by hand.
+- [ ] Each checker ends with `RESULT: PASS` and exits 0:
 
-- [ ] Path 1:
-- [ ] Path 2:
-- [ ] Path 3:
+  ```
+  bash scripts/check-framework-docs.sh
+  bash scripts/check-spec-passwords.sh
+  for checker in scripts/check-*.py; do python3 -I "$checker"; done
+  ```
 
-## 3. Accessibility and audience fit
+  `check-framework-docs.sh` fetches every external URL. Without network
+  access, add `--no-network` and follow the README links by hand in step 3.
+- [ ] Each test script ends with `RESULT: PASS` and exits 0:
 
-CSNP serves non-technical and vulnerable users. Verify the experience holds
-for them.
+  ```
+  for test in scripts/test-check-*.sh; do bash "$test"; done
+  ```
 
-- [ ] Plain language: no unexplained jargon in user-facing copy.
-- [ ] Keyboard navigable: every interactive element reachable by Tab.
-- [ ] Screen-reader labels present on buttons, links, and form fields.
-- [ ] Color contrast meets WCAG AA.
+- [ ] `git status` shows no new files afterwards. The test scripts write
+  their fixtures under `.tmp-tests/` and remove them when they exit.
+- [ ] `--help` on each checker prints a usage line and the checker's header
+  text on stderr.
 
-## 4. Responsive parity
+## 2. Workbooks
 
-- [ ] Mobile (375px): nav, menus, and layout all work.
-- [ ] Desktop (1280px): no overflow or broken grids.
-- [ ] Dark mode (if supported) renders correctly.
+Open both files in Excel or LibreOffice Calc.
 
-## 5. Data and links
+- [ ] `toolkit/QRAMM_Assessment_Toolkit.xlsx` (blank): the Scorecard shows
+  `-` for every dimension score and the overall score, and
+  `Incomplete Assessment` for every maturity level. No cell shows an error
+  such as `#DIV/0!` or `#N/A`.
+- [ ] Answer one question on a Dimension sheet, then clear it again: the
+  Scorecard returns to `-` and `Incomplete Assessment`.
+- [ ] `toolkit/Sample_Assessment.xlsx`: the Scorecard shows the scores that
+  the worked example in `framework/scoring-methodology.md` gives
+  (`python3 -I scripts/check-scoring-example.py` compares the saved values).
+- [ ] Every sheet tab opens, and no sheet asks for a password.
 
-- [ ] Every download link resolves (no 404s).
-- [ ] Any displayed number or statistic traces to a real source.
-- [ ] No placeholder or fabricated content shipped.
+## 3. Website and links
 
-## 6. Security
+- [ ] Take the quick assessment at https://qramm.org/quick-assessment.html
+  from start to finish with the keyboard only, and check that a score is
+  shown at the end.
+- [ ] Follow every link in `README.md` on GitHub. Each one opens the page or
+  section it names.
+- [ ] Download both workbooks from the "Download the toolkit" and "Sample
+  assessment" links in `README.md`.
 
-- [ ] No secrets in the bundle or committed files.
-- [ ] `.env` and credential files are gitignored and excluded.
-- [ ] Forms validate and sanitize input.
+## 4. Audience fit
+
+CSNP serves non-technical and vulnerable users.
+
+- [ ] Plain language in the README, the toolkit overview and the workbook
+  Welcome sheet: no unexplained jargon.
+- [ ] No placeholder or invented numbers in documents or workbooks. Every
+  score or statistic traces to the methodology or the sample assessment.
+
+## 5. Security
+
+- [ ] No secrets or credential files in the committed files.
+- [ ] The toolkit specs record no password
+  (`bash scripts/check-spec-passwords.sh` passes).
 
 ## Result
 

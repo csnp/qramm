@@ -63,7 +63,7 @@ Format as decimal with 1 decimal place (1.0, 0.8, etc.)
 - Red: <60%
 
 **For Gap Priority:**
-- HIGH ⚠: Red background (#FFC7CE), red text (#9C0006)
+- HIGH: Red background (#FFC7CE), red text (#9C0006)
 - Medium: Yellow background (#FFEB9C), dark yellow text (#9C5700)
 - Low: Green background (#C6EFCE), green text (#006100)
 
