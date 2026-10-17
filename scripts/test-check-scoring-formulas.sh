@@ -14,10 +14,16 @@
 #   4. Prose that describes the scores with no formulas, such as "Apply
 #      minimum scoring across practices": exit 1, a FAIL line for each of the
 #      three missing formulas.
-#   5. An option such as --help: exit 2, usage on stderr.
+#   5. An option such as --help: exit 2, usage on stderr, then the checker's
+#      header text.
 #   6. Ranges at the end of a sentence, such as "scored from 1 to 5.": exit 1,
 #      a FAIL line for each range that does not run from 1 to 4, and none for
 #      "scored from 1 to 4." or the decimal in "score 1-2.5".
+#   7. An empty file argument: exit 1, "FAIL '': no file name given", no
+#      "cannot read" line.
+#
+# The temporary directory is made under .tmp-tests/ at the repository root,
+# and the cleanup removes only a directory under it.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -25,9 +31,17 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 checker="$here/check-scoring-formulas.py"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/check-scoring-formulas.XXXXXX")"
-work="$(cd "$work" && pwd -P)"
-trap 'rm -rf "$work"' EXIT
+tmp_root="$(cd "$here/.." && pwd -P)/.tmp-tests"
+mkdir -p "$tmp_root"
+work="$(mktemp -d "$tmp_root/check-scoring-formulas.XXXXXX")"
+cleanup() {
+  case "$work" in
+    "$tmp_root"/?*) rm -rf -- "$work" ;;
+    *) exit 1 ;;
+  esac
+  rmdir "$tmp_root" 2> /dev/null || true
+}
+trap cleanup EXIT
 
 failed=0
 
@@ -119,6 +133,8 @@ end_case
 start_case "case 5: option argument" --help
 expect "exit status is 2" '[ "$status" -eq 2 ]'
 expect "usage on stderr" 'printf "%s\n" "$err" | grep -q "^usage:"'
+expect "header text on stderr" \
+  'printf "%s\n" "$err" | grep -qx "Checks that documents describing QRAMM scores state the same score formulas"'
 end_case
 
 printf '%s\n' \
@@ -140,6 +156,13 @@ expect "FAIL line for scored 0 to 4." \
   'has_fail "sentence.md line 5: \"scored 0 to 4\" but"'
 expect "no FAIL line for scored from 1 to 4." '! has_fail "sentence.md line 6:"'
 expect "no FAIL line for score 1-2.5" '! has_fail "sentence.md line 7:"'
+end_case
+
+start_case "case 7: an empty file argument" ""
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL says no file name was given" \
+  'printf "%s\n" "$out" | grep -qxF "  FAIL '"''"': no file name given"'
+expect "no cannot read line" '! printf "%s\n" "$out" | grep -q "cannot read"'
 end_case
 
 if [ "$failed" -eq 0 ]; then

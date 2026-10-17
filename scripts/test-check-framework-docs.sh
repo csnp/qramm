@@ -20,6 +20,13 @@
 #   4. A file with another name and the same label as case 1: exit 0, no
 #      nist line.
 #   5. The repository's framework/compliance-mapping.md: exit 0, PASS nist.
+#   6. --help: exit 2, a usage line and then the header text on stderr,
+#      nothing on stdout. An unknown option: exit 2, a usage line on stderr.
+#   7. An empty file argument: exit 1, "== ''", FAIL file: no file name
+#      given, no "not found" line.
+#
+# The temporary directory is made under .tmp-tests/ at the repository root,
+# and the cleanup removes only a directory under it.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -32,9 +39,17 @@ if [ ! -f "$checker" ]; then
 fi
 repo_doc="$(cd "$here/.." && pwd -P)/framework/compliance-mapping.md"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/check-framework-docs.XXXXXX")"
-work="$(cd "$work" && pwd -P)"
-trap 'rm -rf "$work"' EXIT
+tmp_root="$(cd "$here/.." && pwd -P)/.tmp-tests"
+mkdir -p "$tmp_root"
+work="$(mktemp -d "$tmp_root/check-framework-docs.XXXXXX")"
+cleanup() {
+  case "$work" in
+    "$tmp_root"/?*) rm -rf -- "$work" ;;
+    *) exit 1 ;;
+  esac
+  rmdir "$tmp_root" 2> /dev/null || true
+}
+trap cleanup EXIT
 
 failed=0
 
@@ -132,6 +147,35 @@ failed=0
 run_checker "$repo_doc"
 expect "exit status is 0" '[ "$status" -eq 0 ]'
 expect "nist check passes" 'printf "%s\n" "$out" | grep -q "^  PASS nist"'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 6: --help and an unknown option"
+case_failed="$failed"
+failed=0
+run_checker --help
+expect "exit status is 2" '[ "$status" -eq 2 ]'
+expect "stderr starts with a usage line" \
+  '[ "$(printf "%s\n" "$err" | head -n 1 | cut -c 1-7)" = "usage: " ]'
+expect "stderr has the header text" \
+  'printf "%s\n" "$err" | grep -qx "Checks QRAMM framework documents before they are merged."'
+expect "stdout is empty" '[ -z "$out" ]'
+[ "$failed" -eq 0 ] || show_output
+run_checker --bogus
+expect "an unknown option exits 2" '[ "$status" -eq 2 ]'
+expect "stderr has a usage line" 'printf "%s\n" "$err" | grep -q "^usage: "'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 7: an empty file argument"
+case_failed="$failed"
+failed=0
+run_checker ""
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "the file is shown as ''" 'printf "%s\n" "$out" | grep -qx "== '"''"'"'
+expect "FAIL says no file name was given" \
+  'printf "%s\n" "$out" | grep -qx "  FAIL file: no file name given"'
+expect "no not found line" '! printf "%s\n" "$out" | grep -q "not found"'
 [ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
 

@@ -7,7 +7,8 @@
 # The checker is check-framework-docs.sh next to this script, and README.md is
 # the one in the repository above it. DEFAULT_DOCS is read out of the checker
 # with sed. The checker is run with --no-network. Fixtures and output are
-# written to a new temporary directory.
+# written to a new temporary directory under .tmp-tests/ at the repository
+# root, and the cleanup removes only a directory under it.
 #
 # Cases:
 #   1. A fixture README with a .md link that has an anchor, a directory link,
@@ -38,9 +39,17 @@ for file in "$checker" "$readme"; do
   fi
 done
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/check-framework-docs-defaults.XXXXXX")"
-work="$(cd "$work" && pwd -P)"
-trap 'rm -rf "$work"' EXIT
+tmp_root="$repo/.tmp-tests"
+mkdir -p "$tmp_root"
+work="$(mktemp -d "$tmp_root/check-framework-docs-defaults.XXXXXX")"
+cleanup() {
+  case "$work" in
+    "$tmp_root"/?*) rm -rf -- "$work" ;;
+    *) exit 1 ;;
+  esac
+  rmdir "$tmp_root" 2> /dev/null || true
+}
+trap cleanup EXIT
 
 failed=0
 

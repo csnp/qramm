@@ -31,7 +31,8 @@ The script reads stored cell values and the formula text of the Compliance
 sheet, and uses the Python standard library only.
 
 Exit status: 0 when the workbooks pass checks 1 to 4, 1 when they do not, 2
-on a usage error.
+on a usage error. An empty workbook argument fails with "no file name given".
+--help (or -h) prints the usage line and this text on stderr and exits 2.
 """
 
 import os
@@ -415,6 +416,11 @@ def check_category_names(label, path, sheet, first, rows, problems):
 
 
 def main(argv):
+    if "--help" in argv or "-h" in argv:
+        print(USAGE, file=sys.stderr)
+        print(file=sys.stderr)
+        print(__doc__.strip(), file=sys.stderr)
+        return 2
     if any(arg.startswith("-") for arg in argv):
         print(USAGE, file=sys.stderr)
         return 2
@@ -430,7 +436,10 @@ def main(argv):
         return 1
 
     for label in workbooks:
-        print("== {} against {}".format(label, SPEC))
+        print("== {} against {}".format(label or "''", SPEC))
+        if not label:
+            problems.append("'': no file name given")
+            continue
         check_workbook(label, os.path.join(root, label), spec, problems)
 
     for problem in problems:

@@ -35,11 +35,11 @@ Rule 6: Cell Value = 4 → Fill #E1BEE7
 
 ### For Maturity Level Text
 Apply icon sets:
-- Level 1: ⭕ Red circle
-- Level 2: 🟡 Yellow circle  
-- Level 3: 🟢 Green circle
-- Level 4: 🔵 Blue circle
-- Level 5: 🟣 Purple star
+- Level 1: Red circle
+- Level 2: Yellow circle  
+- Level 3: Green circle
+- Level 4: Blue circle
+- Level 5: Purple star
 
 ## Cell Formatting Standards
 

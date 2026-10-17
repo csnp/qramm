@@ -26,7 +26,13 @@
 #      a FAIL line that says it quotes no row.
 #   6. A document that does not exist: exit 1, a FAIL line that says it
 #      cannot be read.
-#   7. An option such as --help: exit 2, usage on stderr.
+#   7. An option such as --help: exit 2, usage on stderr, then the checker's
+#      header text.
+#   8. An empty document argument: exit 1, "FAIL '': no file name given",
+#      no "cannot read" line.
+#
+# The temporary directory is made under .tmp-tests/ at the repository root,
+# and the cleanup removes only a directory under it.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -38,9 +44,17 @@ spec="toolkit-specs/4_QRAMM_Compliance_Mapping_Details.md"
 header='| Question | NIST CSF | NIST PQC | CMMC | FISMA | FedRAMP | ISO | SOC2 | CIS |'
 rule='|----------|----------|----------|------|-------|---------|-----|------|-----|'
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/check-compliance-quotes.XXXXXX")"
-work="$(cd "$work" && pwd -P)"
-trap 'rm -rf "$work"' EXIT
+tmp_root="$(cd "$here/.." && pwd -P)/.tmp-tests"
+mkdir -p "$tmp_root"
+work="$(mktemp -d "$tmp_root/check-compliance-quotes.XXXXXX")"
+cleanup() {
+  case "$work" in
+    "$tmp_root"/?*) rm -rf -- "$work" ;;
+    *) exit 1 ;;
+  esac
+  rmdir "$tmp_root" 2> /dev/null || true
+}
+trap cleanup EXIT
 
 failed=0
 
@@ -177,6 +191,15 @@ end_case
 start_case "case 7: option argument" --help
 expect "exit status is 2" '[ "$status" -eq 2 ]'
 expect "usage on stderr" 'printf "%s\n" "$err" | grep -q "^usage:"'
+expect "header text on stderr" \
+  'printf "%s\n" "$err" | grep -qx "Checks that documents quoting rows of the compliance mapping spec quote"'
+end_case
+
+start_case "case 8: an empty document argument" ""
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL says no file name was given" \
+  'printf "%s\n" "$out" | grep -qxF "  FAIL '"''"': no file name given"'
+expect "no cannot read line" '! printf "%s\n" "$out" | grep -q "cannot read"'
 end_case
 
 if [ "$failed" -eq 0 ]; then

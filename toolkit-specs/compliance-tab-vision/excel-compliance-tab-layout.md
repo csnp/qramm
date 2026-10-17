@@ -44,8 +44,8 @@ This document shows exactly how the Compliance tab should look in Excel, using o
 35 │ CVI.1.2 - Vuln        │ ID.RA-1        │   1.0    │    60%     │   60%    │ Medium           │
 36 │ Assessment             │ ID.RA-3        │   1.0    │    60%     │   60%    │ Medium           │
 37 ├────────────────────────┼─────────────────┼──────────┼────────────┼──────────┼─────────────────┤
-38 │ SGRM.2.1 - Executive  │ GV.OC-1        │   1.0    │    40%     │   40%    │ HIGH ⚠          │
-39 │ Leadership            │ GV.OC-2        │   1.0    │    40%     │   40%    │ HIGH ⚠          │
+38 │ SGRM.2.1 - Executive  │ GV.OC-1        │   1.0    │    40%     │   40%    │ HIGH            │
+39 │ Leadership            │ GV.OC-2        │   1.0    │    40%     │   40%    │ HIGH            │
 40 └────────────────────────┴─────────────────┴──────────┴────────────┴──────────┴─────────────────┘
 38
 39
@@ -102,7 +102,7 @@ COUNTIF(FrameworkControls!$A:$A,Compliance!$D$5)
 
 **Gap Priority Calculation:**
 ```excel
-=IF(E32<0.3,"HIGH ⚠",IF(E32<0.7,"Medium","Low"))
+=IF(E32<0.3,"HIGH",IF(E32<0.7,"Medium","Low"))
 ```
 *Where E32 is the Coverage cell*
 

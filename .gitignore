@@ -125,3 +125,9 @@ traffic-snapshots/
 *_traffic.json
 TRAFFIC_REPORT.md
 traffic-reports/
+
+# =============================================================================
+# TEST SCRIPT TEMPORARY FILES
+# =============================================================================
+# scripts/test-check-*.sh write fixtures here and remove them when they exit
+/.tmp-tests/

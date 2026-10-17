@@ -22,7 +22,11 @@
 #      directory reaches a different file: exit 1, a FAIL line for that line.
 #   5. A copy that does not exist: exit 1, a FAIL line that says it cannot be
 #      read.
-#   6. An argument such as --help: exit 2, usage on stderr.
+#   6. An argument such as --help: exit 2, usage on stderr, then the
+#      checker's header text.
+#
+# The temporary directory is made under .tmp-tests/ at the repository root,
+# and the cleanup removes only a directory under it.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -30,9 +34,17 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 checker="$here/check-assessment-copies.py"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/check-assessment-copies.XXXXXX")"
-work="$(cd "$work" && pwd -P)"
-trap 'rm -rf "$work"' EXIT
+tmp_root="$(cd "$here/.." && pwd -P)/.tmp-tests"
+mkdir -p "$tmp_root"
+work="$(mktemp -d "$tmp_root/check-assessment-copies.XXXXXX")"
+cleanup() {
+  case "$work" in
+    "$tmp_root"/?*) rm -rf -- "$work" ;;
+    *) exit 1 ;;
+  esac
+  rmdir "$tmp_root" 2> /dev/null || true
+}
+trap cleanup EXIT
 
 failed=0
 
@@ -171,6 +183,8 @@ end_case
 start_case "case 6: option argument" "$checker" --help
 expect "exit status is 2" '[ "$status" -eq 2 ]'
 expect "usage on stderr" 'printf "%s\n" "$err" | grep -q "^usage:"'
+expect "header text on stderr" \
+  'printf "%s\n" "$err" | grep -qx "Checks that the toolkit.s copies of framework documents match their source\."'
 end_case
 
 if [ "$failed" -eq 0 ]; then

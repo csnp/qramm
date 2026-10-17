@@ -23,7 +23,8 @@ calculated; the script does not recompute any formula. It uses the Python
 standard library only.
 
 Exit status: 0 when the example matches the workbook, 1 when it does not, 2 on
-a usage error.
+a usage error. --help (or -h) prints the usage line and this text on stderr
+and exits 2.
 """
 
 import os
@@ -164,6 +165,9 @@ def shown_value(block, label):
 def main(argv):
     if argv:
         print("usage: python3 -I scripts/check-scoring-example.py", file=sys.stderr)
+        if "--help" in argv or "-h" in argv:
+            print(file=sys.stderr)
+            print(__doc__.strip(), file=sys.stderr)
         return 2
     root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     doc_path = os.path.join(root, DOC)

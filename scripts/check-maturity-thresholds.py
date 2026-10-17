@@ -31,7 +31,9 @@ exactly one of Basic, Developing, Established, Advanced and Optimizing. The
 script uses the Python standard library only.
 
 Exit status: 0 when the documents agree with the Scorecard, 1 when they do
-not, 2 on a usage error.
+not, 2 on a usage error. An empty file argument fails with "no file name
+given". --help (or -h) prints the usage line and this text on stderr and
+exits 2.
 """
 
 import os
@@ -233,6 +235,11 @@ def check_document(path, lines, bands, problems):
 
 
 def main(argv):
+    if "--help" in argv or "-h" in argv:
+        print(USAGE, file=sys.stderr)
+        print(file=sys.stderr)
+        print(__doc__.strip(), file=sys.stderr)
+        return 2
     if any(arg.startswith("-") for arg in argv):
         print(USAGE, file=sys.stderr)
         return 2
@@ -249,7 +256,10 @@ def main(argv):
 
     if bands:
         for path in documents:
-            print("== {} against the {}".format(path, SHEET))
+            print("== {} against the {}".format(path or "''", SHEET))
+            if not path:
+                problems.append("'': no file name given")
+                continue
             try:
                 with open(os.path.join(root, path), encoding="utf-8") as fh:
                     lines = fh.read().splitlines()

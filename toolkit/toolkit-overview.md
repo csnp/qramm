@@ -47,7 +47,7 @@ For example, a financial institution handling long-term sensitive data would hav
 
 This ensures that maturity targets and recommendations align with your organization's specific quantum risk profile and circumstances.
 
-Note - Optional questions are included for comprehensive assessment and 'N/A' responses will not affect your overall score.
+Note - Each question offers four answers, scored 1 to 4. A question you leave blank is left out of the calculation and does not count as zero, as the [Scoring Methodology](../framework/scoring-methodology.md) explains.
 
 ## Scorecard Tab Overview
 The Scorecard tab provides a comprehensive view of your quantum readiness assessment results:

@@ -6,7 +6,7 @@
 
 [Website](https://qramm.org) · [Toolkit](toolkit/toolkit-overview.md) · [Quick assessment](https://qramm.org/quick-assessment.html)
 
-QRAMM is a free and open framework that helps an organization find out how ready it is for quantum computers and plan its move to quantum-safe cryptography. It looks at four dimensions, places each one on five maturity levels through 120 assessment questions, and comes with an Excel toolkit that does the scoring for you.
+QRAMM is a free and open framework that helps an organization find out how ready it is for quantum computers and plan its move to quantum-safe cryptography. It looks at four dimensions through 120 assessment questions, and comes with an Excel toolkit that does the scoring for you: it labels each dimension score and the overall score with one of four maturity levels, from Basic to Advanced (the [Scoring Methodology](framework/scoring-methodology.md) gives the score ranges).
 
 Start with [the four dimensions](framework/qramm-overview.md#the-4-dimensions) in the framework overview. They are what you rate your organization against.
 

@@ -16,7 +16,8 @@ Each difference is reported with the line numbers in both files and the text
 of up to MAX_SHOWN non-blank lines from each side.
 
 The script uses the Python standard library only. Exit status: 0 when every
-copy matches its source, 1 when one does not, 2 on a usage error.
+copy matches its source, 1 when one does not, 2 on a usage error. --help
+(or -h) prints the usage line and this text on stderr and exits 2.
 """
 
 import difflib
@@ -112,6 +113,11 @@ def compare(root, source, copy, problems):
 
 
 def main(argv):
+    if "--help" in argv or "-h" in argv:
+        print(USAGE, file=sys.stderr)
+        print(file=sys.stderr)
+        print(__doc__.strip(), file=sys.stderr)
+        return 2
     if argv:
         print(USAGE, file=sys.stderr)
         return 2

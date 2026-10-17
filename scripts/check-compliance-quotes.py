@@ -29,7 +29,8 @@ cell, for example) is a FAIL line here too. The script uses the Python
 standard library only.
 
 Exit status: 0 when the documents match the spec, 1 when they do not, 2 on a
-usage error.
+usage error. An empty document argument fails with "no file name given".
+--help (or -h) prints the usage line and this text on stderr and exits 2.
 """
 
 import importlib.util
@@ -136,6 +137,11 @@ def check_document(label, path, mapping, spec, problems):
 
 
 def main(argv):
+    if "--help" in argv or "-h" in argv:
+        print(USAGE, file=sys.stderr)
+        print(file=sys.stderr)
+        print(__doc__.strip(), file=sys.stderr)
+        return 2
     if any(arg.startswith("-") for arg in argv):
         print(USAGE, file=sys.stderr)
         return 2
@@ -153,7 +159,10 @@ def main(argv):
         return 1
 
     for label in documents:
-        print("== {} against {}".format(label, mapping.SPEC))
+        print("== {} against {}".format(label or "''", mapping.SPEC))
+        if not label:
+            problems.append("'': no file name given")
+            continue
         check_document(label, os.path.join(root, label), mapping, spec, problems)
 
     for problem in problems:

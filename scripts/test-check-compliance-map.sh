@@ -22,12 +22,18 @@
 #      cells and for the workbook rows the spec does not give.
 #   4. A workbook argument that does not exist: exit 1, a FAIL line that
 #      says the map cannot be read.
-#   5. An option such as --help: exit 2, usage on stderr.
+#   5. An option such as --help: exit 2, usage on stderr, then the checker's
+#      header text.
 #   6. Workbooks whose Compliance sheet looks category names up in
 #      Data!$BG$3:$BH$106, which ends before the FISMA and FedRAMP SR rows:
 #      exit 1, a FAIL line for Q14 FISMA and Q14 FedRAMP in each workbook.
 #   7. A workbook whose Compliance sheet has no category name lookup:
 #      exit 1, a FAIL line that says the lookup cannot be read.
+#   8. An empty workbook argument: exit 1, "FAIL '': no file name given",
+#      no "cannot read" line.
+#
+# The temporary directory is made under .tmp-tests/ at the repository root,
+# and the cleanup removes only a directory under it.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -39,9 +45,17 @@ spec="toolkit-specs/4_QRAMM_Compliance_Mapping_Details.md"
 toolkit="toolkit/QRAMM_Assessment_Toolkit.xlsx"
 sample="toolkit/Sample_Assessment.xlsx"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/check-compliance-map.XXXXXX")"
-work="$(cd "$work" && pwd -P)"
-trap 'rm -rf "$work"' EXIT
+tmp_root="$(cd "$here/.." && pwd -P)/.tmp-tests"
+mkdir -p "$tmp_root"
+work="$(mktemp -d "$tmp_root/check-compliance-map.XXXXXX")"
+cleanup() {
+  case "$work" in
+    "$tmp_root"/?*) rm -rf -- "$work" ;;
+    *) exit 1 ;;
+  esac
+  rmdir "$tmp_root" 2> /dev/null || true
+}
+trap cleanup EXIT
 
 failed=0
 
@@ -183,6 +197,8 @@ end_case
 start_case "case 5: option argument" "$checker" --help
 expect "exit status is 2" '[ "$status" -eq 2 ]'
 expect "usage on stderr" 'printf "%s\n" "$err" | grep -q "^usage:"'
+expect "header text on stderr" \
+  'printf "%s\n" "$err" | grep -qx "Checks that the toolkit workbooks carry the compliance mapping in the spec."'
 end_case
 
 make_copy "$work/narrow" ''
@@ -212,6 +228,13 @@ start_case "case 7: Compliance sheet with no category name lookup" \
 expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "FAIL line says the lookup cannot be read" \
   "has_fail '$sample: cannot read the category name lookup (the Compliance sheet has no category name lookup)'"
+end_case
+
+start_case "case 8: an empty workbook argument" "$checker" ""
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL says no file name was given" \
+  'printf "%s\n" "$out" | grep -qxF "  FAIL '"''"': no file name given"'
+expect "no cannot read line" '! printf "%s\n" "$out" | grep -q "cannot read"'
 end_case
 
 if [ "$failed" -eq 0 ]; then

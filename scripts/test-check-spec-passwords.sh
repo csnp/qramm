@@ -26,6 +26,13 @@
 #      them has a sheetProtection or workbookProtection element, the header
 #      sentence about protection applied without a password starts with "If",
 #      so it does not say that the toolkit is protected.
+#   8. --help: exit 2, a usage line and then the header text on stderr,
+#      nothing on stdout. An unknown option: exit 2, a usage line on stderr.
+#   9. An empty file argument: exit 1, "== ''", FAIL file: no file name
+#      given, no "not found" line.
+#
+# The temporary directory is made under .tmp-tests/ at the repository root,
+# and the cleanup removes only a directory under it.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -37,9 +44,17 @@ if [ ! -f "$checker" ]; then
   exit 1
 fi
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/check-spec-passwords.XXXXXX")"
-work="$(cd "$work" && pwd -P)"
-trap 'rm -rf "$work"' EXIT
+tmp_root="$(cd "$here/.." && pwd -P)/.tmp-tests"
+mkdir -p "$tmp_root"
+work="$(mktemp -d "$tmp_root/check-spec-passwords.XXXXXX")"
+cleanup() {
+  case "$work" in
+    "$tmp_root"/?*) rm -rf -- "$work" ;;
+    *) exit 1 ;;
+  esac
+  rmdir "$tmp_root" 2> /dev/null || true
+}
+trap cleanup EXIT
 export GIT_CEILING_DIRECTORIES="$work"
 
 failed=0
@@ -190,6 +205,35 @@ if [ "$failed" -ne 0 ]; then
   echo "  workbooks: $books, protection elements: $protection"
   echo "  header sentence: $sentence"
 fi
+failed=$((failed | case_failed))
+
+echo "case 8: --help and an unknown option"
+case_failed="$failed"
+failed=0
+run_checker "$work/plain" --help
+expect "exit status is 2" '[ "$status" -eq 2 ]'
+expect "stderr starts with a usage line" \
+  '[ "$(printf "%s\n" "$err" | head -n 1 | cut -c 1-7)" = "usage: " ]'
+expect "stderr has the header text" \
+  'printf "%s\n" "$err" | grep -qx "Checks that the toolkit specs do not record a password."'
+expect "stdout is empty" '[ -z "$out" ]'
+[ "$failed" -eq 0 ] || show_output
+run_checker "$work/plain" --bogus
+expect "an unknown option exits 2" '[ "$status" -eq 2 ]'
+expect "stderr has a usage line" 'printf "%s\n" "$err" | grep -q "^usage: "'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 9: an empty file argument"
+case_failed="$failed"
+failed=0
+run_checker "$work/plain" ""
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "the file is shown as ''" 'printf "%s\n" "$out" | grep -qx "== '"''"'"'
+expect "FAIL says no file name was given" \
+  'printf "%s\n" "$out" | grep -qx "  FAIL file: no file name given"'
+expect "no not found line" '! printf "%s\n" "$out" | grep -q "not found"'
+[ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
 
 if [ "$failed" -eq 0 ]; then

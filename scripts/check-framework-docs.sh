@@ -39,9 +39,26 @@
 #              SP n-n, NIST IR n or OMB M-nn-nn. A label such as "NIST
 #              Testing Guide" names no publication and fails.
 #
+# An empty file argument fails with "no file name given".
+#
 # Exit status: 0 when every check passes, 1 when any check fails, 2 on a
-# usage error.
+# usage error. --help (or -h) prints the usage line and this text on stderr
+# and exits 2.
 set -euo pipefail
+
+usage="usage: bash scripts/check-framework-docs.sh [--no-network] [file ...]"
+for arg in "$@"; do
+  case "$arg" in
+    -h | --help)
+      {
+        printf '%s\n\n' "$usage"
+        awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' \
+          "${BASH_SOURCE[0]}"
+      } >&2
+      exit 2
+      ;;
+  esac
+done
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -391,6 +408,10 @@ def main(argv):
     unknown = [a for a in args if a.startswith("-")]
     if unknown:
         print("unknown option: {}".format(" ".join(unknown)), file=sys.stderr)
+        print(
+            "usage: bash scripts/check-framework-docs.sh [--no-network] [file ...]",
+            file=sys.stderr,
+        )
         return 2
     files = args or [os.path.join(root, doc) for doc in DEFAULT_DOCS]
 
@@ -399,6 +420,11 @@ def main(argv):
     failed = False
 
     for given in files:
+        if not given:
+            print("== ''")
+            print("  FAIL file: no file name given")
+            failed = True
+            continue
         path = os.path.realpath(given)
         rel = os.path.relpath(path, root)
         print("== {}".format(path if rel.startswith("..") else rel))
