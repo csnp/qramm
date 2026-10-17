@@ -19,12 +19,19 @@ relative to the repository root, or absolute). For each workbook:
        the spec's "1.10" matches a stored 1.1.
     3. The row's Weight is the spec's weight. A "-" in the spec matches a
        row whose Control_ID is "-" and whose Weight is empty.
+    4. The row's Category, when it is not "-", has a name in each range the
+       Compliance sheet's category cells look names up in, for example
+       VLOOKUP(_xlfn.CONCAT($M$4,TRIM(E63)),Data!$BG$3:$BH$108,2,FALSE).
+       The key is the framework followed by the category, as that formula
+       builds it, and is matched without regard to case, as VLOOKUP
+       matches. A category with no name there shows as its bare label in
+       the Compliance sheet.
 
-The script reads the stored cell values only and uses the Python standard
-library only.
+The script reads stored cell values and the formula text of the Compliance
+sheet, and uses the Python standard library only.
 
-Exit status: 0 when the workbooks match the spec, 1 when they do not, 2 on a
-usage error.
+Exit status: 0 when the workbooks pass checks 1 to 4, 1 when they do not, 2
+on a usage error.
 """
 
 import os
@@ -41,6 +48,8 @@ WORKBOOKS = [
 ]
 
 MAP_NAME = "ComplianceMap"
+
+COMPLIANCE_SHEET = "Compliance"
 
 # Spec table column -> framework name in the workbook map.
 FRAMEWORKS = [
@@ -60,6 +69,7 @@ QUESTIONS = 120
 QUESTION_COLUMN = 0
 FRAMEWORK_COLUMN = 1
 CONTROL_COLUMN = 3
+CATEGORY_COLUMN = 4
 WEIGHT_COLUMN = 5
 MAP_WIDTH = 6
 
@@ -71,6 +81,10 @@ SPEC_ROW = re.compile(r"^\|\s*(Q\d+):")
 SPEC_CELL = re.compile(r"^(.+?) \((\d+(?:\.\d+)?)\)$")
 CELL_REF = re.compile(r"([A-Z]+)(\d+)")
 RANGE_REF = re.compile(r"'?(.+?)'?!\$?([A-Z]+)\$?(\d+):\$?([A-Z]+)\$?(\d+)")
+NAME_LOOKUP = re.compile(
+    r"VLOOKUP\(_xlfn\.CONCAT\(\$M\$4,TRIM\(\$?[A-Z]+\$?\d+\)\),"
+    r"('?)(.+?)\1!\$?([A-Z]+)\$?(\d+):\$?([A-Z]+)\$?(\d+),2,FALSE\)"
+)
 TOLERANCE = 1e-9
 
 USAGE = "usage: python3 -I scripts/check-compliance-map.py [workbook ...]"
@@ -163,9 +177,8 @@ def shared_strings(book):
     ]
 
 
-def map_range(book):
-    """(sheet part path, sheet name, first column, first row, last row)."""
-    workbook = ET.fromstring(book.read("xl/workbook.xml"))
+def sheet_parts(book, workbook):
+    """Sheet name -> sheet part path."""
     rels = ET.fromstring(book.read("xl/_rels/workbook.xml.rels"))
     targets = {
         rel.get("Id"): rel.get("Target")
@@ -175,6 +188,13 @@ def map_range(book):
     for sheet in workbook.iter(ns(MAIN_NS, "sheet")):
         target = targets[sheet.get(ns(REL_NS, "id"))]
         paths[sheet.get("name")] = target.lstrip("/") if target.startswith("/") else "xl/" + target
+    return paths
+
+
+def map_range(book):
+    """(sheet part path, sheet name, first column, first row, last row)."""
+    workbook = ET.fromstring(book.read("xl/workbook.xml"))
+    paths = sheet_parts(book, workbook)
     for node in workbook.iter(ns(MAIN_NS, "definedName")):
         if node.get("name") != MAP_NAME or node.get("localSheetId") is not None:
             continue
@@ -208,12 +228,10 @@ def cell_value(node, strings):
     return float(value.text)
 
 
-def read_map(path):
-    """(sheet name, list of (row number, {offset: value}))."""
-    with zipfile.ZipFile(path) as book:
-        strings = shared_strings(book)
-        part, sheet, first, top, bottom = map_range(book)
-        root = ET.fromstring(book.read(part))
+def read_block(book, part, strings, first, width, top, bottom):
+    """{row number: {offset: value}} for rows top to bottom and the width
+    columns from column number first of the sheet part."""
+    root = ET.fromstring(book.read(part))
     rows = {number: {} for number in range(top, bottom + 1)}
     for row in root.iter(ns(MAIN_NS, "row")):
         number = int(row.get("r"))
@@ -222,9 +240,69 @@ def read_map(path):
         for node in row.iter(ns(MAIN_NS, "c")):
             letters = CELL_REF.fullmatch(node.get("r")).group(1)
             offset = column_number(letters) - first
-            if 0 <= offset < MAP_WIDTH:
+            if 0 <= offset < width:
                 rows[number][offset] = cell_value(node, strings)
+    return rows
+
+
+def read_map(path):
+    """(sheet name, first column, list of (row number, {offset: value}))."""
+    with zipfile.ZipFile(path) as book:
+        strings = shared_strings(book)
+        part, sheet, first, top, bottom = map_range(book)
+        rows = read_block(book, part, strings, first, MAP_WIDTH, top, bottom)
     return sheet, first, sorted(rows.items())
+
+
+def as_text(value):
+    """The text Excel makes of a stored value, as CONCAT and TRIM do."""
+    if isinstance(value, float):
+        return "{:.15g}".format(value)
+    return value
+
+
+def excel_trim(text):
+    """Excel's TRIM: no leading or trailing spaces, single inner spaces."""
+    return re.sub(" +", " ", text).strip(" ")
+
+
+def read_name_lookups(path):
+    """[(range, {key: name})], one for each distinct range the Compliance
+    sheet's category cells look names up in. The key is the stored value of
+    the range's first column, casefolded; the name is the stored value of
+    its second column. When a key repeats, the first row's name is kept, as
+    VLOOKUP returns the first match."""
+    with zipfile.ZipFile(path) as book:
+        strings = shared_strings(book)
+        workbook = ET.fromstring(book.read("xl/workbook.xml"))
+        paths = sheet_parts(book, workbook)
+        if COMPLIANCE_SHEET not in paths:
+            raise ValueError("the workbook has no sheet {}".format(COMPLIANCE_SHEET))
+        root = ET.fromstring(book.read(paths[COMPLIANCE_SHEET]))
+        ranges = []
+        for node in root.iter(ns(MAIN_NS, "f")):
+            for match in NAME_LOOKUP.finditer(node.text or ""):
+                found = (match.group(2).replace("''", "'"),) + match.group(3, 4, 5, 6)
+                if found not in ranges:
+                    ranges.append(found)
+        if not ranges:
+            raise ValueError("the {} sheet has no category name lookup".format(COMPLIANCE_SHEET))
+        lookups = []
+        for sheet, first_letters, top, last_letters, bottom in ranges:
+            label = "{}!{}{}:{}{}".format(sheet, first_letters, top, last_letters, bottom)
+            if sheet not in paths:
+                raise ValueError("{} names sheet '{}', which is not in the workbook".format(label, sheet))
+            first = column_number(first_letters)
+            if column_number(last_letters) - first + 1 < 2:
+                raise ValueError("{} is narrower than 2 columns".format(label))
+            rows = read_block(book, paths[sheet], strings, first, 2, int(top), int(bottom))
+            names = {}
+            for _, values in sorted(rows.items()):
+                key = values.get(0)
+                if key is not None:
+                    names.setdefault(as_text(key).casefold(), values.get(1))
+            lookups.append((label, names))
+    return lookups
 
 
 def show(value):
@@ -298,6 +376,41 @@ def check_workbook(label, path, spec, problems):
     if len(problems) == before:
         print("  PASS {} questions x {} frameworks, {} rows".format(
             QUESTIONS, len(FRAMEWORKS), len(seen)
+        ))
+    check_category_names(label, path, sheet, first, rows, problems)
+
+
+def check_category_names(label, path, sheet, first, rows, problems):
+    try:
+        lookups = read_name_lookups(path)
+    except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError) as error:
+        problems.append("{}: cannot read the category name lookup ({})".format(label, error))
+        return
+    category_letters = column_letters(first + CATEGORY_COLUMN)
+    named = 0
+    before = len(problems)
+    for number, values in rows:
+        category = values.get(CATEGORY_COLUMN)
+        framework = values.get(FRAMEWORK_COLUMN)
+        if category is None or framework is None:
+            continue
+        shown = excel_trim(as_text(category))
+        if shown in ("", "-"):
+            continue
+        named += 1
+        key = (as_text(framework) + shown).casefold()
+        for range_label, names in lookups:
+            if names.get(key) in (None, ""):
+                problems.append(
+                    "{} {} {}: {}!{}{} is {}, which has no name in {}, the range the {} "
+                    "sheet looks category names up in".format(
+                        label, show(values.get(QUESTION_COLUMN)), show(framework),
+                        sheet, category_letters, number, shown, range_label, COMPLIANCE_SHEET,
+                    )
+                )
+    if len(problems) == before:
+        print("  PASS {} rows with a category, each named in {}".format(
+            named, ", ".join(range_label for range_label, _ in lookups)
         ))
 
 
