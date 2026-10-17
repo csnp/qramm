@@ -71,7 +71,7 @@ RANGE = re.compile(
     r"(?P<lo>\d+\.\d+) ?(?P<sep>to below|to|-) ?(?P<hi>\d+\.\d+)"
     r"|below (?P<below>\d+\.\d+)"
     r"|(?:score |\*\*)(?P<single>\d+\.\d+)(?! ?(?:to below|to|-) ?\d)"
-    r")(?![\d.])",
+    r")(?!\.\d|\d)",
     re.IGNORECASE,
 )
 
