@@ -47,6 +47,17 @@ class GitListError(Exception):
     """git could not list the tracked files. The message is one line."""
 
 
+def untranslated_env():
+    """The environment, set so git prints its messages untranslated.
+
+    git built with translations prints its messages in the language the
+    environment selects, so the "not a git repository" match in
+    tracked_specs needs the C locale. LANG is set as well as LC_ALL: git
+    2.53 from Homebrew on macOS translates by LANG when LC_ALL=C is set.
+    """
+    return dict(os.environ, LC_ALL="C", LANG="C")
+
+
 def tracked_specs(root):
     """Tracked Markdown files under toolkit-specs/, as absolute paths.
 
@@ -57,6 +68,7 @@ def tracked_specs(root):
         result = subprocess.run(
             ["git", "-C", root, "ls-files", "-z", "--", SPECS_DIR + "/*.md"],
             capture_output=True,
+            env=untranslated_env(),
         )
     except OSError as err:
         raise GitListError("git could not be run ({})".format(err.strerror or err))
