@@ -308,7 +308,7 @@ Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
 
 #### **Long-Term Strategy (18+ months)**
 - **Advanced Capabilities**: Development of sophisticated quantum readiness capabilities
-- **Innovation Programs**: Research and development of cutting-edge solutions
+- **Innovation Programs**: Research and development of new solutions
 - **Industry Leadership**: Contribution to standards and best practice development
 - **Ecosystem Development**: Building quantum-ready partner and supplier networks
 
@@ -402,7 +402,7 @@ Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
 
 #### **Improvement Optimization**
 - **Lessons Learned**: Systematic capture and application of implementation experience
-- **Best Practice Adoption**: Integration of industry-leading approaches
+- **Best Practice Adoption**: Integration of approaches proven at other organizations
 - **Process Refinement**: Continuous optimization of quantum readiness processes
 - **Technology Enhancement**: Ongoing improvement of quantum-safe technologies
 
