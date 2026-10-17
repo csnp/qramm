@@ -269,7 +269,9 @@ def check_links(path, lines, root, network):
                     "line {}: relative link '{}' does not resolve".format(number, target)
                 )
         for url in re.findall(r"https?://[^\s)<>\]|\"'`]+", line):
-            url = url.rstrip(".,;:")
+            # Leave out sentence punctuation and the asterisks that close
+            # italic or bold text, as in "*visit https://qramm.org*".
+            url = url.rstrip(".,;:*")
             if url not in [u for _, u in external]:
                 external.append((number, url))
     if network:
