@@ -55,7 +55,7 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 | **Q1.1.7**: How are cryptographic assets prioritized for quantum-resistance upgrades? | NIST SP 800-131A Section 3 "Transition Timeline" | RA.L2-3.11.2 "Scan for vulnerabilities" | RA-3 "Risk Assessment" | NIST SP 800-53 RA-3 |
 | **Q1.1.8**: How is cryptographic asset inventory maintained over time? | NIST IR 8547 (initial public draft) | CM.L2-3.4.3 "Track security configurations" | CM-8(2) "Automated Maintenance" | NIST SP 800-53 CM-8(2) |
 | **Q1.1.9**: How does your organization include IoT and embedded devices in its cryptographic inventory? | FIPS 203 | SC.L2-3.13.8 "Implement cryptographic mechanisms" | SC-8 "Transmission Confidentiality and Integrity" | NIST SP 800-53 SC-8 |
-| **Q1.1.10**: How does your organization stay informed about quantum computing advancements? | NIST PQC Project Updates | AT.L2-3.2.1 "Ensure awareness of security risks" | AT-2 "Literacy Training and Awareness" | NIST SP 800-53 AT-2 |
+| **Q1.1.10**: How does your organization stay informed about quantum computing advancements? | - | AT.L2-3.2.1 "Ensure awareness of security risks" | AT-2 "Literacy Training and Awareness" | NIST SP 800-53 AT-2 |
 
 #### Practice 1.2: Vulnerability Assessment & Classification
 
@@ -66,13 +66,13 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 | **Q1.2.1**: How does your organization identify quantum-vulnerable cryptographic algorithms? | NIST SP 800-131A Table 1 "Deprecated Algorithms" | RA.L2-3.11.1 "Identify and evaluate risk" | RA-5 "Vulnerability Monitoring and Scanning" | NIST SP 800-53 RA-5 |
 | **Q1.2.2**: How are quantum-vulnerable systems classified based on their criticality? | FIPS 199 "Security Categorization" | RA.L2-3.11.3 "Remediate vulnerabilities" | RA-2 "Security Categorization" | NIST SP 800-53 RA-2 |
 | **Q1.2.3**: How does your organization track updates to threat assessments? | NIST IR 8547 (initial public draft) | SI.L2-3.14.1 "Monitor security information" | SI-5 "Security Alerts, Advisories, and Directives" | NIST SP 800-53 SI-5 |
-| **Q1.2.4**: How does your organization evaluate the effectiveness of vulnerability classification? | NIST Framework Core "Evaluate" | CA.L2-3.12.3 "Monitor security controls" | CA-7 "Continuous Monitoring" | NIST SP 800-53 CA-7 |
+| **Q1.2.4**: How does your organization evaluate the effectiveness of vulnerability classification? | - | CA.L2-3.12.3 "Monitor security controls" | CA-7 "Continuous Monitoring" | NIST SP 800-53 CA-7 |
 | **Q1.2.5**: How does your organization assess the business impact of cryptographic vulnerabilities? | FIPS 199 "Impact Assessment" | RA.L2-3.11.2 "Scan for vulnerabilities" | RA-3(1) "Supply Chain Risk Assessment" | NIST SP 800-53 RA-3(1) |
 | **Q1.2.6**: How does your organization assess quantum vulnerability of data authenticity mechanisms? | FIPS 204 "Digital Signatures" | SC.L2-3.13.11 "Employ cryptographic hashing" | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
 | **Q1.2.7**: How does your organization validate cryptographic implementation correctness? | FIPS 140-3 "Cryptographic Module Validation" | SC.L2-3.13.10 "Establish cryptographic key management" | SC-12 "Cryptographic Key Establishment and Management" | NIST SP 800-53 SC-12 |
-| **Q1.2.8**: How does your organization assess trends in cryptographic vulnerabilities? | NIST Vulnerability Database | CA.L2-3.12.2 "Develop security plans" | CA-5 "Plan of Action and Milestones" | NIST SP 800-53 CA-5 |
+| **Q1.2.8**: How does your organization assess trends in cryptographic vulnerabilities? | - | CA.L2-3.12.2 "Develop security plans" | CA-5 "Plan of Action and Milestones" | NIST SP 800-53 CA-5 |
 | **Q1.2.9**: How does your organization apply quantum vulnerability insights? | NIST IR 8547 (initial public draft) | - | CA-7(3) "Trend Analyses" | NIST SP 800-53 CA-7(3) |
-| **Q1.2.10**: How does your organization prioritize systems for stakeholder communication? | NIST CSF "Communicate" | IR.L2-3.6.1 "Establish incident response" | IR-6 "Incident Reporting" | NIST SP 800-53 IR-6 |
+| **Q1.2.10**: How does your organization prioritize systems for stakeholder communication? | - | IR.L2-3.6.1 "Establish incident response" | IR-6 "Incident Reporting" | NIST SP 800-53 IR-6 |
 
 #### Practice 1.3: Cryptographic Dependency Mapping
 
@@ -84,7 +84,7 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 | **Q1.3.2**: How does your organization document cryptographic dependencies? | NIST SP 800-160 Vol. 1 | - | RA-9 "Criticality Analysis" | NIST SP 800-53 RA-9 |
 | **Q1.3.3**: How does your organization analyze impact of cryptographic changes? | FIPS 200 "Change Impact" | CM.L2-3.4.4 "Analyze security impact" | CM-4(1) "Separate Test Environments" | NIST SP 800-53 CM-4(1) |
 | **Q1.3.4**: How does your organization validate dependency mapping accuracy? | NIST IR 8547 Section 4.2 | - | CA-2(1) "Independent Assessors" | NIST SP 800-53 CA-2(1) |
-| **Q1.3.5**: How does your organization keep dependency information current? | NIST CSF "Maintain" | CM.L2-3.4.5 "Define configuration baselines" | CM-2 "Baseline Configuration" | NIST SP 800-53 CM-2 |
+| **Q1.3.5**: How does your organization keep dependency information current? | - | CM.L2-3.4.5 "Define configuration baselines" | CM-2 "Baseline Configuration" | NIST SP 800-53 CM-2 |
 | **Q1.3.6**: How is dependency information used for migration planning? | NIST IR 8547 (initial public draft) | - | PM-30 "Supply Chain Risk Management Strategy" | NIST SP 800-53 PM-30 |
 | **Q1.3.7**: How does your organization manage dependencies in build systems? | NIST SP 800-218 "SSDF" | - | SA-15 "Development Process, Standards, and Tools" | NIST SP 800-53 SA-15 |
 | **Q1.3.8**: How does your organization assess OT dependencies? | NIST SP 800-82 Rev. 3 | - | SC-40 "Wireless Link Protection" | NIST SP 800-53 SC-40 |
@@ -104,13 +104,13 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 | **Q2.1.1**: How is quantum risk oversight structured at the executive level? | OMB M-23-02 | - | PM-2 "Information Security Program Leadership Role" | NIST SP 800-53 PM-2 |
 | **Q2.1.2**: How comprehensive is your quantum risk policy framework? | NIST IR 8547 (initial public draft) | - | PL-1 "Policy and Procedures" | NIST SP 800-53 PL-1 |
 | **Q2.1.3**: How are quantum security initiatives funded and resourced? | OMB M-23-02 | - | PM-3 "Information Security and Privacy Resources" | NIST SP 800-53 PM-3 |
-| **Q2.1.4**: How do you measure quantum risk governance effectiveness? | NIST CSF "Measure" | CA.L2-3.12.3 "Monitor security controls" | PM-6 "Measures of Performance" | NIST SP 800-53 PM-6 |
-| **Q2.1.5**: How does leadership drive quantum security innovation? | NIST NCCoE PQC Migration | - | PM-31 "Continuous Monitoring Strategy" | NIST SP 800-53 PM-31 |
+| **Q2.1.4**: How do you measure quantum risk governance effectiveness? | - | CA.L2-3.12.3 "Monitor security controls" | PM-6 "Measures of Performance" | NIST SP 800-53 PM-6 |
+| **Q2.1.5**: How does leadership drive quantum security innovation? | - | - | PM-31 "Continuous Monitoring Strategy" | NIST SP 800-53 PM-31 |
 | **Q2.1.6**: How is quantum risk integrated into organizational strategy? | OMB M-23-02 | - | PM-9 "Risk Management Strategy" | NIST SP 800-53 PM-9 |
 | **Q2.1.7**: How are quantum security policies reviewed and maintained? | NIST IR 8547 (initial public draft) | - | PL-1 "Policy and Procedures" | NIST SP 800-53 PL-1 |
 | **Q2.1.8**: How is executive leadership kept informed? | OMB M-23-02 | - | PM-14 "Testing, Training, and Monitoring" | NIST SP 800-53 PM-14 |
 | **Q2.1.9**: How do you monitor progress across quantum readiness? | - | - | PM-6 "Measures of Performance" | NIST SP 800-53 PM-6 |
-| **Q2.1.10**: How does your organization contribute to industry standards? | NIST PQC Standardization | - | PM-15 "Security and Privacy Groups and Associations" | NIST SP 800-53 PM-15 |
+| **Q2.1.10**: How does your organization contribute to industry standards? | - | - | PM-15 "Security and Privacy Groups and Associations" | NIST SP 800-53 PM-15 |
 
 #### Practice 2.2: Risk Assessment & Compliance Management
 
@@ -120,14 +120,14 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 |----------------|----------|----------|---------|--------|
 | **Q2.2.1**: How does your organization assess quantum computing risk? | NIST IR 8547 Section 2 | RA.L2-3.11.1 "Identify and evaluate risk" | RA-3 "Risk Assessment" | NIST SP 800-53 RA-3 |
 | **Q2.2.2**: How does your organization manage quantum compliance requirements? | OMB M-23-02 | CA.L2-3.12.1 "Conduct assessments" | CA-1 "Policy and Procedures" | NIST SP 800-53 CA-1 |
-| **Q2.2.3**: How does your organization integrate quantum risk into ERM? | NIST RMF Integration | RA.L2-3.11.2 "Vulnerability identification" | RA-7 "Risk Response" | NIST SP 800-53 RA-7 |
+| **Q2.2.3**: How does your organization integrate quantum risk into ERM? | - | RA.L2-3.11.2 "Vulnerability identification" | RA-7 "Risk Response" | NIST SP 800-53 RA-7 |
 | **Q2.2.4**: How does your organization validate quantum risk assessments? | NIST SP 800-30 Rev. 1 | CA.L2-3.12.2 "Develop remediation plans" | CA-2(2) "Specialized Assessments" | NIST SP 800-53 CA-2(2) |
 | **Q2.2.5**: How does your organization address quantum risk in BCP? | NIST SP 800-34 Rev. 1 | - | CP-2 "Contingency Plan" | NIST SP 800-53 CP-2 |
-| **Q2.2.6**: How does your organization model quantum threat scenarios? | NIST Threat Modeling | - | RA-3(2) "Use of All-source Intelligence" | NIST SP 800-53 RA-3(2) |
-| **Q2.2.7**: How does your organization ensure multi-jurisdiction compliance? | NIST International Alignment | - | CA-1 "Policy and Procedures" | NIST SP 800-53 CA-1 |
-| **Q2.2.8**: How does your organization integrate quantum risk into operations? | NIST CSF Implementation | - | RA-9 "Criticality Analysis" | NIST SP 800-53 RA-9 |
+| **Q2.2.6**: How does your organization model quantum threat scenarios? | - | - | RA-3(2) "Use of All-source Intelligence" | NIST SP 800-53 RA-3(2) |
+| **Q2.2.7**: How does your organization ensure multi-jurisdiction compliance? | - | - | CA-1 "Policy and Procedures" | NIST SP 800-53 CA-1 |
+| **Q2.2.8**: How does your organization integrate quantum risk into operations? | - | - | RA-9 "Criticality Analysis" | NIST SP 800-53 RA-9 |
 | **Q2.2.9**: How does your organization measure risk mitigation effectiveness? | NIST SP 800-55 Rev. 1 | - | PM-6 "Measures of Performance" | NIST SP 800-53 PM-6 |
-| **Q2.2.10**: How does your organization contribute to standards development? | NIST PQC Contributions | - | PM-31 "Continuous Monitoring Strategy" | NIST SP 800-53 PM-31 |
+| **Q2.2.10**: How does your organization contribute to standards development? | - | - | PM-31 "Continuous Monitoring Strategy" | NIST SP 800-53 PM-31 |
 
 #### Practice 2.3: Third-Party & Supply Chain Risk Management
 
@@ -137,14 +137,14 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 |----------------|----------|----------|---------|--------|
 | **Q2.3.1**: How does your organization assess third-party quantum risk? | NIST SP 800-161 Rev. 1 | - | SR-1 "Policy and Procedures" | NIST SP 800-53 SR-1 |
 | **Q2.3.2**: How does your organization incorporate quantum security into contracts? | OMB M-23-02 | - | SR-5 "Acquisition Strategies, Tools, and Methods" | NIST SP 800-53 SR-5 |
-| **Q2.3.3**: How does your organization monitor third-party readiness? | NIST C-SCRM Practices | - | SR-6 "Supplier Assessments and Reviews" | NIST SP 800-53 SR-6 |
+| **Q2.3.3**: How does your organization monitor third-party readiness? | - | - | SR-6 "Supplier Assessments and Reviews" | NIST SP 800-53 SR-6 |
 | **Q2.3.4**: How does your organization validate third-party claims? | NIST SP 800-161 Section 3 | - | SR-6(1) "Testing and Analysis" | NIST SP 800-53 SR-6(1) |
-| **Q2.3.5**: How does your organization manage critical third-party risks? | NIST Critical Software | - | SR-8 "Notification Agreements" | NIST SP 800-53 SR-8 |
+| **Q2.3.5**: How does your organization manage critical third-party risks? | - | - | SR-8 "Notification Agreements" | NIST SP 800-53 SR-8 |
 | **Q2.3.6**: How does your organization assess multi-tier dependencies? | NIST SP 800-161 Appendix F | - | SR-3(2) "Limitation of Harm" | NIST SP 800-53 SR-3(2) |
 | **Q2.3.7**: How does your organization enforce quantum requirements in SLAs? | OMB M-23-02 | - | SR-5(1) "Adequate Supply" | NIST SP 800-53 SR-5(1) |
-| **Q2.3.8**: How does your organization collaborate on risk mitigation? | NIST NCCoE Collaboration | - | SR-10 "Inspection of Systems or Components" | NIST SP 800-53 SR-10 |
+| **Q2.3.8**: How does your organization collaborate on risk mitigation? | - | - | SR-10 "Inspection of Systems or Components" | NIST SP 800-53 SR-10 |
 | **Q2.3.9**: How does your organization assess third-party maturity? | NIST SP 800-161 Section 4 | - | SR-6 "Supplier Assessments and Reviews" | NIST SP 800-53 SR-6 |
-| **Q2.3.10**: How does your organization drive ecosystem improvements? | NIST Supply Chain CoE | - | SR-11 "Component Authenticity" | NIST SP 800-53 SR-11 |
+| **Q2.3.10**: How does your organization drive ecosystem improvements? | - | - | SR-11 "Component Authenticity" | NIST SP 800-53 SR-11 |
 
 ---
 
@@ -160,12 +160,12 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 | **Q3.1.2**: How does your organization define quantum protection requirements? | FIPS 203/204/205 Requirements | SC.L2-3.13.8 "Cryptographic mechanisms" | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
 | **Q3.1.3**: How does your organization implement quantum-resistant controls? | - | SC.L2-3.13.11 "Employ FIPS crypto" | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
 | **Q3.1.4**: How does your organization validate protection effectiveness? | NIST SP 800-175B Rev. 1 | CA.L2-3.12.3 "Monitor controls" | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
-| **Q3.1.5**: How does your organization maintain protection over time? | NIST Crypto Agility | SC.L2-3.13.10 "Key management" | SC-12 "Cryptographic Key Establishment and Management" | NIST SP 800-53 SC-12 |
+| **Q3.1.5**: How does your organization maintain protection over time? | - | SC.L2-3.13.10 "Key management" | SC-12 "Cryptographic Key Establishment and Management" | NIST SP 800-53 SC-12 |
 | **Q3.1.6**: How does your organization protect long-term confidential data? | OMB M-23-02 | - | SC-28(1) "Cryptographic Protection" | NIST SP 800-53 SC-28(1) |
 | **Q3.1.7**: How does your organization protect regulatory data? | NIST SP 800-171 Rev. 3 | SC.L2-3.13.1 "CUI protection" | SC-7 "Boundary Protection" | NIST SP 800-53 SC-7 |
 | **Q3.1.8**: How does your organization manage cryptographic metadata? | NIST SP 800-57 Part 1 Rev. 5 | - | SC-28(3) "Cryptographic Keys" | NIST SP 800-53 SC-28(3) |
 | **Q3.1.9**: How does your organization handle data transformation protection? | FIPS 203 | - | SC-8(3) "Cryptographic Protection for Message Externals" | NIST SP 800-53 SC-8(3) |
-| **Q3.1.10**: How does your organization advance protection practices? | NIST PQC Research | - | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
+| **Q3.1.10**: How does your organization advance protection practices? | - | - | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
 
 #### Practice 3.2: Storage Security & Encryption Management
 
@@ -181,8 +181,8 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 | **Q3.2.6**: How does your organization protect backup/archive data? | OMB M-23-02 | - | CP-9 "System Backup" | NIST SP 800-53 CP-9 |
 | **Q3.2.7**: How does your organization manage distributed storage? | FIPS 203 | - | SC-36 "Distributed Processing and Storage" | NIST SP 800-53 SC-36 |
 | **Q3.2.8**: How does your organization ensure HSM integration? | FIPS 140-3 HSM Requirements | - | SC-44 "Detonation Chambers" | NIST SP 800-53 SC-44 |
-| **Q3.2.9**: How does your organization implement crypto-agility? | NIST Crypto Agility Guide | - | SC-12(6) "Physical Control of Keys" | NIST SP 800-53 SC-12(6) |
-| **Q3.2.10**: How does your organization optimize storage encryption? | NIST Performance Metrics | - | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
+| **Q3.2.9**: How does your organization implement crypto-agility? | - | - | SC-12(6) "Physical Control of Keys" | NIST SP 800-53 SC-12(6) |
+| **Q3.2.10**: How does your organization optimize storage encryption? | - | - | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
 
 #### Practice 3.3: Transit Security & Protocol Management
 
@@ -194,12 +194,12 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 | **Q3.3.2**: How does your organization manage secure protocols? | NIST SP 800-52 Rev. 2 | SC.L2-3.13.11 "FIPS crypto" | SC-23 "Session Authenticity" | NIST SP 800-53 SC-23 |
 | **Q3.3.3**: How does your organization ensure transit compliance? | NIST SP 800-171 Rev. 3 | SC.L2-3.13.1 "Boundary protection" | SC-7 "Boundary Protection" | NIST SP 800-53 SC-7 |
 | **Q3.3.4**: How does your organization validate transit security? | NIST SP 800-115 | CA.L2-3.12.3 "Monitor controls" | SC-8(1) "Cryptographic Protection" | NIST SP 800-53 SC-8(1) |
-| **Q3.3.5**: How does your organization maintain transit security? | NIST Continuous Monitoring | SI.L2-3.14.1 "Monitor security" | SI-4 "System Monitoring" | NIST SP 800-53 SI-4 |
+| **Q3.3.5**: How does your organization maintain transit security? | - | SI.L2-3.14.1 "Monitor security" | SI-4 "System Monitoring" | NIST SP 800-53 SI-4 |
 | **Q3.3.6**: How does your organization protect critical channels? | OMB M-23-02 | - | SC-8(2) "Pre- and Post-transmission Handling" | NIST SP 800-53 SC-8(2) |
-| **Q3.3.7**: How does your organization manage protocol transitions? | NIST TLS Migration | - | SC-8(5) "Protected Distribution System" | NIST SP 800-53 SC-8(5) |
-| **Q3.3.8**: How does your organization ensure end-to-end security? | NIST E2E Guidelines | - | SC-7(21) "Isolation of System Components" | NIST SP 800-53 SC-7(21) |
-| **Q3.3.9**: How does your organization implement protocol agility? | NIST Protocol Agility | - | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
-| **Q3.3.10**: How does your organization advance transit security? | NIST Research Initiatives | - | SC-8(4) "Conceal or Randomize Communications" | NIST SP 800-53 SC-8(4) |
+| **Q3.3.7**: How does your organization manage protocol transitions? | - | - | SC-8(5) "Protected Distribution System" | NIST SP 800-53 SC-8(5) |
+| **Q3.3.8**: How does your organization ensure end-to-end security? | - | - | SC-7(21) "Isolation of System Components" | NIST SP 800-53 SC-7(21) |
+| **Q3.3.9**: How does your organization implement protocol agility? | - | - | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
+| **Q3.3.10**: How does your organization advance transit security? | - | - | SC-8(4) "Conceal or Randomize Communications" | NIST SP 800-53 SC-8(4) |
 
 ---
 
@@ -212,15 +212,15 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 | QRAMM Question | NIST PQC | CMMC 2.0 | FedRAMP | FISMA |
 |----------------|----------|----------|---------|--------|
 | **Q4.1.1**: How does your organization assess infrastructure readiness? | NIST IR 8547 Section 3 | CM.L2-3.4.1 "Baseline configurations" | CM-2 "Baseline Configuration" | NIST SP 800-53 CM-2 |
-| **Q4.1.2**: How does your organization plan infrastructure upgrades? | NIST PQC Migration Guide | CM.L2-3.4.2 "Configuration management" | CM-3 "Configuration Change Control" | NIST SP 800-53 CM-3 |
+| **Q4.1.2**: How does your organization plan infrastructure upgrades? | - | CM.L2-3.4.2 "Configuration management" | CM-3 "Configuration Change Control" | NIST SP 800-53 CM-3 |
 | **Q4.1.3**: How does your organization prioritize infrastructure investments? | OMB M-23-02 | - | PM-11 "Mission and Business Process Definition" | NIST SP 800-53 PM-11 |
-| **Q4.1.4**: How does your organization validate infrastructure readiness? | NIST Testing Guide | CA.L2-3.12.1 "Security assessments" | CA-2 "Control Assessments" | NIST SP 800-53 CA-2 |
-| **Q4.1.5**: How does your organization maintain infrastructure currency? | NIST Patch Management | SI.L2-3.14.2 "Flaw remediation" | SI-2 "Flaw Remediation" | NIST SP 800-53 SI-2 |
+| **Q4.1.4**: How does your organization validate infrastructure readiness? | - | CA.L2-3.12.1 "Security assessments" | CA-2 "Control Assessments" | NIST SP 800-53 CA-2 |
+| **Q4.1.5**: How does your organization maintain infrastructure currency? | - | SI.L2-3.14.2 "Flaw remediation" | SI-2 "Flaw Remediation" | NIST SP 800-53 SI-2 |
 | **Q4.1.6**: How does your organization assess performance impacts? | NIST SP 800-175B | - | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
 | **Q4.1.7**: How does your organization plan hybrid scenarios? | - | - | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
 | **Q4.1.8**: How does your organization ensure scalability? | - | - | SA-17 "Developer Security and Privacy Architecture and Design" | NIST SP 800-53 SA-17 |
 | **Q4.1.9**: How does your organization optimize infrastructure? | - | - | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
-| **Q4.1.10**: How does your organization contribute to best practices? | NIST Community Engagement | - | PM-15 "Security and Privacy Groups and Associations" | NIST SP 800-53 PM-15 |
+| **Q4.1.10**: How does your organization contribute to best practices? | - | - | PM-15 "Security and Privacy Groups and Associations" | NIST SP 800-53 PM-15 |
 
 #### Practice 4.2: Implementation Capability Development
 
@@ -228,16 +228,16 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 
 | QRAMM Question | NIST PQC | CMMC 2.0 | FedRAMP | FISMA |
 |----------------|----------|----------|---------|--------|
-| **Q4.2.1**: How does your organization build implementation skills? | NIST Training Resources | AT.L2-3.2.1 "Security awareness" | AT-3 "Role-based Training" | NIST SP 800-53 AT-3 |
-| **Q4.2.2**: How does your organization develop implementation processes? | NIST SDLC Integration | - | SA-3 "System Development Life Cycle" | NIST SP 800-53 SA-3 |
+| **Q4.2.1**: How does your organization build implementation skills? | - | AT.L2-3.2.1 "Security awareness" | AT-3 "Role-based Training" | NIST SP 800-53 AT-3 |
+| **Q4.2.2**: How does your organization develop implementation processes? | - | - | SA-3 "System Development Life Cycle" | NIST SP 800-53 SA-3 |
 | **Q4.2.3**: How does your organization manage implementation resources? | OMB M-23-02 | - | PM-3 "Information Security and Privacy Resources" | NIST SP 800-53 PM-3 |
-| **Q4.2.4**: How does your organization ensure implementation quality? | NIST Quality Assurance | - | SA-15 "Development Process, Standards, and Tools" | NIST SP 800-53 SA-15 |
-| **Q4.2.5**: How does your organization sustain capabilities? | NIST Workforce Development | AT.L2-3.2.2 "Training program" | AT-3(3) "Practical Exercises" | NIST SP 800-53 AT-3(3) |
-| **Q4.2.6**: How does your organization develop specialized expertise? | NIST PQC Expertise | - | AT-3(5) "Processing Personally Identifiable Information" | NIST SP 800-53 AT-3(5) |
+| **Q4.2.4**: How does your organization ensure implementation quality? | - | - | SA-15 "Development Process, Standards, and Tools" | NIST SP 800-53 SA-15 |
+| **Q4.2.5**: How does your organization sustain capabilities? | - | AT.L2-3.2.2 "Training program" | AT-3(3) "Practical Exercises" | NIST SP 800-53 AT-3(3) |
+| **Q4.2.6**: How does your organization develop specialized expertise? | - | - | AT-3(5) "Processing Personally Identifiable Information" | NIST SP 800-53 AT-3(5) |
 | **Q4.2.7**: How does your organization manage complex integrations? | - | - | SA-8 "Security and Privacy Engineering Principles" | NIST SP 800-53 SA-8 |
-| **Q4.2.8**: How does your organization ensure consistency? | NIST Standards Compliance | - | SA-4(9) "Functions, Ports, Protocols, and Services in Use" | NIST SP 800-53 SA-4(9) |
-| **Q4.2.9**: How does your organization accelerate implementation? | NIST Automation Tools | - | SA-11(1) "Static Code Analysis" | NIST SP 800-53 SA-11(1) |
-| **Q4.2.10**: How does your organization advance practices? | NIST Innovation Framework | - | PM-31 "Continuous Monitoring Strategy" | NIST SP 800-53 PM-31 |
+| **Q4.2.8**: How does your organization ensure consistency? | - | - | SA-4(9) "Functions, Ports, Protocols, and Services in Use" | NIST SP 800-53 SA-4(9) |
+| **Q4.2.9**: How does your organization accelerate implementation? | - | - | SA-11(1) "Static Code Analysis" | NIST SP 800-53 SA-11(1) |
+| **Q4.2.10**: How does your organization advance practices? | - | - | PM-31 "Continuous Monitoring Strategy" | NIST SP 800-53 PM-31 |
 
 #### Practice 4.3: Testing & Validation Capabilities
 
