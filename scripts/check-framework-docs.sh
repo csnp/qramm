@@ -5,8 +5,13 @@
 #   scripts/check-framework-docs.sh [--no-network] [file ...]
 #
 # With no file arguments, the documents in DEFAULT_DOCS (inside the Python
-# block below) are checked. Add a new framework document to that list when it
-# is written, so that it inherits these checks.
+# block below) are checked: README.md, every Markdown document the README
+# links, every Markdown file in a directory the README links, and the
+# toolkit's copies of the question documents. Add a document to that list,
+# in sorted order, when the README starts to link it or when a new framework
+# document is written, so that it inherits these checks.
+# scripts/test-check-framework-docs-defaults.sh fails when a document the
+# README links is missing from the list.
 #
 # Checks, for every file:
 #   writing    No em dashes, no emoji, none of the banned superlatives.
@@ -49,7 +54,26 @@ import urllib.error
 import urllib.request
 
 DEFAULT_DOCS = [
+    "README.md",
+    "docs/faq.md",
+    "docs/overview.md",
+    "docs/toolkit-visuals.md",
+    "framework/Complete_QRAMM_Questions.md",
+    "framework/compliance-coverage-summary.md",
+    "framework/compliance-mapping.md",
+    "framework/full-assessment.md",
+    "framework/maturity-levels.md",
     "framework/pqcmm-comparison.md",
+    "framework/qramm-overview.md",
+    "framework/scoring-methodology.md",
+    "implementation/getting-started.md",
+    "templates/asset-inventory-template.md",
+    "templates/evidence-collection-template.md",
+    "templates/executive-report-template.md",
+    "templates/vendor-questionnaire-template.md",
+    "toolkit/assessment/Complete_QRAMM_Questions.md",
+    "toolkit/assessment/full-assessment.md",
+    "toolkit/toolkit-overview.md",
 ]
 
 PQCMM_DOC = "framework/pqcmm-comparison.md"

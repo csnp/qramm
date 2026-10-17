@@ -117,7 +117,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization govern cryptographic asset ownership and accountability?
 
-**Explanation**: This examines whether your organization has clear, enforceable ownership of cryptographic assets—ensuring someone is responsible for maintaining inventory accuracy, supporting migration planning, and responding to vulnerabilities across all systems and environments.
+**Explanation**: This examines whether your organization has clear, enforceable ownership of cryptographic assets, ensuring someone is responsible for maintaining inventory accuracy, supporting migration planning, and responding to vulnerabilities across all systems and environments.
 
 **Options**:
 
@@ -296,7 +296,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization include IoT and embedded devices in its cryptographic inventory and quantum readiness planning?
 
-**Explanation**: This evaluates whether and how your organization identifies and manages cryptographic implementations in IoT and embedded devices—systems that often rely on hardcoded, legacy, or constrained cryptography.
+**Explanation**: This evaluates whether and how your organization identifies and manages cryptographic implementations in IoT and embedded devices, systems that often rely on hardcoded, legacy, or constrained cryptography.
 
 **Options**:
 
@@ -326,7 +326,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization stay informed about quantum computing and cryptanalysis advancements?
 
-**Explanation**: This assesses how your organization monitors developments in quantum computing, cryptanalysis, and cryptographic standards that may affect the accuracy of your cryptographic inventory or the vulnerability status of deployed algorithms, focusing on ongoing awareness and information gathering—particularly as a foundation for discovery, risk assessment, and planning.
+**Explanation**: This assesses how your organization monitors developments in quantum computing, cryptanalysis, and cryptographic standards that may affect the accuracy of your cryptographic inventory or the vulnerability status of deployed algorithms, focusing on ongoing awareness and information gathering, particularly as a foundation for discovery, risk assessment, and planning.
 
 **Options**:
 
@@ -478,7 +478,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization contribute to (quantum) cryptanalysis and mitigation research?
 
-**Explanation**: This examines your organization’s role in advancing the broader field of classical and post-quantum cryptographic research—such as algorithm analysis, vulnerability assessment, and mitigation strategies—through collaboration, knowledge sharing, or original research.
+**Explanation**: This examines your organization’s role in advancing the broader field of classical and post-quantum cryptographic research (such as algorithm analysis, vulnerability assessment, and mitigation strategies) through collaboration, knowledge sharing, or original research.
 
 **Options**:
 
@@ -510,7 +510,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How are vulnerability findings communicated to stakeholders?
 
-**Explanation**: This assesses how effectively your organization shares information about quantum-related cryptographic vulnerabilities with relevant internal stakeholders—including technical teams, system owners, and executives.
+**Explanation**: This assesses how effectively your organization shares information about quantum-related cryptographic vulnerabilities with relevant internal stakeholders, including technical teams, system owners, and executives.
 
 **Options**:
 
@@ -600,7 +600,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization assess trends in cryptographic vulnerabilities over time?
 
-**Explanation**: This examines whether your organization tracks how cryptographic vulnerabilities evolve due to system changes, algorithm deprecation, or quantum computing progress—and whether this information is used to monitor readiness and guide remediation priorities.
+**Explanation**: This examines whether your organization tracks how cryptographic vulnerabilities evolve due to system changes, algorithm deprecation, or quantum computing progress, and whether this information is used to monitor readiness and guide remediation priorities.
 
 **Options**:
 
@@ -628,7 +628,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization apply quantum vulnerability insights to improve cryptographic practices and standards?
 
-**Explanation**: This examines how insights gained from quantum-focused cryptographic assessments—such as algorithm weaknesses, misconfigurations, or systemic gaps—are used to improve implementation practices, internal standards, and future decision-making.
+**Explanation**: This examines how insights gained from quantum-focused cryptographic assessments (such as algorithm weaknesses, misconfigurations, or systemic gaps) are used to improve implementation practices, internal standards, and future decision-making.
 
 **Options**:
 
@@ -664,7 +664,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization identify and map cryptographic dependencies across systems and services?
 
-**Explanation**: This assesses your ability to discover and document how cryptographic implementations connect systems, applications, services, and devices—such as shared keys, certificates, protocols, or libraries.
+**Explanation**: This assesses your ability to discover and document how cryptographic implementations connect systems, applications, services, and devices, such as shared keys, certificates, protocols, or libraries.
 
 **Options**:
 
@@ -694,7 +694,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization document and maintain cryptographic dependencies between systems and services?
 
-**Explanation**: This examines whether and how your organization records cryptographic interdependencies—such as shared certificates, keys, protocols, or algorithm implementations—across systems, applications, and services. 
+**Explanation**: This examines whether and how your organization records cryptographic interdependencies (such as shared certificates, keys, protocols, or algorithm implementations) across systems, applications, and services. 
 
 **Options**:
 
@@ -724,7 +724,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization analyze the impact of cryptographic changes across dependent systems and services?
 
-**Explanation**: This examines whether your organization performs impact analysis to understand how cryptographic changes—such as algorithm upgrades, key rotations, or certificate transitions—affect interconnected systems, services, and workflows.
+**Explanation**: This examines whether your organization performs impact analysis to understand how cryptographic changes (such as algorithm upgrades, key rotations, or certificate transitions) affect interconnected systems, services, and workflows.
 
 **Options**:
 
@@ -816,7 +816,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**:How is cryptographic dependency information used to inform migration planning and operational risk management?
 
-**Explanation**:This assesses whether your organization uses knowledge of cryptographic interdependencies—such as shared certificates, protocol chains, or API relationships—to guide transition sequencing, prevent cascading failures, and prioritize mitigation efforts.
+**Explanation**:This assesses whether your organization uses knowledge of cryptographic interdependencies (such as shared certificates, protocol chains, or API relationships) to guide transition sequencing, prevent cascading failures, and prioritize mitigation efforts.
 
 **Options**:
 
@@ -844,7 +844,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization manage cryptographic dependencies in software build systems and code-signing infrastructure?
 
-**Explanation**: This examines how your organization identifies and coordinates cryptographic components used across CI/CD pipelines, code-signing tools, package repositories, and update mechanisms—ensuring these trust relationships are tracked, validated, and upgraded as part of the quantum transition strategy.
+**Explanation**: This examines how your organization identifies and coordinates cryptographic components used across CI/CD pipelines, code-signing tools, package repositories, and update mechanisms, ensuring these trust relationships are tracked, validated, and upgraded as part of the quantum transition strategy.
 
 **Options**:
 
@@ -874,7 +874,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization assess cryptographic dependencies and transition constraints in operational technology (OT) and industrial control environments?
 
-**Explanation**: This examines whether your organization identifies and maps cryptographic relationships across OT, Supervisory Control and Data Acquisition (SCADA), Industrial Control Systems (ICS), and industrial systems—including fixed-function protocols (e.g., MODBUS, DNP3, OPC-UA), hardware cryptography limitations, and long lifecycle constraints—to plan safe and effective quantum-resilient transitions.
+**Explanation**: This examines whether your organization identifies and maps cryptographic relationships across OT, Supervisory Control and Data Acquisition (SCADA), Industrial Control Systems (ICS), and industrial systems to plan safe and effective quantum-resilient transitions. This includes fixed-function protocols (e.g., MODBUS, DNP3, OPC-UA), hardware cryptography limitations, and long lifecycle constraints.
 
 **Options**:
 
@@ -1213,7 +1213,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How do you monitor and manage progress across your quantum readiness program and cryptographic transition activities?
 
-**Explanation**: This assesses your organization's approach to tracking the advancement of quantum readiness initiatives across all relevant domains—cryptographic remediation, policy implementation, vendor upgrades, and workforce enablement.
+**Explanation**: This assesses your organization's approach to tracking the advancement of quantum readiness initiatives across all relevant domains: cryptographic remediation, policy implementation, vendor upgrades, and workforce enablement.
 
 **Options**:
 
@@ -1243,7 +1243,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization contribute to shaping industry-wide quantum security and cryptographic agility practices?
 
-**Explanation**: This assesses your organization's contributions to industry knowledge sharing, standards development, and thought leadership in quantum security and cryptographic transition planning—including efforts to drive interoperability, agility, and preparedness across sectors.
+**Explanation**: This assesses your organization's contributions to industry knowledge sharing, standards development, and thought leadership in quantum security and cryptographic transition planning, including efforts to drive interoperability, agility, and preparedness across sectors.
 
 **Options**:
 
@@ -1365,7 +1365,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How do you validate the effectiveness of quantum risk controls?
 
-**Explanation**: This examines your organization's approach to verifying whether quantum-related risk mitigation controls—such as cryptographic upgrades, monitoring systems, and vendor safeguards—are functioning as intended and delivering the expected reduction in quantum risk exposure. 
+**Explanation**: This examines your organization's approach to verifying whether quantum-related risk mitigation controls (such as cryptographic upgrades, monitoring systems, and vendor safeguards) are functioning as intended and delivering the expected reduction in quantum risk exposure. 
 
 **Options**:
 
@@ -1395,7 +1395,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How do you update your quantum risk assessment methodology as new threats and cryptographic developments emerge?
 
-**Explanation**: This examines your organization's ability to evolve its quantum risk assessment framework in response to advances in quantum computing, cryptanalysis, and PQC research—ensuring that risk models, prioritization criteria, and cryptographic agility planning remain current and effective.
+**Explanation**: This examines your organization's ability to evolve its quantum risk assessment framework in response to advances in quantum computing, cryptanalysis, and PQC research, ensuring that risk models, prioritization criteria, and cryptographic agility planning remain current and effective.
 
 **Options**:
 
@@ -1427,7 +1427,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How mature is your quantum security compliance program?
 
-**Explanation**: This assesses your organization’s approach to tracking and enforcing compliance with cryptographic standards and regulatory expectations related to quantum computing—covering PQC readiness, algorithm deprecation, cryptographic agility controls, and coverage of high-risk domains like HSMs, supply chain signing, and PKI modernization.
+**Explanation**: This assesses your organization’s approach to tracking and enforcing compliance with cryptographic standards and regulatory expectations related to quantum computing, covering PQC readiness, algorithm deprecation, cryptographic agility controls, and coverage of high-risk domains like HSMs, supply chain signing, and PKI modernization.
 
 **Options**:
 
@@ -1485,7 +1485,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How do you track and map compliance across quantum-relevant controls and systems?
 
-**Explanation**: This examines your organization's ability to trace quantum security compliance requirements to specific systems, policies, and enforcement controls—ensuring coverage, accountability, and auditability across the enterprise.
+**Explanation**: This examines your organization's ability to trace quantum security compliance requirements to specific systems, policies, and enforcement controls, ensuring coverage, accountability, and auditability across the enterprise.
 
 **Options**:
 
@@ -1581,7 +1581,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How comprehensive is your assessment of vendor quantum readiness and cryptographic agility?
 
-**Explanation**: This assesses your organization's approach to evaluating the quantum readiness of vendors and service providers—focusing on their ability to adopt post-quantum cryptography (PQC), manage cryptographic agility, and secure high-risk domains such as code signing, TLS endpoints, HSM compatibility, and supply chain workflows.
+**Explanation**: This assesses your organization's approach to evaluating the quantum readiness of vendors and service providers, focusing on their ability to adopt post-quantum cryptography (PQC), manage cryptographic agility, and secure high-risk domains such as code signing, TLS endpoints, HSM compatibility, and supply chain workflows.
 
 **Options**:
 
@@ -1611,7 +1611,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How do you manage quantum security and cryptographic agility requirements for vendors handling sensitive systems?
 
-**Explanation**: This assesses your organization's approach to establishing, communicating, and verifying vendor requirements related to post-quantum cryptography and cryptographic agility—particularly for vendors that manage or support cryptographically sensitive systems such as TLS endpoints, code signing infrastructure, firmware updates, HSMs, and PKI components.
+**Explanation**: This assesses your organization's approach to establishing, communicating, and verifying vendor requirements related to post-quantum cryptography and cryptographic agility, particularly for vendors that manage or support cryptographically sensitive systems such as TLS endpoints, code signing infrastructure, firmware updates, HSMs, and PKI components.
 
 **Options**:
 
@@ -1701,7 +1701,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**:How do you evaluate vendor support for hardware dependencies? 
 
-**Explanation**: This assesses your organization's ability to evaluate whether vendors use and support secure hardware components—including HSMs, TPMs, and cryptographic accelerators—that can accommodate evolving cryptographic requirements, such as key lifecycle management, secure key generation, agility under algorithm deprecations, and compatibility with future cryptographic transitions.
+**Explanation**: This assesses your organization's ability to evaluate whether vendors use and support secure hardware components (including HSMs, TPMs, and cryptographic accelerators) that can accommodate evolving cryptographic requirements, such as key lifecycle management, secure key generation, agility under algorithm deprecations, and compatibility with future cryptographic transitions.
 
 **Options**:
 
@@ -1733,7 +1733,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization assess and manage quantum-related risks across its supply chain? 
 
-**Explanation**: This assesses your organization’s maturity in identifying, evaluating, and mitigating quantum computing risks within its vendor ecosystem and broader supply chain—focusing on structured frameworks, assessment methodologies, and the ability to adapt to evolving threats.
+**Explanation**: This assesses your organization’s maturity in identifying, evaluating, and mitigating quantum computing risks within its vendor ecosystem and broader supply chain, focusing on structured frameworks, assessment methodologies, and the ability to adapt to evolving threats.
 
 **Options**:
 
@@ -1763,7 +1763,7 @@ For each question, select the option that best describes your organization's cur
 
 **Question**: How does your organization perform technical evaluation of quantum risk across individual supply chain vendors and components?
 
-**Explanation**: This examines how your organization conducts detailed, component-level quantum risk assessments within the supply chain—focusing on the depth of analysis, evaluation techniques, and ability to detect cryptographic vulnerabilities or lifecycle constraints at the vendor and product level.
+**Explanation**: This examines how your organization conducts detailed, component-level quantum risk assessments within the supply chain, focusing on the depth of analysis, evaluation techniques, and ability to detect cryptographic vulnerabilities or lifecycle constraints at the vendor and product level.
 
 **Options**:
 
@@ -2028,7 +2028,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization tailor data protection requirements for constrained or specialized environments?
 
-**Explanation**: This examines whether your protection requirements account for platform-specific constraints—such as limited hardware, fragmented protocols, or cloud-native designs—especially in IoT, embedded, industrial, or multi-cloud systems.
+**Explanation**: This examines whether your protection requirements account for platform-specific constraints (such as limited hardware, fragmented protocols, or cloud-native designs), especially in IoT, embedded, industrial, or multi-cloud systems.
 
 **Options**:
 
@@ -2058,7 +2058,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization define protection strategies based on data lifecycle and retention needs?
 
-**Explanation**: This examines your organization’s strategic approach to aligning quantum-resistant protections with data lifecycles—ensuring that encryption and integrity controls remain valid for the duration the data must remain secure or verifiable.
+**Explanation**: This examines your organization’s strategic approach to aligning quantum-resistant protections with data lifecycles, ensuring that encryption and integrity controls remain valid for the duration the data must remain secure or verifiable.
 
 **Options**:
 
@@ -2086,7 +2086,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization define protection strategies for unstructured or semi-structured data?
 
-**Explanation**: This examines whether your data protection strategy explicitly addresses hard-to-classify data types—such as email, documents, collaboration tools, messaging logs, or data lakes—which may contain quantum-sensitive information.
+**Explanation**: This examines whether your data protection strategy explicitly addresses hard-to-classify data types (such as email, documents, collaboration tools, messaging logs, or data lakes), which may contain quantum-sensitive information.
 
 **Options**:
 
@@ -2114,7 +2114,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization measure the effectiveness of data protection controls?
 
-**Explanation**: This examines your approach to assessing whether applied data protection controls meet their intended objectives—such as correctly aligning with data classifications and minimizing residual risk.
+**Explanation**: This examines your approach to assessing whether applied data protection controls meet their intended objectives, such as correctly aligning with data classifications and minimizing residual risk.
 
 **Options**:
 
@@ -2142,7 +2142,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization identify opportunities to improve data protection controls?
 
-**Explanation**: This examines how your organization uncovers new protection gaps or improvement areas—through testing, quantum threat updates, performance analysis, or feedback from control validation and classification alignment.
+**Explanation**: This examines how your organization uncovers new protection gaps or improvement areas, through testing, quantum threat updates, performance analysis, or feedback from control validation and classification alignment.
 
 **Options**:
 
@@ -2170,7 +2170,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization assess the performance of data protection controls?
 
-**Explanation**: This examines how your organization tests and monitors the performance of encryption, key management, and related protection mechanisms—including their impact on system efficiency, usability, and operational feasibility across environments.
+**Explanation**: This examines how your organization tests and monitors the performance of encryption, key management, and related protection mechanisms, including their impact on system efficiency, usability, and operational feasibility across environments.
 
 **Options**:
 
@@ -2288,7 +2288,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization ensure long-term cryptographic integrity of stored and archived data?
 
-**Explanation**: This examines how your organization applies integrity protections—such as digital signatures, hashes, and time-stamps—to detect tampering in stored or archived data and ensure those mechanisms remain effective over the full data retention period.
+**Explanation**: This examines how your organization applies integrity protections (such as digital signatures, hashes, and time-stamps) to detect tampering in stored or archived data and ensure those mechanisms remain effective over the full data retention period.
 
 **Options**:
 
@@ -2402,7 +2402,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization measure the effectiveness of encryption and key management controls used to protect stored data?
 
-**Explanation**: This examines how your organization evaluates whether its storage security controls—such as encryption strength, key lifecycle enforcement, and protection coverage—are correctly implemented and sufficient to meet both current security needs and long-term data protection requirements, including emerging threats like quantum decryption.
+**Explanation**: This examines how your organization evaluates whether its storage security controls (such as encryption strength, key lifecycle enforcement, and protection coverage) are correctly implemented and sufficient to meet both current security needs and long-term data protection requirements, including emerging threats like quantum decryption.
 
 **Options**:
 
@@ -2492,7 +2492,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization implement cryptographic protections within data-in-transit protocols?
 
-**Explanation**: This examines how your organization applies cryptographic mechanisms—such as encryption, digital signatures, key exchange, and authentication—within communication protocols to protect data in transit from interception, tampering, or spoofing.
+**Explanation**: This examines how your organization applies cryptographic mechanisms (such as encryption, digital signatures, key exchange, and authentication) within communication protocols to protect data in transit from interception, tampering, or spoofing.
 
 **Options**:
 
@@ -2548,7 +2548,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization ensure trusted identity and authentication in secure network communications?
 
-**Explanation**: This examines your approach to enforcing trust models in transit security—ensuring that endpoints are authenticated and that cryptographic protections provide not only encryption but also integrity and verified identity across systems and services.
+**Explanation**: This examines your approach to enforcing trust models in transit security, ensuring that endpoints are authenticated and that cryptographic protections provide not only encryption but also integrity and verified identity across systems and services.
 
 **Options**:
 
@@ -2576,7 +2576,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization enforce minimum cryptographic standards to prevent downgrade attacks in data-in-transit protocols?
 
-**Explanation**: This examines how your organization ensures that communication protocols reject insecure configurations and prevent fallback to deprecated cryptographic settings—such as weak cipher suites, insecure versions, or unauthenticated channels.
+**Explanation**: This examines how your organization ensures that communication protocols reject insecure configurations and prevent fallback to deprecated cryptographic settings, such as weak cipher suites, insecure versions, or unauthenticated channels.
 
 **Options**:
 
@@ -2662,7 +2662,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization prioritize communication channels for enhanced cryptographic protection?
 
-**Explanation**: This examines how your organization determines which systems or communication paths receive stronger transit protections—based on factors such as data sensitivity, threat exposure, business impact, and technical feasibility.
+**Explanation**: This examines how your organization determines which systems or communication paths receive stronger transit protections, based on factors such as data sensitivity, threat exposure, business impact, and technical feasibility.
 
 **Options**:
 
@@ -2690,7 +2690,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization manage and validate trust anchors for secure communication protocols?
 
-**Explanation**: This examines your approach to managing root certificates, public keys, and trust stores used in transit protocols—ensuring that connections are authenticated against current, trusted authorities and that revocation or compromise is handled effectively.
+**Explanation**: This examines your approach to managing root certificates, public keys, and trust stores used in transit protocols, ensuring that connections are authenticated against current, trusted authorities and that revocation or compromise is handled effectively.
 
 **Options**:
 
@@ -2718,7 +2718,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization assess and enforce cryptographic protections in third-party or externally managed communication channels?
 
-**Explanation**: This examines your approach to ensuring that cryptographic protections—such as encryption, authentication, and protocol strength—are applied effectively to data in transit even when the communication path is partially or fully controlled by external providers, partners, or vendors.
+**Explanation**: This examines your approach to ensuring that cryptographic protections (such as encryption, authentication, and protocol strength) are applied effectively to data in transit even when the communication path is partially or fully controlled by external providers, partners, or vendors.
 
 **Options**:
 
@@ -2746,7 +2746,7 @@ Maintains data usability while transitioning to quantum-resistant algorithms
 
 **Question**: How does your organization plan for interoperability and backward compatibility during cryptographic transitions in transit protocols?
 
-**Explanation**: This examines how your organization manages the risks and dependencies associated with upgrading transit-layer cryptography—ensuring that secure communication remains functional across legacy systems, third-party clients, and modern endpoints during algorithm or protocol changes.
+**Explanation**: This examines how your organization manages the risks and dependencies associated with upgrading transit-layer cryptography, ensuring that secure communication remains functional across legacy systems, third-party clients, and modern endpoints during algorithm or protocol changes.
 
 **Options**:
 
@@ -2871,7 +2871,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization assess the cryptographic agility and quantum readiness of its technical infrastructure?
 
-**Explanation**: This examines how your organization evaluates infrastructure components—such as hardware, software platforms, network devices, and cryptographic interfaces—for their ability to support evolving cryptographic requirements, including algorithm upgrades, larger key sizes, and the adoption of quantum-resistant protocols.
+**Explanation**: This examines how your organization evaluates infrastructure components (such as hardware, software platforms, network devices, and cryptographic interfaces) for their ability to support evolving cryptographic requirements, including algorithm upgrades, larger key sizes, and the adoption of quantum-resistant protocols.
 
 **Options**:
 
@@ -2899,7 +2899,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization plan infrastructure upgrades to support cryptographic agility and quantum readiness?
 
-**Explanation**: This examines how your organization prepares its infrastructure for cryptographic transitions—developing upgrade plans that account for flexibility in algorithm use, compatibility with evolving cryptographic standards, and the future adoption of quantum-resistant algorithms.
+**Explanation**: This examines how your organization prepares its infrastructure for cryptographic transitions, developing upgrade plans that account for flexibility in algorithm use, compatibility with evolving cryptographic standards, and the future adoption of quantum-resistant algorithms.
 
 **Options**:
 
@@ -2927,7 +2927,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization evaluate cryptographic hardware readiness for quantum-era requirements?
 
-**Explanation**: This examines how your organization assesses the ability of its hardware-based cryptographic modules—such as HSMs, TPMs, or offload engines—to support key size expansion, hybrid key management, and future algorithm migration necessary for cryptographic agility and quantum resilience.
+**Explanation**: This examines how your organization assesses the ability of its hardware-based cryptographic modules (such as HSMs, TPMs, or offload engines) to support key size expansion, hybrid key management, and future algorithm migration necessary for cryptographic agility and quantum resilience.
 
 **Options**:
 
@@ -2955,7 +2955,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization identify and address cryptographic upgrade blockers in legacy or third-party systems?
 
-**Explanation**: This examines whether your organization actively discovers systems—including legacy applications, third-party platforms, or unmanaged devices—that may delay or prevent adoption of new cryptographic algorithms due to architectural, licensing, or vendor limitations.
+**Explanation**: This examines whether your organization actively discovers systems (including legacy applications, third-party platforms, or unmanaged devices) that may delay or prevent adoption of new cryptographic algorithms due to architectural, licensing, or vendor limitations.
 
 **Options**:
 
@@ -2983,7 +2983,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization incorporate cryptographic agility requirements into system and software design processes?
 
-**Explanation**: This examines how cryptographic flexibility—such as support for multiple algorithms, pluggable crypto libraries, or hybrid key configurations—is considered and documented during design and architecture phases of new systems, platforms, or software components.
+**Explanation**: This examines how cryptographic flexibility (such as support for multiple algorithms, pluggable crypto libraries, or hybrid key configurations) is considered and documented during design and architecture phases of new systems, platforms, or software components.
 
 **Options**:
 
@@ -3013,7 +3013,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization plan for cryptographic upgrade sequencing and dependency management?
 
-**Explanation**: This examines how your organization identifies and plans for system, service, and vendor interdependencies that affect the order and coordination of cryptographic upgrades—ensuring upgrades are phased to avoid disruption, misalignment, or security gaps during the quantum transition.
+**Explanation**: This examines how your organization identifies and plans for system, service, and vendor interdependencies that affect the order and coordination of cryptographic upgrades, ensuring upgrades are phased to avoid disruption, misalignment, or security gaps during the quantum transition.
 
 **Options**:
 
@@ -3097,7 +3097,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization define and measure technical milestones for cryptographic transitions?
 
-**Explanation**: This examines whether your organization establishes and tracks concrete, cryptography-specific milestones to guide planning and execution—such as upgrading libraries, introducing hybrid certificates, phasing out weak algorithms, or implementing algorithm agility controls.
+**Explanation**: This examines whether your organization establishes and tracks concrete, cryptography-specific milestones to guide planning and execution, such as upgrading libraries, introducing hybrid certificates, phasing out weak algorithms, or implementing algorithm agility controls.
 
 **Options**:
 
@@ -3125,7 +3125,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization contribute to the development and advancement of technical standards for cryptographic agility and quantum-resistant implementations?
 
-**Explanation**: This examines your organization’s involvement in shaping or advancing cryptographic standards—such as those related to agility, hybrid certificate handling, key management, or post-quantum protocol design.
+**Explanation**: This examines your organization’s involvement in shaping or advancing cryptographic standards, such as those related to agility, hybrid certificate handling, key management, or post-quantum protocol design.
 
 **Options**:
 
@@ -3187,7 +3187,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization allocate and protect specialized resources for cryptographic implementation and transition efforts?
 
-**Explanation**: This examines whether your organization dedicates and prioritizes the technical resources—such as cryptographic experts, secure environments, and transition-enabling tools—required to support cryptographic upgrades and ensure continuity across agile and post-quantum implementations.
+**Explanation**: This examines whether your organization dedicates and prioritizes the technical resources (such as cryptographic experts, secure environments, and transition-enabling tools) required to support cryptographic upgrades and ensure continuity across agile and post-quantum implementations.
 
 **Options**:
 
@@ -3215,7 +3215,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization ensure the quality and correctness of cryptographic implementations?
 
-**Explanation**: This examines your organization’s approach to verifying that cryptographic components—such as encryption, key management, and protocol configurations—are implemented securely, follow best practices, and are consistently validated for correctness, resilience, and secure usage across systems.
+**Explanation**: This examines your organization’s approach to verifying that cryptographic components (such as encryption, key management, and protocol configurations) are implemented securely, follow best practices, and are consistently validated for correctness, resilience, and secure usage across systems.
 
 **Options**:
 
@@ -3243,7 +3243,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization monitor the operational impact of cryptographic implementations after deployment?
 
-**Explanation**: This examines whether your organization tracks how cryptographic changes—such as new algorithms, larger key sizes, or protocol upgrades—affect system performance, reliability, and user experience, and whether findings are used to inform future implementation improvements.
+**Explanation**: This examines whether your organization tracks how cryptographic changes (such as new algorithms, larger key sizes, or protocol upgrades) affect system performance, reliability, and user experience, and whether findings are used to inform future implementation improvements.
 
 **Options**:
 
@@ -3271,7 +3271,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization ensure cryptographic implementation libraries, patterns, and tools remain up to date with evolving standards?
 
-**Explanation**: his examines whether your organization maintains its cryptographic development environments, secure coding practices, and supporting tools in line with updated standards, deprecation timelines, and emerging algorithm requirements—ensuring cryptographic changes can be implemented securely over time.
+**Explanation**: his examines whether your organization maintains its cryptographic development environments, secure coding practices, and supporting tools in line with updated standards, deprecation timelines, and emerging algorithm requirements, ensuring cryptographic changes can be implemented securely over time.
 
 **Options**:
 
@@ -3301,7 +3301,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How structured is your delivery process for implementing cryptographic changes?
 
-**Explanation**: This examines whether your organization has established a consistent delivery methodology that is capable of supporting cryptographic transitions—such as algorithm upgrades, certificate changes, or key management enhancements—required for future adoption of quantum-resistant solutions.
+**Explanation**: This examines whether your organization has established a consistent delivery methodology that is capable of supporting cryptographic transitions (such as algorithm upgrades, certificate changes, or key management enhancements) required for future adoption of quantum-resistant solutions.
 
 **Options**:
 
@@ -3329,7 +3329,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization ensure consistent implementation of cryptographic practices across systems
 
-**Explanation**: This examines whether your organization has established common patterns, standards, and verification methods to ensure cryptographic practices—such as algorithm selection, key management, protocol use, and configuration—are applied uniformly across teams, systems, and environments.
+**Explanation**: This examines whether your organization has established common patterns, standards, and verification methods to ensure cryptographic practices (such as algorithm selection, key management, protocol use, and configuration) are applied uniformly across teams, systems, and environments.
 
 **Options**:
 
@@ -3413,7 +3413,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization enforce cryptographic change readiness and agility through its CI/CD and software delivery pipelines?
 
-**Explanation**: This examines whether your organization integrates cryptographic policy enforcement into delivery workflows—ensuring new code, configurations, or services comply with cryptographic agility, key management, and post-quantum preparedness requirements at build and deployment time.
+**Explanation**: This examines whether your organization integrates cryptographic policy enforcement into delivery workflows, ensuring new code, configurations, or services comply with cryptographic agility, key management, and post-quantum preparedness requirements at build and deployment time.
 
 **Options**:
 
@@ -3447,7 +3447,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How comprehensive is your testing strategy for cryptographic transitions and quantum-resistant implementations?
 
-**Explanation**: This examines your organization’s approach to preparing for the testing of quantum-resistant and cryptographically agile systems—including test planning, methodologies, and coverage of new algorithms, hybrid mechanisms, and security validation requirements.
+**Explanation**: This examines your organization’s approach to preparing for the testing of quantum-resistant and cryptographically agile systems, including test planning, methodologies, and coverage of new algorithms, hybrid mechanisms, and security validation requirements.
 
 **Options**:
 
@@ -3475,7 +3475,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization validate cryptographic fallback mechanisms and recovery readiness during transition testing?
 
-**Explanation**: This examines whether your organization tests for failure modes, rollback behavior, and recovery scenarios related to cryptographic transitions—such as handshake failure, unsupported algorithms, expired certificates, or hybrid chain parsing issues—before deployment into production environments.
+**Explanation**: This examines whether your organization tests for failure modes, rollback behavior, and recovery scenarios related to cryptographic transitions (such as handshake failure, unsupported algorithms, expired certificates, or hybrid chain parsing issues) before deployment into production environments.
 
 **Options**:
 
@@ -3531,7 +3531,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization generate and manage assurance evidence from cryptographic testing activities?
 
-**Explanation**: This examines whether your testing practices produce reliable, traceable, and meaningful outputs—such as logs, artifacts, and validation records—that demonstrate the correctness, security, and performance of cryptographic transitions to internal and external stakeholders.
+**Explanation**: This examines whether your testing practices produce reliable, traceable, and meaningful outputs (such as logs, artifacts, and validation records) that demonstrate the correctness, security, and performance of cryptographic transitions to internal and external stakeholders.
 
 **Options**:
 
@@ -3617,7 +3617,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization ensure consistent validation practices across cryptographic transitions and systems?
 
-**Explanation**: This examines whether your organization applies standardized validation procedures—such as test criteria, success thresholds, and evaluation methods—consistently across teams, systems, and environments during cryptographic migrations.
+**Explanation**: This examines whether your organization applies standardized validation procedures (such as test criteria, success thresholds, and evaluation methods) consistently across teams, systems, and environments during cryptographic migrations.
 
 **Options**:
 
@@ -3673,7 +3673,7 @@ Addresses performance considerations of post-quantum implementations
 
 **Question**: How does your organization assess cryptographic weaknesses or downgrade risks in third-party and externally managed systems during implementation testing?
 
-**Explanation**: This examines whether your testing and validation efforts include evaluation of cryptographic risks introduced by external systems—such as APIs, SaaS platforms, or vendor-integrated components—including legacy protocol fallback, insecure defaults, or inconsistent cryptographic controls.
+**Explanation**: This examines whether your testing and validation efforts include evaluation of cryptographic risks introduced by external systems (such as APIs, SaaS platforms, or vendor-integrated components), including legacy protocol fallback, insecure defaults, or inconsistent cryptographic controls.
 
 **Options**:
 

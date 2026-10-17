@@ -15,7 +15,7 @@ The QRAMM maturity model uses a five-level structure that provides clear progres
 2. **Level 2: Developing** - Structured approaches beginning to emerge  
 3. **Level 3: Established** - Systematic and consistent practices
 4. **Level 4: Advanced** - Optimized processes with continuous improvement
-5. **Level 5: Optimizing** - Industry-leading practices and innovation
+5. **Level 5: Optimizing** - Practices that other organizations adopt, and innovation
 
 The score ranges in the level headings below are the cut-offs the toolkit's Scorecard uses to label each dimension score and the overall score. They are set out in [Maturity Level Interpretation](scoring-methodology.md#maturity-level-interpretation) in the scoring methodology.
 
@@ -236,7 +236,7 @@ Each level is characterized by specific capabilities, organizational attributes,
 - Optimized processes with continuous improvement and innovation
 - Advanced analytics and predictive capabilities for quantum risk management
 - Proactive risk management with comprehensive scenario planning
-- Industry-leading practices with measurable competitive advantages
+- Practices that other organizations look to as an example, with measurable competitive advantages
 
 **Decision-Making Process:**
 - Strategic integration of quantum readiness across all business functions
@@ -279,7 +279,7 @@ Each level is characterized by specific capabilities, organizational attributes,
 ### Common Improvement Priorities
 
 **Immediate Actions (0-6 months):**
-- Develop cutting-edge quantum security technologies and methodologies
+- Develop new quantum security technologies and methodologies
 - Establish industry partnerships for quantum readiness innovation
 - Create thought leadership content and industry guidance
 - Drive standards development and best practice advancement
@@ -303,7 +303,7 @@ The toolkit does not assign this level to a dimension score or the overall score
 ### General Characteristics
 
 **Organizational State:**
-- Industry-leading practices with continuous innovation and research
+- Practices that other organizations adopt, with continuous innovation and research
 - Comprehensive integration of quantum readiness across all organizational aspects
 - Significant contribution to industry knowledge, standards, and technologies
 - Strategic competitive advantage and market leadership through quantum excellence
@@ -324,7 +324,7 @@ The toolkit does not assign this level to a dimension score or the overall score
 
 #### Dimension 1: Cryptographic Visibility & Inventory (CVI)
 - **Discovery**: Breakthrough technologies for cryptographic asset intelligence
-- **Documentation**: Industry-leading asset intelligence platforms and methodologies
+- **Documentation**: Asset intelligence platforms and methodologies that other organizations adopt
 - **Vulnerability Assessment**: Advanced research in quantum vulnerability analysis
 - **Dependency Mapping**: Innovative approaches to cryptographic dependency management
 
@@ -332,24 +332,24 @@ The toolkit does not assign this level to a dimension score or the overall score
 - **Leadership**: Industry leadership in quantum security governance innovation
 - **Policy Framework**: Industry-standard policy frameworks and governance models
 - **Risk Assessment**: Advanced quantum risk research and modeling methodologies
-- **Third-Party Management**: Industry-leading vendor ecosystem management practices
+- **Third-Party Management**: Vendor ecosystem management practices that other organizations adopt
 
 #### Dimension 3: Data Protection Engineering (DPE)
 - **Data Classification**: Innovative data protection technologies and methodologies
 - **Storage Security**: Advanced research in quantum-safe encryption and storage
-- **Transit Security**: Industry-leading quantum-safe protocol development
+- **Transit Security**: Development of quantum-safe protocols that other organizations build on
 - **Protection Requirements**: Research-driven protection requirement methodologies
 
 #### Dimension 4: Implementation & Technical Readiness (ITR)
 - **Infrastructure Assessment**: Innovative infrastructure assessment and planning technologies
-- **Implementation Capability**: Industry-leading quantum-safe implementation expertise
+- **Implementation Capability**: Quantum-safe implementation expertise that other organizations learn from
 - **Testing & Validation**: Advanced testing technologies and validation methodologies
 - **Operational Readiness**: Industry-standard operational excellence in quantum security
 
 ### Strategic Focus Areas
 
 **Innovation Leadership:**
-- Research and development of next-generation quantum security technologies
+- Research and development of new quantum security technologies
 - Collaboration with academic institutions and research organizations
 - Investment in quantum security startups and emerging technologies
 - Development of proprietary quantum security intellectual property
@@ -476,7 +476,7 @@ The toolkit does not assign this level to a dimension score or the overall score
 
 **Continuous Improvement:**
 - **Lessons Learned**: Systematic capture and application of experience
-- **Best Practice Adoption**: Integration of industry leading practices
+- **Best Practice Adoption**: Integration of practices proven at other organizations
 - **Innovation Opportunities**: Identification and pursuit of breakthrough improvements
 - **Ecosystem Learning**: Leveraging partner and vendor experiences and capabilities
 

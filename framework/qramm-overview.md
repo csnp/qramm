@@ -110,9 +110,9 @@ QRAMM uses a 5-level maturity model that provides clear progression paths and be
 - **Typical State**: Automated processes, predictive analytics, strategic integration
 
 ### Level 5: Optimizing
-- **Characteristics**: Industry-leading practices and innovation
+- **Characteristics**: Practices that other organizations adopt, and innovation
 - **Focus**: Continuous innovation and thought leadership
-- **Typical State**: Cutting-edge practices, industry contribution, strategic advantage
+- **Typical State**: New practices, industry contribution, strategic advantage
 
 ## Assessment Methodology
 
