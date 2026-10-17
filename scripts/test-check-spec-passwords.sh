@@ -21,6 +21,11 @@
 #      and Spanish, so git prints its messages in that language: the same
 #      results as case 1. A language is skipped, with a line that says so,
 #      when git prints its message untranslated for it on this machine.
+#   7. The checker header against the repository's workbooks: at least one
+#      .xlsx file is found under toolkit/ and toolkit-specs/, and when none of
+#      them has a sheetProtection or workbookProtection element, the header
+#      sentence about protection applied without a password starts with "If",
+#      so it does not say that the toolkit is protected.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -136,6 +141,56 @@ for locale in de_DE.UTF-8 fr_FR.UTF-8 es_ES.UTF-8; do
   [ "$failed" -eq 0 ] || show_output
   failed=$((failed | case_failed))
 done
+
+echo "case 7: checker header and the repository's workbooks"
+case_failed="$failed"
+failed=0
+repo="$(cd "$here/.." && pwd -P)"
+# Prints the number of workbooks found, then the number of sheetProtection
+# and workbookProtection elements in their workbook and worksheet parts.
+counts="$(python3 -I - "$repo" <<'PY'
+import os
+import re
+import sys
+import zipfile
+
+root = sys.argv[1]
+part = re.compile(r"xl/workbook\.xml|xl/worksheets/[^/]+\.xml")
+element = re.compile(rb"<(?:\w+:)?(?:sheetProtection|workbookProtection)\b")
+books = 0
+found = 0
+for top in ("toolkit", "toolkit-specs"):
+    for base, _, names in os.walk(os.path.join(root, top)):
+        for name in names:
+            if not name.endswith(".xlsx"):
+                continue
+            books += 1
+            with zipfile.ZipFile(os.path.join(base, name)) as book:
+                for member in book.namelist():
+                    if part.fullmatch(member):
+                        found += len(element.findall(book.read(member)))
+print(books, found)
+PY
+)"
+books="${counts% *}"
+protection="${counts#* }"
+# The comment block at the top of the checker, as one line of text.
+header="$(sed -n '2,/^set /p' "$checker" | sed -e '/^set /d' -e 's/^#[[:space:]]*//' \
+  | tr '\n' ' ' | tr -s ' ')"
+sentence="$(printf '%s\n' "$header" | grep -oE '[^.]*applied without a password[^.]*' \
+  | head -n 1 | sed 's/^ *//')"
+expect "at least one workbook found" '[ "$books" -gt 0 ]'
+expect "header has a sentence about protection applied without a password" \
+  '[ -n "$sentence" ]'
+if [ "$protection" -eq 0 ]; then
+  expect "header sentence starts with If while no workbook is protected" \
+    'case "$sentence" in "If "*) true ;; *) false ;; esac'
+fi
+if [ "$failed" -ne 0 ]; then
+  echo "  workbooks: $books, protection elements: $protection"
+  echo "  header sentence: $sentence"
+fi
+failed=$((failed | case_failed))
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
