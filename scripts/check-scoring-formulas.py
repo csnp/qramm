@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
-"""Checks that the framework overview states the same score formulas as the
-scoring methodology.
+"""Checks that documents describing QRAMM scores state the same score formulas
+and answer scale as the scoring methodology.
 
 Usage:
-    python3 -I scripts/check-scoring-formulas.py
+    python3 -I scripts/check-scoring-formulas.py [file ...]
 
 framework/scoring-methodology.md describes how the toolkit workbook calculates
 QRAMM scores, and scripts/check-scoring-example.py checks its worked example
-against the sample workbook. framework/qramm-overview.md repeats the practice,
-dimension and overall score formulas. This script checks that the two
-documents agree:
+against the sample workbook. The documents in DOCUMENTS repeat the practice,
+dimension and overall score formulas. With no file arguments this script
+checks each of them; with file arguments it checks those files instead (paths
+relative to the repository root, or absolute). For each document:
 
-    1. Every score formula in the overview has a formula with the same left
-       side in the methodology, and the two have the same text.
-    2. The overview states each formula named in REQUIRED.
+    1. Every score formula has a formula with the same left side in the
+       methodology, and the two have the same text.
+    2. The document states each formula named in REQUIRED.
+    3. Every "N-point scale" names the same N as the methodology, and every
+       range written as "scored from A to B", "scores from A-B" or similar
+       runs from 1 to that N.
 
 A score formula is a fenced code block whose first line starts with
 "<name> Score =", or a line outside code blocks written in bold as
@@ -28,13 +32,26 @@ import os
 import re
 import sys
 
-OVERVIEW = "framework/qramm-overview.md"
 METHODOLOGY = "framework/scoring-methodology.md"
+
+DOCUMENTS = [
+    "framework/qramm-overview.md",
+    "framework/full-assessment.md",
+    "toolkit/assessment/full-assessment.md",
+    "docs/overview.md",
+    "implementation/getting-started.md",
+]
 
 REQUIRED = ["Practice Score", "Dimension Score", "Overall Score"]
 
 LEFT_SIDE = re.compile(r"^([A-Z][A-Za-z ]*Score) =")
 BOLD_LINE = re.compile(r"^\*\*(.+)\*\*$")
+SCALE = re.compile(r"(\d+)-point scale", re.IGNORECASE)
+SCORE_RANGE = re.compile(
+    r"\bscor(?:e|es|ed)(?: from)? (\d+) ?(?:-|to) ?(\d+)(?![.\d])", re.IGNORECASE
+)
+
+USAGE = "usage: python3 -I scripts/check-scoring-formulas.py [file ...]"
 
 
 def normalize(text):
@@ -77,17 +94,8 @@ def read_lines(root, relative):
         return fh.read().splitlines()
 
 
-def main(argv):
-    if argv:
-        print("usage: python3 -I scripts/check-scoring-formulas.py", file=sys.stderr)
-        return 2
-    root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    overview = formulas(read_lines(root, OVERVIEW))
-    methodology = formulas(read_lines(root, METHODOLOGY))
-
-    print("== {} against {}".format(OVERVIEW, METHODOLOGY))
-    problems = []
-
+def reference_formulas(methodology, problems):
+    """Left side -> (line number, formula text) from the methodology."""
     reference = {}
     for number, name, text in methodology:
         if name in reference and reference[name][1] != text:
@@ -98,20 +106,37 @@ def main(argv):
             )
             continue
         reference.setdefault(name, (number, text))
+    return reference
 
-    for number, name, text in overview:
+
+def reference_scale(lines, problems):
+    """The N of the methodology's "N-point scale", or None."""
+    sizes = {int(m.group(1)) for line in lines for m in SCALE.finditer(line)}
+    if len(sizes) != 1:
+        problems.append(
+            "{}: expected one answer scale, found {}".format(
+                METHODOLOGY, sorted(sizes) or "none"
+            )
+        )
+        return None
+    return sizes.pop()
+
+
+def check_document(path, lines, reference, scale, problems):
+    found = formulas(lines)
+    for number, name, text in found:
         if name not in reference:
             problems.append(
                 "{} line {}: {} has no formula in {}".format(
-                    OVERVIEW, number, name, METHODOLOGY
+                    path, number, name, METHODOLOGY
                 )
             )
         elif reference[name][1] != text:
             problems.append(
                 "{} line {}: {} differs from {} line {}\n"
-                "         overview:    {}\n"
+                "         document:    {}\n"
                 "         methodology: {}".format(
-                    OVERVIEW, number, name, METHODOLOGY, reference[name][0],
+                    path, number, name, METHODOLOGY, reference[name][0],
                     text, reference[name][1],
                 )
             )
@@ -120,12 +145,53 @@ def main(argv):
                 name, number, reference[name][0]
             ))
 
-    stated = {name for _, name, _ in overview}
+    stated = {name for _, name, _ in found}
+    for name in REQUIRED:
+        if name not in stated:
+            problems.append("{}: no formula for {}".format(path, name))
+
+    if scale is None:
+        return
+    for number, line in enumerate(lines, 1):
+        for match in SCALE.finditer(line):
+            if int(match.group(1)) != scale:
+                problems.append(
+                    "{} line {}: \"{}\" but {} uses a {}-point scale".format(
+                        path, number, match.group(0), METHODOLOGY, scale
+                    )
+                )
+        for match in SCORE_RANGE.finditer(line):
+            if (int(match.group(1)), int(match.group(2))) != (1, scale):
+                problems.append(
+                    "{} line {}: \"{}\" but answers in {} score 1 to {}".format(
+                        path, number, match.group(0), METHODOLOGY, scale
+                    )
+                )
+
+
+def main(argv):
+    if any(arg.startswith("-") for arg in argv):
+        print(USAGE, file=sys.stderr)
+        return 2
+    root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    documents = argv or DOCUMENTS
+
+    problems = []
+    methodology_lines = read_lines(root, METHODOLOGY)
+    reference = reference_formulas(formulas(methodology_lines), problems)
+    scale = reference_scale(methodology_lines, problems)
     for name in REQUIRED:
         if name not in reference:
             problems.append("{}: no formula for {}".format(METHODOLOGY, name))
-        if name not in stated:
-            problems.append("{}: no formula for {}".format(OVERVIEW, name))
+
+    for path in documents:
+        print("== {} against {}".format(path, METHODOLOGY))
+        try:
+            lines = read_lines(root, path)
+        except OSError as error:
+            problems.append("{}: cannot read ({})".format(path, error.strerror))
+            continue
+        check_document(path, lines, reference, scale, problems)
 
     for problem in problems:
         print("  FAIL {}".format(problem))

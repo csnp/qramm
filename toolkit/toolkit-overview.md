@@ -56,7 +56,7 @@ The Scorecard tab provides a comprehensive view of your quantum readiness assess
 ### Dimension Scoring Summary
 For each dimension:
 
-- **Raw Score**: Direct calculation from assessment responses (average of practice scores)
+- **Raw Score**: The dimension score calculated from assessment responses, the weighted sum of the dimension's three practice scores (see [Scoring Methodology](../framework/scoring-methodology.md#dimension-level-scoring))
 - **Weighted Score**: Profile multiplier-adjusted calculation based on organizational context
 - **Maturity Level**: Current dimension maturity level (Basic/Developing/Established/Advanced/Optimizing)
 - **Industry Benchmark**: Comparison against similar organizations in your industry

@@ -226,10 +226,28 @@ This guide provides step-by-step instructions for implementing the Quantum Readi
 **Analysis Activities:**
 
 #### **Score Calculation**
-- **Practice Scores**: Calculate average scores for each practice
-- **Dimension Scores**: Apply minimum scoring across practices
-- **Overall QRAMM Score**: Average dimension scores for overall assessment
+The toolkit workbook calculates the scores. The [Scoring Methodology](../framework/scoring-methodology.md) describes that calculation in full, with the practice weights and a worked example.
+
+- **Question Scores**: Each question is scored from 1 to 4, the number of the selected option. A question with no answer is left out of the calculation
+- **Practice Scores**: Combine the average of the answered Foundation questions (60 percent) and the average of the answered Advanced questions (40 percent)
+- **Dimension Scores**: Add the three practice scores, each multiplied by its fixed practice weight. The three weights in a dimension add up to 1.00
+- **Overall QRAMM Score**: Average the four dimension scores
 - **Maturity Level Determination**: Map scores to maturity levels
+
+```
+Practice Score = (average of the answered Foundation questions × 0.6)
+               + (average of the answered Advanced questions × 0.4)
+```
+
+```
+Dimension Score = (Practice 1 Score × Weight 1)
+                + (Practice 2 Score × Weight 2)
+                + (Practice 3 Score × Weight 3)
+```
+
+```
+Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
+```
 
 #### **Gap Analysis**
 - **Practice-Level Gaps**: Identify practices with lowest scores
