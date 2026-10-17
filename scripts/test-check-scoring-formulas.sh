@@ -15,6 +15,9 @@
 #      minimum scoring across practices": exit 1, a FAIL line for each of the
 #      three missing formulas.
 #   5. An option such as --help: exit 2, usage on stderr.
+#   6. Ranges at the end of a sentence, such as "scored from 1 to 5.": exit 1,
+#      a FAIL line for each range that does not run from 1 to 4, and none for
+#      "scored from 1 to 4." or the decimal in "score 1-2.5".
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -116,6 +119,27 @@ end_case
 start_case "case 5: option argument" --help
 expect "exit status is 2" '[ "$status" -eq 2 ]'
 expect "usage on stderr" 'printf "%s\n" "$err" | grep -q "^usage:"'
+end_case
+
+printf '%s\n' \
+  '## Scoring Methodology' \
+  '' \
+  'Each question is scored from 1 to 5.' \
+  'Each question is scored from 1-5.' \
+  'Each question is scored 0 to 4.' \
+  'Each question is scored from 1 to 4.' \
+  'A practice may score 1-2.5 on average.' \
+  > "$work/sentence.md"
+start_case "case 6: ranges at the end of a sentence" "$work/sentence.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line for scored from 1 to 5." \
+  'has_fail "sentence.md line 3: \"scored from 1 to 5\" but"'
+expect "FAIL line for scored from 1-5." \
+  'has_fail "sentence.md line 4: \"scored from 1-5\" but"'
+expect "FAIL line for scored 0 to 4." \
+  'has_fail "sentence.md line 5: \"scored 0 to 4\" but"'
+expect "no FAIL line for scored from 1 to 4." '! has_fail "sentence.md line 6:"'
+expect "no FAIL line for score 1-2.5" '! has_fail "sentence.md line 7:"'
 end_case
 
 if [ "$failed" -eq 0 ]; then
