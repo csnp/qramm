@@ -115,8 +115,10 @@ def compare(root, source, copy, problems):
 def main(argv):
     if "--help" in argv or "-h" in argv:
         print(USAGE, file=sys.stderr)
-        print(file=sys.stderr)
-        print(__doc__.strip(), file=sys.stderr)
+        # __doc__ is None when python3 -OO removes docstrings.
+        if __doc__:
+            print(file=sys.stderr)
+            print(__doc__.strip(), file=sys.stderr)
         return 2
     if argv:
         print(USAGE, file=sys.stderr)
