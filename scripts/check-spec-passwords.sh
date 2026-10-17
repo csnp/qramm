@@ -11,8 +11,9 @@
 # Check, for every file:
 #   passwords  A line carrying "Password:" (any case, with or without list
 #              markers, bold or code formatting) must have the value None.
-#              Sheet and workbook protection in the toolkit is applied without
-#              a password, so any other value, including an empty one, fails.
+#              If sheet or workbook protection is added to the toolkit, it is
+#              applied without a password, so any value other than None,
+#              including an empty one, fails.
 #              Values are never printed, only the file and line number.
 #
 # The check fails when a given file does not exist, and when no tracked
