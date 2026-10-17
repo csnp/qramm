@@ -187,6 +187,12 @@ The Control_ID and Weight of every row match the tables in
 4_QRAMM_Compliance_Mapping_Details.md. `python3 -I scripts/check-compliance-map.py` compares
 the two workbooks with those tables.
 
+The Compliance sheet shows a row's category as its label and name, for example
+"SR - Supply Chain Risk Management", by looking up the selected framework joined to the
+category in Data!$BG$3:$BH$108. Data!BE2:BH2 head that table: Framework Dimensions,
+Category Label, Helper Column (`=CONCAT(BE3,BF3)` in row 3) and Category Name. Each Category
+other than "-" in the map has a name there, and the same script checks that.
+
 ## Table 14: Score Color Thresholds (AO1:AP6)
 | Score_Threshold | Color_Code |
 |-----------------|------------|

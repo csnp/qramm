@@ -5,13 +5,14 @@
 # Usage:
 #   scripts/test-check-compliance-map.sh
 #
-# Cases 2 to 4 copy the checker, the spec and both workbooks into a new
-# temporary directory laid out like the repository (scripts/, toolkit-specs/
-# and toolkit/), edit the copy of the spec, and run the checker there.
+# Cases 2, 3, 6 and 7 copy the checker, the spec and both workbooks into a
+# new temporary directory laid out like the repository (scripts/,
+# toolkit-specs/ and toolkit/), edit the copy of the spec or of the
+# workbooks, and run the checker there.
 #
 # Cases:
-#   1. The repository spec and workbooks: exit 0, a PASS line for each
-#      workbook, RESULT: PASS.
+#   1. The repository spec and workbooks: exit 0, a map PASS line and a
+#      category name PASS line for each workbook, RESULT: PASS.
 #   2. A spec that differs from the workbooks in five cells: a different
 #      control (Q1 CMMC), "-" where the workbooks carry a control (Q2 CMMC),
 #      a control where the workbooks carry "-" (Q19 CMMC), a different weight
@@ -22,6 +23,11 @@
 #   4. A workbook argument that does not exist: exit 1, a FAIL line that
 #      says the map cannot be read.
 #   5. An option such as --help: exit 2, usage on stderr.
+#   6. Workbooks whose Compliance sheet looks category names up in
+#      Data!$BG$3:$BH$106, which ends before the FISMA and FedRAMP SR rows:
+#      exit 1, a FAIL line for Q14 FISMA and Q14 FedRAMP in each workbook.
+#   7. A workbook whose Compliance sheet has no category name lookup:
+#      exit 1, a FAIL line that says the lookup cannot be read.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -46,6 +52,27 @@ make_copy() {
   cp "$checker" "$1/scripts/check-compliance-map.py"
   cp "$root/$toolkit" "$root/$sample" "$1/toolkit/"
   sed -e "$2" "$root/$spec" > "$1/$spec"
+}
+
+# Writes to $2 a copy of the workbook $1 with every "$3" in its worksheet
+# parts replaced by "$4". Fails when no worksheet part of $1 contains "$3".
+replace_in_sheets() {
+  python3 -I - "$@" <<'PY'
+import sys
+import zipfile
+
+source, target, old, new = sys.argv[1:5]
+found = 0
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        data = book.read(info.filename)
+        if info.filename.startswith("xl/worksheets/") and info.filename.endswith(".xml"):
+            text = data.decode("utf-8")
+            found += text.count(old)
+            data = text.replace(old, new).encode("utf-8")
+        copy.writestr(info, data)
+sys.exit(0 if found else 1)
+PY
 }
 
 # Runs the checker at $1 with the remaining arguments. Sets out, err and
@@ -104,6 +131,8 @@ start_case "case 1: repository spec and workbooks" "$checker"
 expect "exit status is 0" '[ "$status" -eq 0 ]'
 expect "PASS line for each workbook" \
   '[ "$(printf "%s\n" "$out" | grep -c "^  PASS 120 questions x 8 frameworks, 960 rows$")" -eq 2 ]'
+expect "category name PASS line for each workbook" \
+  '[ "$(printf "%s\n" "$out" | grep -c "^  PASS 848 rows with a category, each named in Data!BG3:BH108$")" -eq 2 ]'
 expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
 end_case
 
@@ -154,6 +183,35 @@ end_case
 start_case "case 5: option argument" "$checker" --help
 expect "exit status is 2" '[ "$status" -eq 2 ]'
 expect "usage on stderr" 'printf "%s\n" "$err" | grep -q "^usage:"'
+end_case
+
+make_copy "$work/narrow" ''
+for book in "$toolkit" "$sample"; do
+  replace_in_sheets "$root/$book" "$work/narrow/$book" \
+    'Data!$BG$3:$BH$108' 'Data!$BG$3:$BH$106'
+done
+start_case "case 6: category name lookup that ends at row 106" \
+  "$work/narrow/scripts/check-compliance-map.py"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "4 FAIL lines (2 for each workbook)" '[ "$(fail_count)" -eq 4 ]'
+expect "map PASS line for each workbook" \
+  '[ "$(printf "%s\n" "$out" | grep -c "^  PASS 120 questions x 8 frameworks, 960 rows$")" -eq 2 ]'
+for book in "$toolkit" "$sample"; do
+  expect "$book: Q14 FISMA category name" \
+    "has_fail '$book Q14 FISMA: Data!AZ110 is SR, which has no name in Data!BG3:BH106'"
+  expect "$book: Q14 FedRAMP category name" \
+    "has_fail '$book Q14 FedRAMP: Data!AZ111 is SR, which has no name in Data!BG3:BH106'"
+done
+end_case
+
+make_copy "$work/nolookup" ''
+replace_in_sheets "$root/$sample" "$work/nolookup/$sample" \
+  'VLOOKUP(_xlfn.CONCAT($M$4,' 'HLOOKUP(_xlfn.CONCAT($M$4,'
+start_case "case 7: Compliance sheet with no category name lookup" \
+  "$work/nolookup/scripts/check-compliance-map.py" "$sample"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line says the lookup cannot be read" \
+  "has_fail '$sample: cannot read the category name lookup (the Compliance sheet has no category name lookup)'"
 end_case
 
 if [ "$failed" -eq 0 ]; then
