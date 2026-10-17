@@ -48,7 +48,7 @@ LEFT_SIDE = re.compile(r"^([A-Z][A-Za-z ]*Score) =")
 BOLD_LINE = re.compile(r"^\*\*(.+)\*\*$")
 SCALE = re.compile(r"(\d+)-point scale", re.IGNORECASE)
 SCORE_RANGE = re.compile(
-    r"\bscor(?:e|es|ed)(?: from)? (\d+) ?(?:-|to) ?(\d+)(?![.\d])", re.IGNORECASE
+    r"\bscor(?:e|es|ed)(?: from)? (\d+) ?(?:-|to) ?(\d+)(?!\.\d|\d)", re.IGNORECASE
 )
 
 USAGE = "usage: python3 -I scripts/check-scoring-formulas.py [file ...]"
