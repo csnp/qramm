@@ -33,11 +33,13 @@ A raw dimension or overall score of 4.0 is labelled Advanced. The Scorecard does
 ### Weighted Scores
 Your organization's unique context affects your target quantum readiness level. The Organization Profile Tab captures this context through a profile multiplier (0.8-1.5x) that adjusts raw scores based on:
 
-- **Industry Requirements**: The inherent security needs and quantum threat exposure of your industry sector
-- **Regulatory Obligations**: Current and emerging quantum security compliance requirements
-- **Organizational Scale**: The size, complexity, and geographic distribution of your operations
-- **Data Sensitivity**: The criticality and longevity of data requiring protection
-- **Technology Complexity**: The sophistication of your IT infrastructure and cryptographic implementations
+- **Industry** (factor 0.30): how exposed your sector is to the quantum threat
+- **Data sensitivity** (factor 0.25): how critical the data you protect is, and how long it must stay protected
+- **Regulatory requirements** (factor 0.20): which compliance frameworks apply to you
+- **Geographic scope** (factor 0.15): how many countries you operate in
+- **Organization size** (factor 0.10): how large your organization is
+
+Each answer carries a risk value of 1.0, 1.3 or 1.5, and the multiplier is the sum of risk value times factor. The answer options and the full calculation are in the [Scoring Methodology](../framework/scoring-methodology.md#profile-adjusted-score).
 
 For example, a financial institution handling long-term sensitive data would have a higher profile multiplier than a retail business with primarily transactional data, reflecting the greater urgency and rigor required for quantum-safe transformation.
 
