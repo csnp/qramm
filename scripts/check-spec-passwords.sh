@@ -9,12 +9,19 @@
 # repository).
 #
 # Check, for every file:
-#   passwords  A line carrying "Password:" (any case, with or without list
-#              markers, bold or code formatting) must have the value None.
-#              If sheet or workbook protection is added to the toolkit, it is
+#   passwords  A line that records a password must have the value None. The
+#              shapes recognised are "password" (any case, with or without
+#              list markers, bold or code formatting) followed by a colon, an
+#              equals sign, a fullwidth colon (U+FF1A) or a fullwidth equals
+#              sign (U+FF1D), and the sentence forms "password is set to" and
+#              "password was set to". The value is the rest of the line,
+#              without the white space and formatting marks around it. If
+#              sheet or workbook protection is added to the toolkit, it is
 #              applied without a password, so any value other than None,
 #              including an empty one, fails.
 #              Values are never printed, only the file and line number.
+#              A line that contains "password" (any case) in no recognised
+#              shape is not judged, and the summary line counts it.
 #
 # The check fails when a given file does not exist, and when no tracked
 # Markdown file is found under toolkit-specs/, so it cannot pass by reading
@@ -54,9 +61,22 @@ import sys
 
 SPECS_DIR = "toolkit-specs"
 
-# "Password" followed by a colon, allowing Markdown emphasis or code marks
-# around the word and around the colon.
-PASSWORD_LINE = re.compile(r"password[*_`]*\s*:[*_`]*(.*)$", re.I)
+# The separators that can follow "Password": a colon, an equals sign, a
+# fullwidth colon (U+FF1A) and a fullwidth equals sign (U+FF1D).
+SEPARATORS = ":=\N{FULLWIDTH COLON}\N{FULLWIDTH EQUALS SIGN}"
+
+# "Password" followed by one of SEPARATORS, or by "is set to" or "was set
+# to", allowing Markdown emphasis or code marks around the word and around
+# the separator. The value is the rest of the line.
+PASSWORD_LINE = re.compile(
+    r"password[*_`]*(?:\s*[" + SEPARATORS + r"]|\s+(?:is|was)\s+set\s+to\b)"
+    r"[*_`]*(.*)$",
+    re.I,
+)
+
+# A mention of a password. A line with one that PASSWORD_LINE does not match
+# is counted, not judged.
+PASSWORD_MENTION = re.compile(r"password", re.I)
 
 ALLOWED_VALUE = "None"
 
@@ -104,12 +124,16 @@ def tracked_specs(root):
 
 
 def check_passwords(lines):
-    """Return (problems, password lines seen). Problems never carry a value."""
+    """Return (problems, password lines seen, other lines that mention a
+    password). Problems never carry a value."""
     problems = []
     seen = 0
+    unjudged = 0
     for number, line in enumerate(lines, 1):
         m = PASSWORD_LINE.search(line)
         if not m:
+            if PASSWORD_MENTION.search(line):
+                unjudged += 1
             continue
         seen += 1
         value = m.group(1).strip().strip("*_`").strip()
@@ -118,7 +142,7 @@ def check_passwords(lines):
                 "line {}: Password line has a value other than {} "
                 "(value not shown)".format(number, ALLOWED_VALUE)
             )
-    return problems, seen
+    return problems, seen, unjudged
 
 
 def main(argv):
@@ -149,6 +173,7 @@ def main(argv):
 
     failed = False
     total_seen = 0
+    total_unjudged = 0
     for given in files:
         if not given:
             print("== ''")
@@ -165,8 +190,9 @@ def main(argv):
             continue
         with open(path, encoding="utf-8") as fh:
             lines = fh.read().splitlines()
-        problems, seen = check_passwords(lines)
+        problems, seen, unjudged = check_passwords(lines)
         total_seen += seen
+        total_unjudged += unjudged
         if problems:
             failed = True
             print("== {}".format(label))
@@ -175,7 +201,8 @@ def main(argv):
                 print("    {}".format(problem))
 
     print(
-        "{} files checked, {} Password lines found".format(len(files), total_seen)
+        "{} files checked, {} Password lines found, {} other lines mention a "
+        "password (not judged)".format(len(files), total_seen, total_unjudged)
     )
     print("RESULT: {}".format("FAIL" if failed else "PASS"))
     return 1 if failed else 0

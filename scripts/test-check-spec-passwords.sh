@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Tests scripts/check-spec-passwords.sh in and outside a git checkout.
+# Tests scripts/check-spec-passwords.sh in and outside a git checkout, and the
+# shapes of a password line that it recognises.
 #
 # Usage:
 #   scripts/test-check-spec-passwords.sh [checker]
@@ -26,9 +27,22 @@
 #      them has a sheetProtection or workbookProtection element, the header
 #      sentence about protection applied without a password starts with "If",
 #      so it does not say that the toolkit is protected.
-#   8. --help: exit 2, a usage line and then the header text on stderr,
+#   8-13. A spec file whose line 3 records the value FAKE-1234 as
+#      "- password=FAKE-1234", after "- Password" and a fullwidth colon
+#      (U+FF1A) or a fullwidth equals sign (U+FF1D), in the sentences "The
+#      sheet password is set to FAKE-1234." and "The workbook password was
+#      set to FAKE-1234.", and after None in "The sheet password is set to
+#      None and the workbook password is set to FAKE-1234.": exit 1, one
+#      problem line, which names line 3, RESULT: FAIL, nothing on stderr,
+#      and FAKE-1234 printed nowhere.
+#   14. A spec file with the value None after "Password:" and in each shape
+#      of cases 8 to 12, and the sentence "Protect each sheet without a
+#      password, allowing users to:": exit 0, the summary line "1 files
+#      checked, 6 Password lines found, 1 other lines mention a password (not
+#      judged)", RESULT: PASS, nothing on stderr.
+#   15. --help: exit 2, a usage line and then the header text on stderr,
 #      nothing on stdout. An unknown option: exit 2, a usage line on stderr.
-#   9. An empty file argument: exit 1, "== ''", FAIL file: no file name
+#   16. An empty file argument: exit 1, "== ''", FAIL file: no file name
 #      given, no "not found" line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
@@ -108,6 +122,50 @@ expect_not_a_checkout() {
   expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
   expect "stderr is empty" '[ -z "$err" ]'
   expect "no traceback" '! printf "%s\n%s\n" "$out" "$err" | grep -q Traceback'
+}
+
+# The value that cases 8 to 13 record. The checker must never print it.
+value="FAKE-1234"
+# U+FF1A FULLWIDTH COLON and U+FF1D FULLWIDTH EQUALS SIGN, written as their
+# UTF-8 bytes so this script stays ASCII.
+fullwidth_colon="$(printf '\357\274\232')"
+fullwidth_equals="$(printf '\357\274\235')"
+
+# Runs the checker on a spec file whose lines are the remaining arguments,
+# in a new copy at $1 that is not a git checkout.
+run_on_lines() {
+  local copy="$1"
+  shift
+  make_copy "$copy"
+  printf '%s\n' "$@" > "$copy/toolkit-specs/spec.md"
+  run_checker "$copy" toolkit-specs/spec.md
+}
+
+# Checks a run on a spec file in which line $1, and no other line, records
+# a password with a value other than None.
+expect_line_fails() {
+  local number="$1" problems
+  problems="$(printf '%s\n' "$out" | grep -c '^    line ' || true)"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "one problem line" '[ "$problems" -eq 1 ]'
+  expect "problem line names line $number" \
+    'printf "%s\n" "$out" | grep -q "^    line $number: Password line has a value other than None"'
+  expect "value not printed" '! printf "%s\n%s\n" "$out" "$err" | grep -qF "$value"'
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+  expect "stderr is empty" '[ -z "$err" ]'
+}
+
+# Runs the next case on a spec file whose line 3 is $2, a line that records
+# the value FAKE-1234. $1 describes the line for the case heading.
+check_failing_line() {
+  echo "case $case_number: $1 on line 3"
+  case_failed="$failed"
+  failed=0
+  run_on_lines "$work/case$case_number" "# Spec" "" "$2"
+  expect_line_fails 3
+  [ "$failed" -eq 0 ] || show_output
+  failed=$((failed | case_failed))
+  case_number=$((case_number + 1))
 }
 
 echo "case 1: not a git checkout, no file arguments"
@@ -207,7 +265,35 @@ if [ "$failed" -ne 0 ]; then
 fi
 failed=$((failed | case_failed))
 
-echo "case 8: --help and an unknown option"
+case_number=8
+check_failing_line "password=" "- password=$value"
+check_failing_line "fullwidth colon (U+FF1A)" "- Password${fullwidth_colon}$value"
+check_failing_line "fullwidth equals sign (U+FF1D)" "- Password${fullwidth_equals}$value"
+check_failing_line "password is set to" "The sheet password is set to $value."
+check_failing_line "password was set to" "The workbook password was set to $value."
+check_failing_line "a value after None" \
+  "The sheet password is set to None and the workbook password is set to $value."
+
+echo "case $case_number: None in every shape, and a sentence without a password"
+case_failed="$failed"
+failed=0
+run_on_lines "$work/case$case_number" "# Spec" "" \
+  "- Password: None" \
+  "- password=None" \
+  "- Password${fullwidth_colon}None" \
+  "- Password${fullwidth_equals}None" \
+  "The sheet password is set to None" \
+  'The workbook password was set to `None`' \
+  "Protect each sheet without a password, allowing users to:"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "summary line counts 6 Password lines and 1 other line" \
+  'printf "%s\n" "$out" | grep -qxF "1 files checked, 6 Password lines found, 1 other lines mention a password (not judged)"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+expect "stderr is empty" '[ -z "$err" ]'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 15: --help and an unknown option"
 case_failed="$failed"
 failed=0
 run_checker "$work/plain" --help
@@ -224,7 +310,7 @@ expect "stderr has a usage line" 'printf "%s\n" "$err" | grep -q "^usage: "'
 [ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
 
-echo "case 9: an empty file argument"
+echo "case 16: an empty file argument"
 case_failed="$failed"
 failed=0
 run_checker "$work/plain" ""
