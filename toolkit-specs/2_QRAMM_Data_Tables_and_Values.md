@@ -158,7 +158,7 @@ one for each of the 120 questions in each of the 8 frameworks listed in Complian
 - Category (AZ) is the group the control belongs to, for example ID for ID.AM-1 and A.8 for
   A.8.1.1.
 - Weight (BA) is 1, 0.8 or 0.6. When a question has no control in a framework, Control_ID and
-  Category are "-" and Weight is empty. 96 of the 960 rows are of this kind.
+  Category are "-" and Weight is empty. 112 of the 960 rows are of this kind.
 
 Sample entries (Data!AV3:BA18, the same in toolkit/QRAMM_Assessment_Toolkit.xlsx and
 toolkit/Sample_Assessment.xlsx):
@@ -167,7 +167,7 @@ toolkit/Sample_Assessment.xlsx):
 |-------------|-----------|---------------|------------|----------|--------|
 | Q1 | NIST CSF 2.0 | Q1\|NIST CSF 2.0 | ID.AM-1 | ID | 1 |
 | Q1 | NIST PQC | Q1\|NIST PQC | - | - | |
-| Q1 | CMMC 2.0 | Q1\|CMMC 2.0 | AC.L1-3.1.1 | AC | 0.8 |
+| Q1 | CMMC 2.0 | Q1\|CMMC 2.0 | AC.L1-b.1.i | AC | 0.8 |
 | Q1 | FISMA | Q1\|FISMA | SI-12 | SI | 0.8 |
 | Q1 | FedRAMP | Q1\|FedRAMP | CM-8 | CM | 1 |
 | Q1 | ISO 27001 | Q1\|ISO 27001 | A.8.1.1 | A.8 | 1 |
@@ -183,8 +183,9 @@ toolkit/Sample_Assessment.xlsx):
 | Q2 | CIS v8 | Q2\|CIS v8 | 2.1 | 2 | 0.8 |
 | ... | ... | ... | ... | ... | ... |
 
-For Q1 in CMMC 2.0, 4_QRAMM_Compliance_Mapping_Details.md gives AC.L1-b.1.i, while the
-workbooks carry AC.L1-3.1.1, as shown above.
+The Control_ID and Weight of every row match the tables in
+4_QRAMM_Compliance_Mapping_Details.md. `python3 -I scripts/check-compliance-map.py` compares
+the two workbooks with those tables.
 
 ## Table 14: Score Color Thresholds (AO1:AP6)
 | Score_Threshold | Color_Code |
