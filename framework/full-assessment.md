@@ -3789,11 +3789,27 @@ Testing methodologies for cryptographic transitions
 
 ## Scoring Methodology
 
-The QRAMM assessment uses a 5-point scale where:
-- Each question is scored from 1-5 based on the selected maturity level
-- Practice scores are calculated as the average of all questions within that practice
-- Dimension scores are calculated as the average of all practices within that dimension
-- Overall QRAMM score is calculated as the average of all four dimension scores
+The QRAMM Assessment Toolkit workbook calculates the scores. The [Scoring Methodology](scoring-methodology.md) describes that calculation in full, with the practice weights and a worked example.
+
+- Each question is scored from 1 to 4, the number of the selected option. A question with no answer is left out of the calculation
+- A practice score combines the average of the answered Foundation questions (60 percent) and the average of the answered Advanced questions (40 percent)
+- A dimension score is the weighted sum of its three practice scores. Each practice has a fixed weight, and the three weights in a dimension add up to 1.00
+- The overall QRAMM score is the average of the four dimension scores
+
+```
+Practice Score = (average of the answered Foundation questions × 0.6)
+               + (average of the answered Advanced questions × 0.4)
+```
+
+```
+Dimension Score = (Practice 1 Score × Weight 1)
+                + (Practice 2 Score × Weight 2)
+                + (Practice 3 Score × Weight 3)
+```
+
+```
+Overall Score = (Dimension 1 + Dimension 2 + Dimension 3 + Dimension 4) ÷ 4
+```
 
 ## Assessment Completion
 
