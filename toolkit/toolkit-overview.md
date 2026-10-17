@@ -31,7 +31,7 @@ The Scorecard labels each raw dimension score and the raw overall score with one
 A raw dimension or overall score of 4.0 is labelled Advanced. The Scorecard does not label a dimension or overall score Optimizing; its Maturity Distribution chart counts a practice score of 4 as Optimizing. See [Maturity Level Interpretation](../framework/scoring-methodology.md#maturity-level-interpretation) in the scoring methodology.
 
 ### Weighted Scores
-Your organization's unique context affects your target quantum readiness level. The Organization Profile Tab captures this context through a profile multiplier (0.8-1.5x) that adjusts raw scores based on:
+Your organization's unique context affects your target quantum readiness level. The Organization Profile Tab captures this context through a profile multiplier between 1.00 and 1.50 that adjusts raw scores based on:
 
 - **Industry** (factor 0.30): how exposed your sector is to the quantum threat
 - **Data sensitivity** (factor 0.25): how critical the data you protect is, and how long it must stay protected
