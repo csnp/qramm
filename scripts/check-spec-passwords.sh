@@ -17,7 +17,10 @@
 #
 # The check fails when a given file does not exist, and when no tracked
 # Markdown file is found under toolkit-specs/, so it cannot pass by reading
-# nothing.
+# nothing. With no file arguments it needs a git checkout to list the tracked
+# files; in a copy that is not one (for example a downloaded archive) it fails
+# with a one-line message that says so. Pass the files to check as arguments
+# there instead.
 #
 # Exit status: 0 when every check passes, 1 when any check fails, 2 on a
 # usage error.
@@ -40,13 +43,33 @@ PASSWORD_LINE = re.compile(r"password[*_`]*\s*:[*_`]*(.*)$", re.I)
 ALLOWED_VALUE = "None"
 
 
+class GitListError(Exception):
+    """git could not list the tracked files. The message is one line."""
+
+
 def tracked_specs(root):
-    """Tracked Markdown files under toolkit-specs/, as absolute paths."""
-    output = subprocess.run(
-        ["git", "-C", root, "ls-files", "-z", "--", SPECS_DIR + "/*.md"],
-        check=True,
-        capture_output=True,
-    ).stdout.decode("utf-8")
+    """Tracked Markdown files under toolkit-specs/, as absolute paths.
+
+    Raises GitListError when git cannot list them, for example in a copy of
+    the repository that is not a git checkout.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", root, "ls-files", "-z", "--", SPECS_DIR + "/*.md"],
+            capture_output=True,
+        )
+    except OSError as err:
+        raise GitListError("git could not be run ({})".format(err.strerror or err))
+    if result.returncode != 0:
+        detail = result.stderr.decode("utf-8", "replace").strip().splitlines()
+        if detail and "not a git repository" in detail[0]:
+            raise GitListError("not a git checkout")
+        raise GitListError(
+            "git ls-files exited {}{}".format(
+                result.returncode, ": " + detail[0] if detail else ""
+            )
+        )
+    output = result.stdout.decode("utf-8")
     return [os.path.join(root, name) for name in output.split("\0") if name]
 
 
@@ -75,7 +98,18 @@ def main(argv):
     if unknown:
         print("unknown option: {}".format(" ".join(unknown)), file=sys.stderr)
         return 2
-    files = args or tracked_specs(root)
+    if args:
+        files = args
+    else:
+        try:
+            files = tracked_specs(root)
+        except GitListError as err:
+            print(
+                "FAIL cannot list tracked files under {}/: {}; "
+                "pass the files to check as arguments".format(SPECS_DIR, err)
+            )
+            print("RESULT: FAIL")
+            return 1
 
     if not files:
         print("FAIL no tracked Markdown files under {}/".format(SPECS_DIR))

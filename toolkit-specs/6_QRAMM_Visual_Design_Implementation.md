@@ -88,10 +88,20 @@ Show value: Yes
 
 ## Protection Settings
 
-Sheet and workbook protection in this toolkit is a guard against accidental edits. It is not
-a security control: anyone can remove it, and reviewers are meant to be able to, because the
-formulas are part of what the toolkit publishes. Protection is applied without a password.
-Do not set one, and do not record one in this repository.
+The shipped workbooks are not protected. `toolkit/QRAMM_Assessment_Toolkit.xlsx`,
+`toolkit/Sample_Assessment.xlsx` and `toolkit-specs/QRAMM_120_questions.xlsx` contain no
+`workbookProtection` element in `xl/workbook.xml` and no `sheetProtection` element in any
+worksheet. To check a workbook, run the command below; it prints 0 for an unprotected one:
+
+```
+unzip -p toolkit/Sample_Assessment.xlsx xl/workbook.xml 'xl/worksheets/*.xml' | grep -cE 'sheetProtection|workbookProtection'
+```
+
+The settings below are the ones to use if protection is added. Sheet and workbook protection
+in this toolkit is a guard against accidental edits. It is not a security control: anyone can
+remove it, and reviewers are meant to be able to, because the formulas are part of what the
+toolkit publishes. If protection is added, apply it without a password. Do not set one, and
+do not record one in this repository.
 
 ### Workbook Level
 - Structure: Protected
@@ -99,7 +109,7 @@ Do not set one, and do not record one in this repository.
 - Password: None
 
 ### Worksheet Level
-All sheets protected without a password, allowing users to:
+Protect each sheet without a password, allowing users to:
 - Select locked cells: Yes
 - Select unlocked cells: Yes
 - Format cells: No
@@ -180,7 +190,7 @@ Hover: 10% darker blue
 2. Freeze panes at row 9 on dimension tabs
 3. Group/outline practice sections for collapsing
 4. Set zoom to 90% for better visibility
-5. Enable worksheet protection last
+5. If protection is added (see Protection Settings), enable it last
 6. Test all conditional formatting works
 7. Verify charts update dynamically
 8. Check print preview before delivery

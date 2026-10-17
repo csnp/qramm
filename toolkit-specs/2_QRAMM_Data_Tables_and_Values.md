@@ -146,18 +146,45 @@ Create a hidden "Data" tab containing all reference tables. Use structured table
 | 0.0-2.0 | DPE | Deploy quantum-resistant encryption and implement robust key management systems. |
 | 0.0-2.0 | ITR | Strengthen infrastructure security and develop incident response capabilities. |
 
-## Table 13: Compliance Framework Mappings (AJ1:AM121)
-Structure: Question_ID | Framework | Control_ID | Relevance_Weight
+## Table 13: Compliance Framework Mappings (AV1:BA962)
+Structure: Question_ID | Framework | Helper Column | Control_ID | Category | Weight
 
-Sample entries:
-| Question_ID | Framework | Control_ID | Weight |
-|-------------|-----------|------------|--------|
-| Q1 | NIST CSF | ID.AM-1 | 1.0 |
-| Q1 | ISO 27001 | A.8.1.1 | 0.8 |
-| Q1 | CMMC | AC.L1-3.1.1 | 0.6 |
-| Q2 | NIST CSF | ID.AM-2 | 1.0 |
-| Q2 | ISO 27001 | A.8.1.2 | 0.8 |
-| ... | ... | ... | ... |
+The title is in AV1 and the column headers are in row 2. Rows 3 to 962 hold 960 data rows,
+one for each of the 120 questions in each of the 8 frameworks listed in ComplianceFrameworks
+(Data!$BC$3:$BC$10). The named range ComplianceMap covers the data rows, Data!$AV$3:$BA$962.
+
+- Helper Column (AX) is a formula that joins Question_ID and Framework with "|", for example
+  `=CONCAT(AV3,"|",AW3)` in row 3.
+- Category (AZ) is the group the control belongs to, for example ID for ID.AM-1 and A.8 for
+  A.8.1.1.
+- Weight (BA) is 1, 0.8 or 0.6. When a question has no control in a framework, Control_ID and
+  Category are "-" and Weight is empty. 96 of the 960 rows are of this kind.
+
+Sample entries (Data!AV3:BA18, the same in toolkit/QRAMM_Assessment_Toolkit.xlsx and
+toolkit/Sample_Assessment.xlsx):
+
+| Question_ID | Framework | Helper Column | Control_ID | Category | Weight |
+|-------------|-----------|---------------|------------|----------|--------|
+| Q1 | NIST CSF 2.0 | Q1\|NIST CSF 2.0 | ID.AM-1 | ID | 1 |
+| Q1 | NIST PQC | Q1\|NIST PQC | - | - | |
+| Q1 | CMMC 2.0 | Q1\|CMMC 2.0 | AC.L1-3.1.1 | AC | 0.8 |
+| Q1 | FISMA | Q1\|FISMA | SI-12 | SI | 0.8 |
+| Q1 | FedRAMP | Q1\|FedRAMP | CM-8 | CM | 1 |
+| Q1 | ISO 27001 | Q1\|ISO 27001 | A.8.1.1 | A.8 | 1 |
+| Q1 | SOC2 | Q1\|SOC2 | CC6.1 | CC6 | 0.8 |
+| Q1 | CIS v8 | Q1\|CIS v8 | 1.1 | 1 | 1 |
+| Q2 | NIST CSF 2.0 | Q2\|NIST CSF 2.0 | ID.AM-5 | ID | 1 |
+| Q2 | NIST PQC | Q2\|NIST PQC | - | - | |
+| Q2 | CMMC 2.0 | Q2\|CMMC 2.0 | AC.L2-3.1.3 | AC | 0.8 |
+| Q2 | FISMA | Q2\|FISMA | RA-2 | RA | 1 |
+| Q2 | FedRAMP | Q2\|FedRAMP | RA-2 | RA | 1 |
+| Q2 | ISO 27001 | Q2\|ISO 27001 | A.8.2.1 | A.8 | 1 |
+| Q2 | SOC2 | Q2\|SOC2 | CC6.2 | CC6 | 0.8 |
+| Q2 | CIS v8 | Q2\|CIS v8 | 2.1 | 2 | 0.8 |
+| ... | ... | ... | ... | ... | ... |
+
+For Q1 in CMMC 2.0, 4_QRAMM_Compliance_Mapping_Details.md gives AC.L1-b.1.i, while the
+workbooks carry AC.L1-3.1.1, as shown above.
 
 ## Table 14: Score Color Thresholds (AO1:AP6)
 | Score_Threshold | Color_Code |
@@ -192,6 +219,6 @@ PracticeData              Data!$S$2:$U$13
 DimensionData             Data!$W$2:$Z$5
 Benchmarks                Data!$AB$2:$AE$25
 Recommendations           Data!$AG$2:$AH$31
-ComplianceMap             Data!$AJ$2:$AM$121
+ComplianceMap             Data!$AV$3:$BA$962
 ScoreColors               Data!$AO$2:$AP$6
 ```
