@@ -17,11 +17,13 @@ The QRAMM maturity model uses a five-level structure that provides clear progres
 4. **Level 4: Advanced** - Optimized processes with continuous improvement
 5. **Level 5: Optimizing** - Industry-leading practices and innovation
 
+The score ranges in the level headings below are the cut-offs the toolkit's Scorecard uses to label each dimension score and the overall score. They are set out in [Maturity Level Interpretation](scoring-methodology.md#maturity-level-interpretation) in the scoring methodology.
+
 ### Maturity Level Characteristics
 
 Each level is characterized by specific capabilities, organizational attributes, and typical achievements that distinguish it from other levels. Organizations progress through these levels by developing increasingly sophisticated capabilities across all four QRAMM dimensions.
 
-## Level 1: Basic (Score 1.0 - 1.4)
+## Level 1: Basic (Score below 1.5)
 
 ### General Characteristics
 
@@ -90,7 +92,7 @@ Each level is characterized by specific capabilities, organizational attributes,
 - Established leadership accountability for quantum readiness initiatives
 - Basic quantum security awareness among key technical staff
 
-## Level 2: Developing (Score 1.5 - 2.4)
+## Level 2: Developing (Score 1.5 to below 2.5)
 
 ### General Characteristics
 
@@ -158,7 +160,7 @@ Each level is characterized by specific capabilities, organizational attributes,
 - Formal governance structure with clear accountability and progress tracking
 - Initial quantum-safe implementations in pilot environments
 
-## Level 3: Established (Score 2.5 - 3.4)
+## Level 3: Established (Score 2.5 to below 3.5)
 
 ### General Characteristics
 
@@ -226,7 +228,7 @@ Each level is characterized by specific capabilities, organizational attributes,
 - Comprehensive vendor and supply chain quantum readiness programs
 - Recognition as industry leader in quantum readiness practices
 
-## Level 4: Advanced (Score 3.5 - 3.9)
+## Level 4: Advanced (Score 3.5 to 4.0)
 
 ### General Characteristics
 
@@ -294,7 +296,9 @@ Each level is characterized by specific capabilities, organizational attributes,
 - Revenue generation from quantum readiness intellectual property or services
 - Measurable competitive advantage from superior quantum preparedness
 
-## Level 5: Optimizing (Score 4.0)
+## Level 5: Optimizing
+
+The toolkit does not assign this level to a dimension score or the overall score. Its Maturity Distribution chart counts a practice score of 4 as Optimizing.
 
 ### General Characteristics
 
