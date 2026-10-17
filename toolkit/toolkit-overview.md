@@ -21,11 +21,14 @@ Each dimension contains 3 specialized practices, totaling 12 core practices. Eac
 The QRAMM toolkit uses a comprehensive scoring system that calculates both raw and weighted scores:
 
 ### Raw Scores
-- **1.0-1.5**: Basic - Initial awareness and ad-hoc practices
-- **1.6-2.5**: Developing - Structured approaches beginning to emerge
-- **2.6-3.5**: Established - Systematic and consistent practices
-- **3.6-3.9**: Advanced - Optimized processes with continuous improvement
-- **4.0**: Optimizing - Perfect score demonstrating excellence and industry leadership
+The Scorecard labels each raw dimension score and the raw overall score with one of four maturity levels:
+
+- **Below 1.5**: Basic - Initial awareness and ad-hoc practices
+- **1.5 to below 2.5**: Developing - Structured approaches beginning to emerge
+- **2.5 to below 3.5**: Established - Systematic and consistent practices
+- **3.5 to 4.0**: Advanced - Optimized processes with continuous improvement
+
+A raw dimension or overall score of 4.0 is labelled Advanced. The Scorecard does not label a dimension or overall score Optimizing; its Maturity Distribution chart counts a practice score of 4 as Optimizing. See [Maturity Level Interpretation](../framework/scoring-methodology.md#maturity-level-interpretation) in the scoring methodology.
 
 ### Weighted Scores
 Your organization's unique context affects your target quantum readiness level. The Organization Profile Tab captures this context through a profile multiplier (0.8-1.5x) that adjusts raw scores based on:
@@ -38,7 +41,7 @@ Your organization's unique context affects your target quantum readiness level. 
 
 For example, a financial institution handling long-term sensitive data would have a higher profile multiplier than a retail business with primarily transactional data, reflecting the greater urgency and rigor required for quantum-safe transformation.
 
-**Note on Weighted Scores**: While raw scores cap at 4.0 (Level 5: Optimizing), weighted scores can exceed 4.0 for high-risk organizations. For example, a healthcare organization with a multiplier of 1.33 and strong dimension scores could see weighted scores like 4.07, 4.54, or even 5.32. An organization with a perfect raw score (4.0) and maximum risk multiplier (1.5) would achieve a weighted score of 6.0, demonstrating exceptional quantum readiness that exceeds standard requirements. This reflects that high-risk organizations must achieve higher standards to adequately address their elevated quantum threat exposure.
+**Note on Weighted Scores**: While raw scores cap at 4.0, weighted scores can exceed 4.0 for high-risk organizations. For example, a healthcare organization with a multiplier of 1.33 and strong dimension scores could see weighted scores like 4.07, 4.54, or even 5.32. An organization with a perfect raw score (4.0) and maximum risk multiplier (1.5) would achieve a weighted score of 6.0, demonstrating exceptional quantum readiness that exceeds standard requirements. This reflects that high-risk organizations must achieve higher standards to adequately address their elevated quantum threat exposure.
 
 This ensures that maturity targets and recommendations align with your organization's specific quantum risk profile and circumstances.
 
@@ -58,7 +61,7 @@ For each dimension:
 
 - **Raw Score**: The dimension score calculated from assessment responses, the weighted sum of the dimension's three practice scores (see [Scoring Methodology](../framework/scoring-methodology.md#dimension-level-scoring))
 - **Weighted Score**: Profile multiplier-adjusted calculation based on organizational context
-- **Maturity Level**: Current dimension maturity level (Basic/Developing/Established/Advanced/Optimizing)
+- **Maturity Level**: Current dimension maturity level (Basic, Developing, Established or Advanced, from the raw score)
 - **Industry Benchmark**: Comparison against similar organizations in your industry
 - **Percentage**: Progress toward maximum possible score
 
