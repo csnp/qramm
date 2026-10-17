@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# Tests the nist check of scripts/check-framework-docs.sh.
+#
+# Usage:
+#   scripts/test-check-framework-docs.sh [checker]
+#
+# checker defaults to check-framework-docs.sh next to this script. Every run
+# passes --no-network. Fixtures are written to a new temporary directory and
+# given to the checker by absolute path.
+#
+# Cases:
+#   1. A compliance-mapping.md whose NIST PQC cell is "NIST Testing Guide":
+#      exit 1, FAIL nist, a line that names the question and the label,
+#      RESULT: FAIL.
+#   2. A compliance-mapping.md whose NIST PQC cells are "-", FIPS 203,
+#      NIST SP 800-131A Rev. 2, NIST IR 8547 (initial public draft) and
+#      OMB M-23-02: exit 0, PASS nist with 5 question rows, 1 with '-'.
+#   3. A compliance-mapping.md with a NIST PQC column and no question rows:
+#      exit 1, FAIL nist, "no question rows".
+#   4. A file with another name and the same label as case 1: exit 0, no
+#      nist line.
+#   5. The repository's framework/compliance-mapping.md: exit 0, PASS nist.
+#
+# Exit status: 0 when every case passes, 1 when any case fails.
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+checker="${1:-$here/check-framework-docs.sh}"
+if [ ! -f "$checker" ]; then
+  echo "checker not found: $checker" >&2
+  exit 1
+fi
+repo_doc="$(cd "$here/.." && pwd -P)/framework/compliance-mapping.md"
+
+work="$(mktemp -d "${TMPDIR:-/tmp}/check-framework-docs.XXXXXX")"
+work="$(cd "$work" && pwd -P)"
+trap 'rm -rf "$work"' EXIT
+
+failed=0
+
+# Writes a mapping table to $1 with one question row per remaining argument,
+# each argument being that row's NIST PQC cell.
+write_mapping() {
+  local file="$1" n=0 cell
+  shift
+  mkdir -p "$(dirname "$file")"
+  {
+    printf '# Mapping\n\n'
+    printf '| QRAMM Question | NIST PQC | CMMC 2.0 | FedRAMP | FISMA |\n'
+    printf '|----------------|----------|----------|---------|--------|\n'
+    for cell in "$@"; do
+      n=$((n + 1))
+      printf '| **Q1.1.%d**: A question? | %s | - | CM-8 | NIST SP 800-53 CM-8 |\n' \
+        "$n" "$cell"
+    done
+  } > "$file"
+}
+
+# Runs the checker on the given files. Sets out, err and status.
+run_checker() {
+  status=0
+  bash "$checker" --no-network "$@" > "$work/out" 2> "$work/err" || status=$?
+  out="$(cat "$work/out")"
+  err="$(cat "$work/err")"
+}
+
+expect() {
+  local name="$1" condition="$2"
+  if eval "$condition"; then
+    echo "  ok   $name"
+  else
+    echo "  FAIL $name"
+    failed=1
+  fi
+}
+
+show_output() {
+  echo "  -- stdout --"
+  printf '%s\n' "$out" | sed 's/^/  /'
+  echo "  -- stderr --"
+  printf '%s\n' "$err" | sed 's/^/  /'
+}
+
+echo "case 1: a NIST PQC label with no publication number"
+write_mapping "$work/bad/compliance-mapping.md" "NIST Testing Guide"
+run_checker "$work/bad/compliance-mapping.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nist check fails" 'printf "%s\n" "$out" | grep -q "^  FAIL nist"'
+expect "problem names the question and the label" \
+  'printf "%s\n" "$out" | grep -q "Q1.1.1 NIST PQC cell .NIST Testing Guide. names no publication number"'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+expect "stderr is empty" '[ -z "$err" ]'
+[ "$failed" -eq 0 ] || show_output
+
+echo "case 2: '-' and publication numbers"
+case_failed="$failed"
+failed=0
+write_mapping "$work/good/compliance-mapping.md" "-" "FIPS 203" \
+  "NIST SP 800-131A Rev. 2" "NIST IR 8547 (initial public draft)" "OMB M-23-02"
+run_checker "$work/good/compliance-mapping.md"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nist check passes with 5 rows, 1 with '-'" \
+  'printf "%s\n" "$out" | grep -qx "  PASS nist (5 question rows, 1 with '"'"'-'"'"')"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 3: a NIST PQC column with no question rows"
+case_failed="$failed"
+failed=0
+write_mapping "$work/empty/compliance-mapping.md"
+run_checker "$work/empty/compliance-mapping.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nist check says there are no question rows" \
+  'printf "%s\n" "$out" | grep -q "no question rows under a .NIST PQC. column"'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 4: another file name is not given the nist check"
+case_failed="$failed"
+failed=0
+write_mapping "$work/other/other.md" "NIST Testing Guide"
+run_checker "$work/other/other.md"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "no nist line" '! printf "%s\n" "$out" | grep -q " nist"'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 5: the repository's compliance mapping"
+case_failed="$failed"
+failed=0
+run_checker "$repo_doc"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nist check passes" 'printf "%s\n" "$out" | grep -q "^  PASS nist"'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+if [ "$failed" -eq 0 ]; then
+  echo "RESULT: PASS"
+else
+  echo "RESULT: FAIL"
+fi
+exit "$failed"

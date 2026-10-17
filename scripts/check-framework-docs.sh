@@ -27,6 +27,13 @@
 #              table's second column, must still appear on the PQCMM levels
 #              page.
 #
+# Extra checks for framework/compliance-mapping.md (any file with that name):
+#   nist       In every table whose header has a "NIST PQC" column, each row
+#              that starts with a question number (**Qn.n.n**) has a NIST PQC
+#              cell that is "-" or names a publication number: FIPS n, NIST
+#              SP n-n, NIST IR n or OMB M-nn-nn. A label such as "NIST
+#              Testing Guide" names no publication and fails.
+#
 # Exit status: 0 when every check passes, 1 when any check fails, 2 on a
 # usage error.
 set -euo pipefail
@@ -47,6 +54,12 @@ DEFAULT_DOCS = [
 
 PQCMM_DOC = "framework/pqcmm-comparison.md"
 PQCMM_LEVELS_URL = "https://pkic.org/wg/pqc/pqcmm/levels/"
+
+MAPPING_DOC = "framework/compliance-mapping.md"
+NIST_COLUMN = "NIST PQC"
+NIST_PUBLICATION = re.compile(
+    r"\b(?:FIPS \d+|NIST SP \d+-\d+|NIST IR \d+|OMB M-\d{2}-\d{2})"
+)
 
 BANNED_PHRASES = [
     "industry-leading",
@@ -309,6 +322,41 @@ def check_pqcmm(lines, practice_count, network):
     return problems
 
 
+def check_nist(lines):
+    """NIST PQC cells of question rows are '-' or name a publication number."""
+    problems = []
+    rows = 0
+    dashes = 0
+    column = None
+    for number, line in strip_code(lines):
+        if not line.lstrip().startswith("|"):
+            column = None
+            continue
+        cells = split_row(line)
+        if NIST_COLUMN in cells:
+            column = cells.index(NIST_COLUMN)
+            continue
+        if column is None:
+            continue
+        question = re.match(r"^\*\*(Q\d+\.\d+\.\d+)\*\*", cells[0])
+        if not question:
+            continue
+        rows += 1
+        cell = cells[column] if column < len(cells) else ""
+        if cell == "-":
+            dashes += 1
+        elif not NIST_PUBLICATION.search(cell):
+            problems.append(
+                "line {}: {} NIST PQC cell '{}' names no publication number; "
+                "give a FIPS, NIST SP, NIST IR or OMB number, or '-'".format(
+                    number, question.group(1), cell
+                )
+            )
+    if rows == 0:
+        problems.append("no question rows under a '{}' column".format(NIST_COLUMN))
+    return problems, rows, dashes
+
+
 def main(argv):
     root = os.path.realpath(argv[0])
     args = argv[1:]
@@ -353,6 +401,10 @@ def main(argv):
             if not network:
                 pqcmm_note += ", quotes not compared (--no-network)"
             results.append(("pqcmm", check_pqcmm(lines, practice_count, network), pqcmm_note))
+        if os.path.basename(path) == os.path.basename(MAPPING_DOC):
+            nist_problems, rows, dashes = check_nist(lines)
+            nist_note = "{} question rows, {} with '-'".format(rows, dashes)
+            results.append(("nist", nist_problems, nist_note))
 
         for name, problems, note in results:
             suffix = " ({})".format(note) if note else ""
