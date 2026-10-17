@@ -38,9 +38,13 @@ Run from the repository root.
 Open both files in Excel or LibreOffice Calc.
 
 - [ ] `toolkit/QRAMM_Assessment_Toolkit.xlsx` (blank): the Scorecard shows
-  `-` for every dimension score and the overall score, and
-  `Incomplete Assessment` for every maturity level. No cell shows an error
-  such as `#DIV/0!` or `#N/A`.
+  `-` for every dimension score and the overall score,
+  `Incomplete Assessment` for every maturity level, and `-` for each of the
+  three Top Strengths and Top Area for Improvement entries. The Compliance
+  sheet shows `-` for the overall score and its category list. No cell
+  shows an error such as `#DIV/0!` or `#N/A`
+  (`python3 -I scripts/check-workbook-errors.py` lists the visible cells
+  that store one).
 - [ ] Answer one question on a Dimension sheet, then clear it again: the
   Scorecard returns to `-` and `Incomplete Assessment`.
 - [ ] `toolkit/Sample_Assessment.xlsx`: the Scorecard shows the scores that
