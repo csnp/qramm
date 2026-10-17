@@ -44,6 +44,11 @@
 #      header text.
 #  12. -h: exit 2, usage on stderr, then the checker's header text.
 #  13. An unknown option, --verbose: exit 2, only the usage line on stderr.
+#  14. Where the fixtures were written: the directory is under .tmp-tests/
+#      at the repository root and holds the fixture of case 2.
+#
+# The temporary directory is made under .tmp-tests/ at the repository root,
+# and the cleanup removes only a directory under it.
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -53,9 +58,17 @@ root="$(dirname "$here")"
 checker="$here/check-profile-multiplier.py"
 toolkit="toolkit/QRAMM_Assessment_Toolkit.xlsx"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/check-profile-multiplier.XXXXXX")"
-work="$(cd "$work" && pwd -P)"
-trap 'rm -rf "$work"' EXIT
+tmp_root="$root/.tmp-tests"
+mkdir -p "$tmp_root"
+work="$(mktemp -d "$tmp_root/check-profile-multiplier.XXXXXX")"
+cleanup() {
+  case "$work" in
+    "$tmp_root"/?*) rm -rf -- "$work" ;;
+    *) exit 1 ;;
+  esac
+  rmdir "$tmp_root" 2> /dev/null || true
+}
+trap cleanup EXIT
 
 failed=0
 
@@ -284,6 +297,15 @@ expect "exit status is 2" '[ "$status" -eq 2 ]'
 expect "only the usage line on stderr" \
   '[ "$err" = "usage: python3 -I scripts/check-profile-multiplier.py [file ...]" ]'
 end_case
+
+echo "case 14: where the fixtures were written"
+case_failed="$failed"
+failed=0
+expect "fixtures directory is under .tmp-tests/ at the repository root" \
+  'case "$work" in "$root"/.tmp-tests/?*) true ;; *) false ;; esac'
+expect "the fixture of case 2 is in it" '[ -f "$work/old.md" ]'
+[ "$failed" -eq 0 ] || echo "  -- fixtures directory: $work"
+failed=$((failed | case_failed))
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"

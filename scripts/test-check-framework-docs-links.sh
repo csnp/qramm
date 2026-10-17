@@ -22,27 +22,38 @@
 #   3. An italic sentence that ends with the URL of /missing and the closing
 #      asterisk: exit 1, FAIL links, a line that names the URL without the
 #      asterisk and the 404 answer, RESULT: FAIL.
+#   4. Where the fixtures were written: the directory is under .tmp-tests/
+#      at the repository root and holds the fixture of case 1.
+#
+# The temporary directory is made under .tmp-tests/ at the repository root,
+# and the cleanup removes only a directory under it.
 #
 # Exit status: 0 when every case passes, 1 when any case fails or the web
 # server does not start.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+repo="$(cd "$here/.." && pwd -P)"
 checker="${1:-$here/check-framework-docs.sh}"
 if [ ! -f "$checker" ]; then
   echo "checker not found: $checker" >&2
   exit 1
 fi
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/check-framework-docs-links.XXXXXX")"
-work="$(cd "$work" && pwd -P)"
+tmp_root="$repo/.tmp-tests"
+mkdir -p "$tmp_root"
+work="$(mktemp -d "$tmp_root/check-framework-docs-links.XXXXXX")"
 server_pid=""
 cleanup() {
   if [ -n "$server_pid" ]; then
     kill "$server_pid" 2> /dev/null || true
     wait "$server_pid" 2> /dev/null || true
   fi
-  rm -rf "$work"
+  case "$work" in
+    "$tmp_root"/?*) rm -rf -- "$work" ;;
+    *) exit 1 ;;
+  esac
+  rmdir "$tmp_root" 2> /dev/null || true
 }
 trap cleanup EXIT
 
@@ -141,6 +152,15 @@ expect "problem names the URL without the asterisk and the 404 answer" \
   'printf "%s\n" "$out" | grep -qxF "    line 3: $base/missing answered 404, expected 200"'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 [ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 4: where the fixtures were written"
+case_failed="$failed"
+failed=0
+expect "fixtures directory is under .tmp-tests/ at the repository root" \
+  'case "$work" in "$repo"/.tmp-tests/?*) true ;; *) false ;; esac'
+expect "the fixture of case 1 is in it" '[ -f "$work/italic/doc.md" ]'
+[ "$failed" -eq 0 ] || echo "  -- fixtures directory: $work"
 failed=$((failed | case_failed))
 
 if [ "$failed" -eq 0 ]; then
