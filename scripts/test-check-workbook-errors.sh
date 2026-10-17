@@ -30,6 +30,9 @@
 #      header text.
 #   6. An empty workbook argument: exit 1, "FAIL '': no file name given",
 #      RESULT: FAIL.
+#   7. --help under python3 -OO, which removes the header text: exit 2 and
+#      only the usage line on stderr, with no traceback.
+#   8. -h under python3 -OO: the same as case 7.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -54,6 +57,9 @@ cleanup() {
 trap cleanup EXIT
 
 failed=0
+# Interpreter option that run_checker passes before -I, such as -OO; empty
+# for none.
+optimize=""
 
 # Writes to $1 a fixture workbook. When $2 is "visible", Scorecard!A1 and
 # Scorecard!B2 store errors in visible cells as well.
@@ -128,13 +134,14 @@ make_copy() {
   make_workbook "$1/toolkit/Sample_Assessment.xlsx" hidden
 }
 
-# Runs the checker at $1 with the remaining arguments. Sets out, err and
-# status.
+# Runs the checker at $1 with the remaining arguments, under python3 -I and
+# the option in optimize when it is set. Sets out, err and status.
 run_checker() {
   local checker_path="$1"
   shift
   status=0
-  python3 -I "$checker_path" "$@" > "$work/out" 2> "$work/err" || status=$?
+  python3 ${optimize:+"$optimize"} -I "$checker_path" "$@" \
+    > "$work/out" 2> "$work/err" || status=$?
   out="$(cat "$work/out")"
   err="$(cat "$work/err")"
 }
@@ -239,6 +246,20 @@ expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "FAIL line names the empty argument" "has_fail \"'': no file name given\""
 expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
+
+optimize="-OO"
+start_case "case 7: --help under python3 -OO" "$checker" --help
+expect "exit status is 2" '[ "$status" -eq 2 ]'
+expect "only the usage line on stderr" \
+  '[ "$err" = "usage: python3 -I scripts/check-workbook-errors.py [workbook ...]" ]'
+end_case
+
+start_case "case 8: -h under python3 -OO" "$checker" -h
+expect "exit status is 2" '[ "$status" -eq 2 ]'
+expect "only the usage line on stderr" \
+  '[ "$err" = "usage: python3 -I scripts/check-workbook-errors.py [workbook ...]" ]'
+end_case
+optimize=""
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
