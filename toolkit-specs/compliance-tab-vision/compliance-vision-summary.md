@@ -49,8 +49,11 @@ Sum of all Control Coverages / Total Possible = Compliance %
 ```
 | Question | NIST CSF | NIST PQC | CMMC | FISMA | FedRAMP | ISO | SOC2 | CIS |
 |----------|----------|----------|-------|--------|---------|-----|------|-----|
-| Q1       | ID.AM-1 (1.0) | - | AC.L1-3.1.1 (0.8) | SI-12 (0.8) | CM-8 (1.0) | A.8.1.1 (1.0) | CC6.1 (0.8) | 1.1 (1.0) |
+| Q1       | ID.AM-1 (1.0) | - | AC.L1-b.1.i (0.8) | SI-12 (0.8) | CM-8 (1.0) | A.8.1.1 (1.0) | CC6.1 (0.8) | 1.1 (1.0) |
 ```
+
+The Q1 row is copied from 4_QRAMM_Compliance_Mapping_Details.md.
+`python3 -I scripts/check-compliance-quotes.py` compares it with that table.
 
 ### Key Calculations
 1. **Control Coverage** = Question Score × Mapping Weight
