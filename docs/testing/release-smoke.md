@@ -26,7 +26,12 @@ Run from the repository root.
 
   ```
   for test in scripts/test-check-*.sh; do bash "$test"; done
+  bash scripts/test-questions-workbook.sh
   ```
+
+  `test-questions-workbook.sh` checks that the blank
+  `toolkit-specs/QRAMM_120_questions.xlsx` shows `-` on its Scoring
+  Dashboard and that no cell text carries Markdown source.
 
 - [ ] `git status` shows no new files afterwards. The test scripts write
   their fixtures under `.tmp-tests/` and remove them when they exit.
