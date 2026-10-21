@@ -270,6 +270,15 @@ def workbook_texts(path):
     return texts
 
 
+def is_zip_file(path):
+    """zipfile.is_zipfile(path), or False where that raises BadZipFile, as it
+    does in Python 3.9.6 for an archive whose zip64 locator gives two disks."""
+    try:
+        return zipfile.is_zipfile(path)
+    except zipfile.BadZipFile:
+        return False
+
+
 def stated_ranges(lines):
     """List of (line number, low, high) outside fenced code blocks, as written."""
     found = []
@@ -359,7 +368,14 @@ def main(argv):
                 problems.append("{}: cannot read ({})".format(path, error.strerror))
                 continue
             except zipfile.BadZipFile:
-                problems.append("{}: cannot read (not a zip file)".format(path))
+                # zipfile raises BadZipFile for a file that is not a zip
+                # archive, and also when it reads an entry of a zip archive
+                # whose data does not match its CRC-32 or whose local file
+                # header gives another file name than the central directory.
+                if is_zip_file(os.path.join(root, path)):
+                    problems.append("{}: cannot read (not a workbook)".format(path))
+                else:
+                    problems.append("{}: cannot read (not a zip file)".format(path))
                 continue
             except Exception as error:
                 if not is_workbook:
