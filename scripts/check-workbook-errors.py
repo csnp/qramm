@@ -107,13 +107,25 @@ def sheets(book):
     return found
 
 
-def hidden_columns(root):
-    """List of (first, last) column numbers of the hidden column ranges."""
+def hidden_columns(root, part):
+    """List of (first, last) column numbers of the hidden column ranges of
+    root, the sheet read from the part path part. Raises ValueError for a
+    hidden col element with no min or no max attribute, as int() does for a
+    min or max such as "x"."""
     ranges = []
     for col in root.iter(ns(MAIN_NS, "col")):
         if col.get("hidden") in ("1", "true"):
-            ranges.append((int(col.get("min")), int(col.get("max"))))
+            ranges.append((column_bound(col, "min", part), column_bound(col, "max", part)))
     return ranges
+
+
+def column_bound(col, name, part):
+    """The attribute name, min or max, of the hidden col element col, as a
+    number. part is the part path of the sheet that holds col."""
+    value = col.get(name)
+    if value is None:
+        raise ValueError("{} has a hidden col element with no {} attribute".format(part, name))
+    return int(value)
 
 
 def formula_text(cell):
@@ -124,10 +136,10 @@ def formula_text(cell):
     return " ".join(node.text.split())
 
 
-def check_sheet(name, root, label, problems):
+def check_sheet(name, part, root, label, problems):
     """Adds a problem per visible error cell. Returns the number of visible
     cells with a formula."""
-    hidden = hidden_columns(root)
+    hidden = hidden_columns(root, part)
     formulas = 0
     for row in root.iter(ns(MAIN_NS, "row")):
         if row.get("hidden") in ("1", "true"):
@@ -162,7 +174,7 @@ def check_workbook(label, path, problems):
                 if hidden:
                     continue
                 root = ET.fromstring(book.read(part))
-                formulas += check_sheet(name, root, label, problems)
+                formulas += check_sheet(name, part, root, label, problems)
     except OSError as error:
         if error.errno is None or is_zip_file(path):
             # bzip2 data that does not decompress. bz2 raises

@@ -134,6 +134,12 @@
 #      as the xl/workbook.xml entry is in case 24, with the second central
 #      directory header for xl/worksheets/sheet8.xmz: as cases 19 to 22,
 #      except that stderr can hold the warning of case 24 for that part.
+#  23. A copy of the sample workbook whose row element for row 3 of the Data
+#      sheet, xl/worksheets/sheet10.xml, the first row of the ComplianceMap
+#      range, has no r attribute, then the sample workbook: exit 1, nothing
+#      on stderr, one FAIL line, which says the map cannot be read as
+#      xl/worksheets/sheet10.xml has a row element with no r attribute, the
+#      map PASS line for the sample workbook, then RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -880,6 +886,41 @@ make_damaged_entry "$work/lookup-same-offset.xlsx" xl/worksheets/sheet8.xml same
 start_case "case 25: Compliance sheet part sizes past the end and a second header at the same offset" \
   "$checker" "$work/lookup-same-offset.xlsx"
 expect_lookup_not_a_workbook "$work/lookup-same-offset.xlsx" xl/worksheets/sheet8.xml
+end_case
+
+# Writes to $2 a copy of the workbook $1 whose part $3 has its first "$4"
+# replaced by "$5". Fails when the part does not hold "$4".
+edit_part() {
+  python3 -I - "$@" <<'PY'
+import sys
+import zipfile
+
+source, target, part, old, new = sys.argv[1:6]
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        data = book.read(info.filename)
+        if info.filename == part:
+            text = data.decode("utf-8")
+            if old not in text:
+                sys.exit("edit_part: no %s in %s" % (old, part))
+            data = text.replace(old, new, 1).encode("utf-8")
+        copy.writestr(info, data)
+PY
+}
+
+# The Data sheet is xl/worksheets/sheet10.xml in the sample workbook, and
+# the ComplianceMap range, Data!$AV$3:$BA$962, starts at its row 3.
+edit_part "$root/$sample" "$work/norow.xlsx" xl/worksheets/sheet10.xml '<row r="3" ' '<row '
+start_case "case 23: a row element with no r attribute" \
+  "$checker" "$work/norow.xlsx" "$sample"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the map cannot be read as a row element has no r attribute" \
+  "has_line '  FAIL $work/norow.xlsx: cannot read the compliance map (xl/worksheets/sheet10.xml has a row element with no r attribute)'"
+expect "the sample workbook is checked" \
+  "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
