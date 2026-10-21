@@ -9,12 +9,15 @@
 #
 # Cases 7 to 10 copy the checker and the toolkit workbook into a new
 # temporary directory laid out like the repository (scripts/ and toolkit/),
-# edit the copy of the workbook, and run the checker there.
+# edit the copy of the workbook, and run the checker there. Cases 15 and 17
+# make the same copies and pass the copy of the workbook to the repository's
+# checker as a document.
 #
 # Cases:
 #   1. No file arguments (the documents in DOCUMENTS): exit 0, RESULT: PASS,
-#      and the lowest and highest multiplier read from the workbook are
-#      listed as 1.00 and 1.50.
+#      the lowest and highest multiplier read from the workbook are listed
+#      as 1.00 and 1.50, and the checklist's line 18 and the Welcome!H9 text
+#      of both workbooks each give a PASS line.
 #   2. The toolkit overview's earlier wording, "a profile multiplier
 #      (0.8-1.5x)": exit 1, one FAIL line that gives 0.8 to 1.5 and the
 #      workbook's 1.00 to 1.50.
@@ -46,6 +49,16 @@
 #  13. An unknown option, --verbose: exit 2, only the usage line on stderr.
 #  14. Where the fixtures were written: the directory is under .tmp-tests/
 #      at the repository root and holds the fixture of case 2.
+#  15. A copy of the workbook whose Welcome!H9 text gives the earlier
+#      "(0.8x – 1.5x)", with an en dash: exit 1, one FAIL line that names
+#      Welcome!H9 line 12 and gives 0.8 to 1.5.
+#  16. Ranges written with an en dash, "(0.8x – 1.5x)", "1.00 – 1.50" and
+#      "1.0–1.5": exit 1, a FAIL line for the first and a PASS line for each
+#      of the others.
+#  17. A copy of the workbook whose Welcome!H9 text gives no range: exit 1,
+#      a FAIL line that says the workbook gives no multiplier range.
+#  18. A text file whose name ends in .xlsx: exit 1, a FAIL line that says
+#      it is not a zip file.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -162,6 +175,13 @@ expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "R
 expect "workbook answers are listed" 'has_line "  answers: D9, D11, D13, D15, D17"'
 expect "workbook range is 1.00 to 1.50" 'has_line "  lowest 1.00, highest 1.50"'
 expect "no FAIL lines" '[ "$(fail_count)" -eq 0 ]'
+expect "the checklist is checked" \
+  "has_line '== toolkit-specs/MASTER_PLAN_Document_Checklist.md against $toolkit'"
+expect "PASS line for the checklist's line 18" 'has_line "  PASS line 18: 1.00 to 1.50"'
+expect "the text of both workbooks is checked" \
+  "has_line '== $toolkit against $toolkit' && has_line '== toolkit/Sample_Assessment.xlsx against $toolkit'"
+expect "a PASS line for Welcome!H9 in each workbook" \
+  '[ "$(printf "%s\n" "$out" | grep -c -x -F "  PASS Welcome!H9 line 12: 1.00 to 1.50")" -eq 2 ]'
 end_case
 
 printf '%s\n' \
@@ -306,6 +326,51 @@ expect "fixtures directory is under .tmp-tests/ at the repository root" \
 expect "the fixture of case 2 is in it" '[ -f "$work/old.md" ]'
 [ "$failed" -eq 0 ] || echo "  -- fixtures directory: $work"
 failed=$((failed | case_failed))
+
+make_copy "$work/oldtext" \
+  'multiplier between 1.00 and 1.50, adjusted by' \
+  'multiplier (0.8x – 1.5x), adjusted by'
+start_case "case 15: workbook whose Welcome!H9 text gives the earlier range" \
+  "$checker" "$work/oldtext/$toolkit"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line names Welcome!H9 line 12 and gives 0.8 to 1.5" \
+  "has_fail 'oldtext/$toolkit Welcome!H9 line 12: the multiplier range is 0.8 to 1.5 here, but $toolkit calculates 1.00 to 1.50'"
+end_case
+
+printf '%s\n' \
+  'A profile multiplier (0.8x – 1.5x) adjusts the scores.' \
+  'The multiplier runs 1.00 – 1.50, set on the Profile tab.' \
+  'The multiplier is 1.0–1.5.' \
+  > "$work/endash.md"
+start_case "case 16: ranges written with an en dash" "$checker" "$work/endash.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line for (0.8x – 1.5x)" \
+  "has_fail 'endash.md line 1: the multiplier range is 0.8 to 1.5 here, but $toolkit calculates 1.00 to 1.50'"
+expect "two PASS lines" '[ "$(pass_count)" -eq 2 ]'
+expect "PASS line for 1.00 – 1.50" 'has_line "  PASS line 2: 1.00 to 1.50"'
+expect "PASS line for 1.0–1.5" 'has_line "  PASS line 3: 1.0 to 1.5"'
+end_case
+
+make_copy "$work/norangebook" \
+  'multiplier between 1.00 and 1.50, adjusted by' \
+  'multiplier, adjusted by'
+start_case "case 17: workbook whose text gives no multiplier range" \
+  "$checker" "$work/norangebook/$toolkit"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says there is no range" \
+  "has_fail 'norangebook/$toolkit: gives no multiplier range'"
+end_case
+
+printf '%s\n' 'The profile multiplier is between 1.00 and 1.50.' > "$work/text.xlsx"
+start_case "case 18: a text file whose name ends in .xlsx" "$checker" "$work/text.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not a zip file" \
+  "has_fail 'text.xlsx: cannot read (not a zip file)'"
+end_case
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
