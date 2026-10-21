@@ -385,10 +385,19 @@ def main(argv):
                     with open(os.path.join(root, path), encoding="utf-8") as fh:
                         parts = [("", fh.read().splitlines())]
             except OSError as error:
-                if is_workbook and error.errno is None:
+                if is_workbook and (
+                    error.errno is None or is_zip_file(os.path.join(root, path))
+                ):
                     # bzip2 data that does not decompress. bz2 raises
                     # OSError("Invalid data stream"), which has no errno and
-                    # so no strerror to give as the reason.
+                    # so no strerror to give as the reason. Or a zip archive
+                    # that zipfile.is_zipfile() accepts, which it does only
+                    # for a file it can open, so the error was raised while
+                    # reading the archive: zipfile raises OSError(22,
+                    # "Invalid argument") when it seeks to an entry at the
+                    # negative offset it works out from an end of central
+                    # directory record that gives a central directory offset
+                    # past the end of the file.
                     problems.append("{}: cannot read (not a workbook)".format(name))
                     continue
                 problems.append("{}: cannot read ({})".format(name, error.strerror))

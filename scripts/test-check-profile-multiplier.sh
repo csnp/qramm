@@ -123,6 +123,11 @@
 #      case is skipped, with a line that says so, when python3 -I does not
 #      decode file names as UTF-8 and write stdout as ISO-8859-1 under that
 #      locale on this machine.
+#  37. A workbook whose end of central directory record gives a central
+#      directory offset 1000 bytes past the end of the file, then a text
+#      document that gives the workbook's range: the results of cases 23 to
+#      28. zipfile.is_zipfile() accepts this archive, and zipfile raises
+#      OSError(22, "Invalid argument") when it reads the first entry.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -528,7 +533,8 @@ sys.exit(0 if found else 1)
 PY
 }
 
-# Expectations for cases 23 to 28 and 30: $1 is the workbook's file name.
+# Expectations for cases 23 to 28, 30, 32, 33 and 37: $1 is the workbook's
+# file name.
 expect_not_a_workbook() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "no traceback on stderr" '[ -z "$err" ]'
@@ -733,6 +739,32 @@ else
   echo "$title"
   echo "  skip python3 does not decode file names as UTF-8 and write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($probe)"
 fi
+
+# Sets the central directory offset that the end of central directory record
+# of the zip archive at $1 gives to 1000 bytes past the end of the file.
+move_directory_offset() {
+  python3 -I - "$1" <<'PY'
+import struct
+import sys
+
+path = sys.argv[1]
+with open(path, "rb") as fh:
+    data = bytearray(fh.read())
+# The archive has no comment, so its last 22 bytes are the end of central
+# directory record, which ends with the central directory's offset and a
+# 2-byte comment length.
+struct.pack_into("<I", data, len(data) - 6, len(data) + 1000)
+with open(path, "wb") as fh:
+    fh.write(data)
+PY
+}
+
+make_zip "$work/badoffset.xlsx" "$book_xml" "$rels_xml" "$strings_xml" "$sheet_xml"
+move_directory_offset "$work/badoffset.xlsx"
+start_case "case 37: a central directory offset past the end of the file" \
+  "$checker" "$work/badoffset.xlsx" "$work/new.md"
+expect_not_a_workbook badoffset.xlsx
+end_case
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
