@@ -63,6 +63,15 @@
 #  nothing on stderr, one FAIL line, which says the archive cannot be read
 #  (not a workbook), a PASS line for the sample workbook, and RESULT: FAIL
 #  as the last line.
+#  14. Under the en_US.ISO8859-1 locale, a workbook with one visible sheet,
+#      whose name holds the character U+2192, which ISO-8859-1 cannot
+#      encode, and whose cells A1 and B1 store #DIV/0!, A1 from the formula
+#      1/0 and B1 from a formula that holds U+00D7, which ISO-8859-1 can
+#      encode: exit 1, nothing on stderr, two FAIL lines, each giving the
+#      sheet name with U+2192 as \u2192, the one for B1 giving its formula
+#      with U+00D7 as the ISO-8859-1 byte 0xd7, then RESULT: FAIL. The case
+#      is skipped, with a line that says so, when python3 -I does not write
+#      stdout as ISO-8859-1 under that locale on this machine.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -409,6 +418,67 @@ start_case "case 13: deflate data that does not decompress" \
   "$checker" "$work/deflate.xlsx" toolkit/Sample_Assessment.xlsx
 expect_not_a_workbook "$work/deflate.xlsx"
 end_case
+
+# Writes to $1 a workbook with one visible sheet, named "Scores \u2192
+# Totals", whose A1 stores #DIV/0! from the formula 1/0 and whose B1 stores
+# #DIV/0! from the formula "\u00d7"&A1, where \u2192 is the character U+2192
+# and \u00d7 is U+00D7.
+make_arrow_workbook() {
+  python3 -I - "$1" <<'PY'
+import sys
+import zipfile
+
+MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+PKG = "http://schemas.openxmlformats.org/package/2006/relationships"
+parts = {
+    "xl/workbook.xml": (
+        '<workbook xmlns="%s" xmlns:r="%s"><sheets>'
+        '<sheet name="Scores \u2192 Totals" sheetId="1" r:id="rId1"/>'
+        "</sheets></workbook>" % (MAIN, REL)
+    ),
+    "xl/_rels/workbook.xml.rels": (
+        '<Relationships xmlns="%s"><Relationship Id="rId1" Type="%s/worksheet" '
+        'Target="worksheets/sheet1.xml"/></Relationships>' % (PKG, REL)
+    ),
+    "xl/worksheets/sheet1.xml": (
+        '<worksheet xmlns="%s"><sheetData><row r="1">'
+        '<c r="A1" t="e"><f>1/0</f><v>#DIV/0!</v></c>'
+        '<c r="B1" t="e"><f>"\u00d7"&amp;A1</f><v>#DIV/0!</v></c>'
+        "</row></sheetData></worksheet>" % MAIN
+    ),
+}
+with zipfile.ZipFile(sys.argv[1], "w") as book:
+    for name, text in parts.items():
+        book.writestr(name, '<?xml version="1.0" encoding="UTF-8"?>' + text)
+PY
+}
+
+# Under en_US.ISO8859-1 on macOS, python3 writes stdout as ISO-8859-1, which
+# has the byte 0xd7 (\327) for U+00D7 and no byte for U+2192, so printing a
+# FAIL line that quotes the sheet name as it is raises UnicodeEncodeError.
+# The checker is expected to print \u2192 in place of U+2192 and the byte
+# 0xd7 for U+00D7. The line with that byte is matched under LC_ALL=C, where
+# grep compares bytes, not characters.
+title="case 14: FAIL lines that quote a character stdout's encoding cannot hold"
+stdout_encoding="$(LC_ALL=en_US.ISO8859-1 python3 -I -c 'import codecs, sys; print(codecs.lookup(sys.stdout.encoding).name)' 2>&1 || true)"
+if [ "$stdout_encoding" = "iso8859-1" ]; then
+  make_arrow_workbook "$work/arrow.xlsx"
+  LC_ALL=en_US.ISO8859-1 start_case "$title" "$checker" "$work/arrow.xlsx"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "two FAIL lines" '[ "$(LC_ALL=C fail_count)" -eq 2 ]'
+  expect "FAIL line for A1 gives the sheet name with U+2192 as \\u2192" \
+    "has_fail '$work/arrow.xlsx: Scores \\u2192 Totals!A1 stores #DIV/0!: 1/0'"
+  b1_line="  FAIL $work/arrow.xlsx: Scores \\u2192 Totals!B1 stores #DIV/0!: \"$(printf '\327')\"&A1"
+  expect "FAIL line for B1 gives its formula with U+00D7 as the byte 0xd7" \
+    'LC_ALL=C has_line "$b1_line"'
+  expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+  end_case
+else
+  echo "$title"
+  echo "  skip python3 does not write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($stdout_encoding)"
+fi
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
