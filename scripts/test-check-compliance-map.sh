@@ -70,6 +70,22 @@
 #      stderr, the map PASS line, then one FAIL line, which says the
 #      category name lookup cannot be read (not a workbook), then
 #      RESULT: FAIL.
+#  15. Under the en_US.ISO8859-1 locale, a copy of the sample workbook whose
+#      Q1 FISMA Control_ID (Data!AY6) is SI-12 followed by the character
+#      U+2192, which ISO-8859-1 cannot encode, and whose Q1 FedRAMP
+#      Control_ID (Data!AY7) is CM-8 followed by U+00D7, which it can:
+#      exit 1, nothing on stderr, two FAIL lines, the one for Q1 FISMA
+#      giving the control with U+2192 as \u2192 and the one for Q1 FedRAMP
+#      giving it with U+00D7 as the ISO-8859-1 byte 0xd7, the category name
+#      PASS line, then RESULT: FAIL.
+#  16. Under the en_US.ISO8859-1 locale, a copy of the sample workbook whose
+#      Data sheet is named Data followed by U+2192 in the workbook's sheet
+#      list, in the ComplianceMap range and in the Compliance sheet's
+#      category name lookups: exit 0, nothing on stderr, the map PASS line,
+#      the category name PASS line giving the range as
+#      Data\u2192!BG3:BH108, then RESULT: PASS.
+#  Cases 15 and 16 are skipped, with a line that says so, when python3 -I
+#  does not write stdout as ISO-8859-1 under that locale on this machine.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -474,6 +490,120 @@ expect "FAIL line says the category name lookup cannot be read as it is not a wo
   "has_line '  FAIL $work/lookup.xlsx: cannot read the category name lookup (not a workbook)'"
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
+
+# Writes to $2 a copy of the workbook $1 whose Data sheet cell $3 holds the
+# text $4, and so on for each further pair of a cell and a text. A text is
+# given with Python's backslash escapes, such as \u2192 for the character
+# U+2192. Fails when the Data sheet lacks one of the cells.
+set_data_text() {
+  python3 -I - "$@" <<'PY'
+import re
+import sys
+import zipfile
+
+source, target = sys.argv[1:3]
+pairs = list(zip(sys.argv[3::2], sys.argv[4::2]))
+data = "xl/worksheets/sheet10.xml"
+
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        part = book.read(info.filename)
+        if info.filename == data:
+            text = part.decode("utf-8")
+            for ref, value in pairs:
+                old = re.search(r'<c r="%s"( s="\d+")?[^>]*>.*?</c>' % ref, text)
+                if old is None:
+                    sys.exit("no cell %s" % ref)
+                value = value.encode("ascii").decode("unicode_escape")
+                text = text.replace(
+                    old.group(0),
+                    '<c r="%s"%s t="inlineStr"><is><t>%s</t></is></c>'
+                    % (ref, old.group(1) or "", value),
+                )
+            part = text.encode("utf-8")
+        copy.writestr(info, part)
+PY
+}
+
+# Writes to $2 a copy of the workbook $1 whose Data sheet is named $3, given
+# with Python's backslash escapes, in the workbook's sheet list, in the
+# ComplianceMap range and in the category name lookups of the Compliance
+# sheet, xl/worksheets/sheet8.xml in the sample workbook. Fails when one of
+# them does not name the Data sheet.
+rename_data_sheet() {
+  python3 -I - "$@" <<'PY'
+import sys
+import zipfile
+
+source, target, name = sys.argv[1:4]
+name = name.encode("ascii").decode("unicode_escape")
+edits = {
+    "xl/workbook.xml": [
+        ('<sheet name="Data" ', '<sheet name="%s" ' % name),
+        (">Data!$AV$3:$BA$962<", ">'%s'!$AV$3:$BA$962<" % name),
+    ],
+    "xl/worksheets/sheet8.xml": [
+        ("Data!$BG$3:$BH$108", "'%s'!$BG$3:$BH$108" % name),
+    ],
+}
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        part = book.read(info.filename)
+        for old, new in edits.get(info.filename, []):
+            text = part.decode("utf-8")
+            if old not in text:
+                sys.exit("no %s in %s" % (old, info.filename))
+            part = text.replace(old, new).encode("utf-8")
+        copy.writestr(info, part)
+PY
+}
+
+# U+2192 has no byte in ISO-8859-1, and U+00D7 has the byte 0xd7 (\327).
+# Under en_US.ISO8859-1 on macOS, python3 writes stdout as ISO-8859-1, so
+# printing a line that quotes U+2192 as it is raises UnicodeEncodeError. The
+# checker is expected to print \u2192 in place of U+2192 and the byte 0xd7
+# for U+00D7. The line with that byte is matched under LC_ALL=C, where grep
+# compares bytes, not characters.
+stdout_encoding="$(LC_ALL=en_US.ISO8859-1 python3 -I -c 'import codecs, sys; print(codecs.lookup(sys.stdout.encoding).name)' 2>&1 || true)"
+
+title="case 15: FAIL lines that quote a character stdout's encoding cannot hold"
+if [ "$stdout_encoding" = "iso8859-1" ]; then
+  set_data_text "$root/$sample" "$work/arrowmap.xlsx" AY6 'SI-12\u2192' AY7 'CM-8\u00d7'
+  LC_ALL=en_US.ISO8859-1 start_case "$title" "$checker" "$work/arrowmap.xlsx"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "two FAIL lines" '[ "$(LC_ALL=C fail_count)" -eq 2 ]'
+  expect "FAIL line for Q1 FISMA gives the control with U+2192 as \\u2192" \
+    "has_line '  FAIL $work/arrowmap.xlsx Q1 FISMA: Data!AY6 is SI-12\\u2192, the spec gives SI-12 (line 33)'"
+  ay7_line="  FAIL $work/arrowmap.xlsx Q1 FedRAMP: Data!AY7 is CM-8$(printf '\327'), the spec gives CM-8 (line 33)"
+  expect "FAIL line for Q1 FedRAMP gives the control with U+00D7 as the byte 0xd7" \
+    'LC_ALL=C has_line "$ay7_line"'
+  expect "the category names are checked" \
+    "has_line '  PASS 848 rows with a category, each named in Data!BG3:BH108'"
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+  end_case
+else
+  echo "$title"
+  echo "  skip python3 does not write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($stdout_encoding)"
+fi
+
+# The category name PASS line names the range the Compliance sheet looks
+# category names up in, with the sheet name its formulas give.
+title="case 16: a PASS line that quotes a sheet name stdout's encoding cannot hold"
+if [ "$stdout_encoding" = "iso8859-1" ]; then
+  rename_data_sheet "$root/$sample" "$work/renamed.xlsx" 'Data\u2192'
+  LC_ALL=en_US.ISO8859-1 start_case "$title" "$checker" "$work/renamed.xlsx"
+  expect "exit status is 0" '[ "$status" -eq 0 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "the map is checked" "has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+  expect "the category name PASS line gives the sheet name with U+2192 as \\u2192" \
+    "has_line '  PASS 848 rows with a category, each named in Data\\u2192!BG3:BH108'"
+  expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+  end_case
+else
+  echo "$title"
+  echo "  skip python3 does not write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($stdout_encoding)"
+fi
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"

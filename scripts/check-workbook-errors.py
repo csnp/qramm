@@ -21,8 +21,11 @@ workbook cannot be read, 2 on a usage error. An empty workbook argument
 fails with "no file name given". A file name is printed with each byte that
 the file system encoding cannot decode, and each character that the encoding
 of stdout cannot encode, as a backslash escape, such as \\xff for the byte
-0xff and \\u65e5 for the character U+65E5. --help (or -h) prints the usage
-line and this text on stderr and exits 2.
+0xff and \\u65e5 for the character U+65E5. A FAIL line, such as one that
+quotes a sheet name or a formula, is printed with each character that the
+encoding of stdout cannot encode as a backslash escape too, such as \\u2192
+for U+2192. --help (or -h) prints the usage line and this text on stderr
+and exits 2.
 """
 
 import os
@@ -167,6 +170,20 @@ def is_zip_file(path):
         return False
 
 
+def printable(text):
+    """text with each character the encoding of stdout cannot encode written
+    as a backslash escape, such as \\u2192 for U+2192. Under en_US.ISO8859-1
+    on macOS, the encoding of stdout is ISO-8859-1, so text quoted from a
+    workbook, such as a sheet name or a formula that holds U+2192, can hold a
+    character that print() cannot encode."""
+    # sys.stdout is None when file descriptor 1 is closed, and print() then
+    # writes nothing.
+    encoding = getattr(sys.stdout, "encoding", None)
+    if encoding is None:
+        return text
+    return text.encode(encoding, "backslashreplace").decode(encoding)
+
+
 def shown(path):
     """path in a form stdout can encode: the bytes os.fsencode gives back,
     decoded with each byte the file system encoding cannot decode written as
@@ -179,12 +196,7 @@ def shown(path):
     so a file name that is valid UTF-8 can hold a character, such as U+65E5,
     that print() cannot encode."""
     name = os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
-    # sys.stdout is None when file descriptor 1 is closed, and print() then
-    # writes nothing.
-    encoding = getattr(sys.stdout, "encoding", None)
-    if encoding is None:
-        return name
-    return name.encode(encoding, "backslashreplace").decode(encoding)
+    return printable(name)
 
 
 def main(argv):
@@ -210,7 +222,9 @@ def main(argv):
         check_workbook(name, os.path.join(root, label), problems)
 
     for problem in problems:
-        print("  FAIL {}".format(problem))
+        # A problem can quote a workbook's text, such as a sheet name or a
+        # formula.
+        print(printable("  FAIL {}".format(problem)))
     print("RESULT: {}".format("FAIL" if problems else "PASS"))
     return 1 if problems else 0
 

@@ -35,8 +35,11 @@ on a usage error. An empty workbook argument fails with "no file name given".
 A file name is printed with each byte that the file system encoding cannot
 decode, and each character that the encoding of stdout cannot encode, as a
 backslash escape, such as \\xff for the byte 0xff and \\u65e5 for the
-character U+65E5. --help (or -h) prints the usage line and this text on
-stderr and exits 2.
+character U+65E5. A FAIL line, such as one that quotes a Control_ID, and the
+PASS line that names the ranges the category names are looked up in are
+printed with each character that the encoding of stdout cannot encode as a
+backslash escape too, such as \\u2192 for U+2192. --help (or -h) prints the
+usage line and this text on stderr and exits 2.
 """
 
 import os
@@ -450,9 +453,25 @@ def check_category_names(label, path, sheet, first, rows, problems):
                     )
                 )
     if len(problems) == before:
-        print("  PASS {} rows with a category, each named in {}".format(
+        # A range label quotes a sheet name from the Compliance sheet's
+        # formulas.
+        print(printable("  PASS {} rows with a category, each named in {}".format(
             named, ", ".join(range_label for range_label, _ in lookups)
-        ))
+        )))
+
+
+def printable(text):
+    """text with each character the encoding of stdout cannot encode written
+    as a backslash escape, such as \\u2192 for U+2192. Under en_US.ISO8859-1
+    on macOS, the encoding of stdout is ISO-8859-1, so text quoted from a
+    workbook, such as a Control_ID or a sheet name that holds U+2192, can
+    hold a character that print() cannot encode."""
+    # sys.stdout is None when file descriptor 1 is closed, and print() then
+    # writes nothing.
+    encoding = getattr(sys.stdout, "encoding", None)
+    if encoding is None:
+        return text
+    return text.encode(encoding, "backslashreplace").decode(encoding)
 
 
 def shown(path):
@@ -467,12 +486,7 @@ def shown(path):
     so a file name that is valid UTF-8 can hold a character, such as U+65E5,
     that print() cannot encode."""
     name = os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
-    # sys.stdout is None when file descriptor 1 is closed, and print() then
-    # writes nothing.
-    encoding = getattr(sys.stdout, "encoding", None)
-    if encoding is None:
-        return name
-    return name.encode(encoding, "backslashreplace").decode(encoding)
+    return printable(name)
 
 
 def main(argv):
@@ -493,7 +507,7 @@ def main(argv):
     try:
         spec = read_spec(os.path.join(root, SPEC), problems)
     except OSError as error:
-        print("  FAIL {}: cannot read ({})".format(SPEC, error.strerror))
+        print(printable("  FAIL {}: cannot read ({})".format(SPEC, error.strerror)))
         print("RESULT: FAIL")
         return 1
 
@@ -506,7 +520,9 @@ def main(argv):
         check_workbook(name, os.path.join(root, label), spec, problems)
 
     for problem in problems:
-        print("  FAIL {}".format(problem))
+        # A problem can quote a workbook's text, such as a Control_ID or a
+        # sheet name.
+        print(printable("  FAIL {}".format(problem)))
     print("RESULT: {}".format("FAIL" if problems else "PASS"))
     return 1 if problems else 0
 
