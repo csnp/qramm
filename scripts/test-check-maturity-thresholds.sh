@@ -51,6 +51,12 @@
 #  15. A copy whose Basic chart value is SUM(PracticeScoreOutcomes)/12:
 #      exit 1, one FAIL line that names Scorecard!M21 and says the value is
 #      not a count of practice scores in one range.
+#  16. Under the en_US.UTF-8 locale, a file argument that holds the byte
+#      0xff, which is not valid UTF-8, and names no file, then the document
+#      from case 5: exit 1, no traceback, the name printed with the byte as
+#      \xff on its == line and in a FAIL line that says it cannot be read,
+#      a PASS line for the Basic range of the case 5 document, then RESULT:
+#      FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -387,6 +393,24 @@ expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
 expect "FAIL line names Scorecard!M21 and the formula" \
   'has_fail "notcount/QRAMM_Assessment_Toolkit.xlsx Scorecard!M21: the Maturity Distribution chart value is not a count of practice scores in one range: SUM(PracticeScoreOutcomes)/12"'
+end_case
+
+# \377 is the byte 0xff, which is not valid UTF-8, so Python holds it as a
+# lone surrogate. Under en_US.UTF-8 printing that raises UnicodeEncodeError;
+# the C, C.UTF-8 and UTF-8 locales write the byte as it is. The checker is
+# expected to print \xff in either case. No file is made with this name.
+LC_ALL=en_US.UTF-8 start_case "case 16: a file argument that is not UTF-8" \
+  "$work/bad$(printf '\377').md" "$work/fenced.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "the name is printed with the byte as \\xff" \
+  "has_line '== $work/bad\\xff.md against the Scorecard'"
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the file cannot be read and gives the byte as \\xff" \
+  "has_fail '$work/bad\\xff.md: cannot read ('"
+expect "the case 5 document is checked" \
+  "has_line '== $work/fenced.md against the Scorecard' && has_line '  PASS line 1: Basic below 1.5'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then

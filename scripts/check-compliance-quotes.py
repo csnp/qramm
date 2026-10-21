@@ -29,8 +29,10 @@ cell, for example) is a FAIL line here too. The script uses the Python
 standard library only.
 
 Exit status: 0 when the documents match the spec, 1 when they do not, 2 on a
-usage error. An empty document argument fails with "no file name given".
---help (or -h) prints the usage line and this text on stderr and exits 2.
+usage error. An empty document argument fails with "no file name given". A
+file name is printed with each byte that the file system encoding cannot
+decode as a backslash escape, such as \\xff for the byte 0xff. --help (or -h)
+prints the usage line and this text on stderr and exits 2.
 """
 
 import importlib.util
@@ -95,6 +97,7 @@ def same_cell(cell, control, weight, cell_pattern):
 
 
 def check_document(label, path, mapping, spec, problems):
+    """label is the document's file name as printed; path is the file read."""
     try:
         with open(path, encoding="utf-8") as fh:
             lines = fh.read().splitlines()
@@ -161,11 +164,12 @@ def main(argv):
         return 1
 
     for label in documents:
-        print("== {} against {}".format(label or "''", mapping.SPEC))
+        name = mapping.shown(label)
+        print("== {} against {}".format(name or "''", mapping.SPEC))
         if not label:
             problems.append("'': no file name given")
             continue
-        check_document(label, os.path.join(root, label), mapping, spec, problems)
+        check_document(name, os.path.join(root, label), mapping, spec, problems)
 
     for problem in problems:
         print("  FAIL {}".format(problem))

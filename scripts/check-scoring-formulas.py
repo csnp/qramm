@@ -25,8 +25,10 @@ A score formula is a fenced code block whose first line starts with
 collapsed to one space. The script uses the Python standard library only.
 
 Exit status: 0 when the documents agree, 1 when they do not, 2 on a usage
-error. An empty file argument fails with "no file name given". --help (or -h)
-prints the usage line and this text on stderr and exits 2.
+error. An empty file argument fails with "no file name given". A file name is
+printed with each byte that the file system encoding cannot decode as a
+backslash escape, such as \\xff for the byte 0xff. --help (or -h) prints the
+usage line and this text on stderr and exits 2.
 """
 
 import os
@@ -123,13 +125,14 @@ def reference_scale(lines, problems):
     return sizes.pop()
 
 
-def check_document(path, lines, reference, scale, problems):
+def check_document(document, lines, reference, scale, problems):
+    """document is the document's file name as printed."""
     found = formulas(lines)
     for number, name, text in found:
         if name not in reference:
             problems.append(
                 "{} line {}: {} has no formula in {}".format(
-                    path, number, name, METHODOLOGY
+                    document, number, name, METHODOLOGY
                 )
             )
         elif reference[name][1] != text:
@@ -137,7 +140,7 @@ def check_document(path, lines, reference, scale, problems):
                 "{} line {}: {} differs from {} line {}\n"
                 "         document:    {}\n"
                 "         methodology: {}".format(
-                    path, number, name, METHODOLOGY, reference[name][0],
+                    document, number, name, METHODOLOGY, reference[name][0],
                     text, reference[name][1],
                 )
             )
@@ -149,7 +152,7 @@ def check_document(path, lines, reference, scale, problems):
     stated = {name for _, name, _ in found}
     for name in REQUIRED:
         if name not in stated:
-            problems.append("{}: no formula for {}".format(path, name))
+            problems.append("{}: no formula for {}".format(document, name))
 
     if scale is None:
         return
@@ -158,16 +161,24 @@ def check_document(path, lines, reference, scale, problems):
             if int(match.group(1)) != scale:
                 problems.append(
                     "{} line {}: \"{}\" but {} uses a {}-point scale".format(
-                        path, number, match.group(0), METHODOLOGY, scale
+                        document, number, match.group(0), METHODOLOGY, scale
                     )
                 )
         for match in SCORE_RANGE.finditer(line):
             if (int(match.group(1)), int(match.group(2))) != (1, scale):
                 problems.append(
                     "{} line {}: \"{}\" but answers in {} score 1 to {}".format(
-                        path, number, match.group(0), METHODOLOGY, scale
+                        document, number, match.group(0), METHODOLOGY, scale
                     )
                 )
+
+
+def shown(path):
+    """path with each byte that the file system encoding cannot decode
+    written as a backslash escape, such as \\xff for the byte 0xff. Python
+    holds such a byte of a command-line argument as a lone surrogate, which
+    print() cannot encode under a locale such as en_US.UTF-8."""
+    return os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
 
 
 def main(argv):
@@ -193,16 +204,17 @@ def main(argv):
             problems.append("{}: no formula for {}".format(METHODOLOGY, name))
 
     for path in documents:
-        print("== {} against {}".format(path or "''", METHODOLOGY))
+        document = shown(path)
+        print("== {} against {}".format(document or "''", METHODOLOGY))
         if not path:
             problems.append("'': no file name given")
             continue
         try:
             lines = read_lines(root, path)
         except OSError as error:
-            problems.append("{}: cannot read ({})".format(path, error.strerror))
+            problems.append("{}: cannot read ({})".format(document, error.strerror))
             continue
-        check_document(path, lines, reference, scale, problems)
+        check_document(document, lines, reference, scale, problems)
 
     for problem in problems:
         print("  FAIL {}".format(problem))
