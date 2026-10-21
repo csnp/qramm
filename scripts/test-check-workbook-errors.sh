@@ -81,7 +81,7 @@
 #  nothing on stderr, one FAIL line, which says the archive cannot be read
 #  (not a workbook), a PASS line for the sample workbook, and RESULT: FAIL
 #  as the last line.
-#  14. Under the en_US.ISO8859-1 locale, a workbook with one visible sheet,
+#  18. Under the en_US.ISO8859-1 locale, a workbook with one visible sheet,
 #      whose name holds the character U+2192, which ISO-8859-1 cannot
 #      encode, and whose cells A1 and B1 store #DIV/0!, A1 from the formula
 #      1/0 and B1 from a formula that holds U+00D7, which ISO-8859-1 can
@@ -90,7 +90,7 @@
 #      with U+00D7 as the ISO-8859-1 byte 0xd7, then RESULT: FAIL. The case
 #      is skipped, with a line that says so, when python3 -I does not write
 #      stdout as ISO-8859-1 under that locale on this machine.
-#  18. A zip archive whose xl/workbook.xml entry gives, in both of its
+#  19. A zip archive whose xl/workbook.xml entry gives, in both of its
 #      headers, a compressed and an uncompressed size equal to the length of
 #      the archive, which run past its end, then the sample workbook: exit
 #      1, nothing on stderr, one FAIL line, a PASS line for the sample
@@ -100,53 +100,53 @@
 #      Python 3.13.12 and 3.14.3 raise zipfile.BadZipFile("Overlapped
 #      entries: 'xl/workbook.xml' (possible zip bomb)") instead, and the
 #      FAIL line says the archive is not a workbook and gives that reason.
-#  19. The archive of case 18 with a second central directory header, for
+#  20. The archive of case 19 with a second central directory header, for
 #      an entry named xl/workbook.xmz, that gives the same local header
 #      offset, then the sample workbook: as cases 11 to 17, except that
 #      stderr can hold a warning. Python 3.13.12 and 3.14.3 print the
 #      warning "UserWarning: Overlapped entries: 'xl/workbook.xml' (possible
 #      zip bomb)" and read on, and zipfile raises EOFError, as with Python
 #      3.9.6.
-#  20. A copy of the sample workbook whose col element for column M of the
+#  21. A copy of the sample workbook whose col element for column M of the
 #      Welcome sheet, xl/worksheets/sheet1.xml, has hidden="1" and no min
 #      attribute. The Welcome sheet is the first sheet and is not hidden.
-#  21. The same copy with the min attribute and no max attribute.
-#  Cases 20 and 21 pass the copy and then the sample workbook: exit 1,
+#  22. The same copy with the min attribute and no max attribute.
+#  Cases 21 and 22 pass the copy and then the sample workbook: exit 1,
 #  nothing on stderr, one FAIL line, which says the copy is not a workbook
-#  as xl/worksheets/sheet1.xml has a hidden col element with no min (case 20)
-#  or no max (case 21) attribute, a PASS line for the sample workbook, and
+#  as xl/worksheets/sheet1.xml has a hidden col element with no min (case 21)
+#  or no max (case 22) attribute, a PASS line for the sample workbook, and
 #  RESULT: FAIL as the last line.
-#  22. A copy of the sample workbook whose Relationship element with Id rId1
+#  23. A copy of the sample workbook whose Relationship element with Id rId1
 #      in xl/_rels/workbook.xml.rels, the one the Welcome sheet names, has no
 #      Target attribute, then the sample workbook: exit 1, nothing on stderr,
 #      one FAIL line, which says the copy is not a workbook as that
 #      Relationship element has no Target attribute, a PASS line for the
 #      sample workbook, and RESULT: FAIL as the last line.
-#  23. A copy of the sample workbook whose first c element in
+#  24. A copy of the sample workbook whose first c element in
 #      xl/worksheets/sheet1.xml, the one for A1 of the Welcome sheet, in row
 #      1, which is not hidden, is replaced by a c element with no r
 #      attribute that stores #DIV/0! from the formula 1/0.
-#  24. The same copy with the r attribute 1A, which is not a cell
+#  25. The same copy with the r attribute 1A, which is not a cell
 #      reference, in that c element.
-#  25. The copy of case 23 with no r attribute in the row element of row 1
+#  26. The copy of case 24 with no r attribute in the row element of row 1
 #      either.
-#  Cases 23 to 25 pass the copy and then the sample workbook: exit 1,
+#  Cases 24 to 26 pass the copy and then the sample workbook: exit 1,
 #  nothing on stderr, one FAIL line, which says the copy is not a workbook
 #  as xl/worksheets/sheet1.xml has a c element with no r attribute in row 1
-#  (case 23), a c element in row 1 whose r attribute 1A is not a cell
-#  reference (case 24) or a c element with no r attribute (case 25), a PASS
+#  (case 24), a c element in row 1 whose r attribute 1A is not a cell
+#  reference (case 25) or a c element with no r attribute (case 26), a PASS
 #  line for the sample workbook, and RESULT: FAIL as the last line.
-#  26. A copy of the sample workbook whose c element for E6 of the Welcome
+#  27. A copy of the sample workbook whose c element for E6 of the Welcome
 #      sheet, in row 6, which is hidden, is replaced by a c element with no
 #      r attribute that stores #DIV/0! from the formula 1/0: exit 0, nothing
 #      on stderr, no FAIL line, one PASS line, and RESULT: PASS as the last
 #      line.
-#  27. The copy of case 24 with the r attribute M1x in place of 1A. M1x
+#  28. The copy of case 25 with the r attribute M1x in place of 1A. M1x
 #      starts with the cell reference M1 and goes on with x, and column M
-#      of the Welcome sheet is hidden. As cases 23 to 25, with a FAIL line
+#      of the Welcome sheet is hidden. As cases 24 to 26, with a FAIL line
 #      that says the copy is not a workbook as xl/worksheets/sheet1.xml has
 #      a c element in row 1 whose r attribute M1x is not a cell reference.
-#  28. A copy of the sample workbook whose first c element in
+#  29. A copy of the sample workbook whose first c element in
 #      xl/worksheets/sheet1.xml, the one for A1 of the Welcome sheet, is
 #      replaced by one that stores #DIV/0! from the formula 1/0, and in which
 #      each of the namespace names
@@ -159,11 +159,11 @@
 #      nothing on stderr, one FAIL line, for Welcome!A1, which gives its
 #      formula, a PASS line for the sample workbook, and RESULT: FAIL as the
 #      last line.
-#  29. A copy of the sample workbook with the namespace names of case 28
+#  30. A copy of the sample workbook with the namespace names of case 29
 #      replaced in the same parts: exit 0, nothing on stderr, no FAIL line, a
 #      PASS line that gives as many visible formula cells as the checker
 #      gives for the sample workbook, and RESULT: PASS as the last line.
-#  30. A copy of the sample workbook whose xl/workbook.xml declares the
+#  31. A copy of the sample workbook whose xl/workbook.xml declares the
 #      namespace urn:example:spreadsheetml in place of
 #      http://schemas.openxmlformats.org/spreadsheetml/2006/main, so that it
 #      has no sheet element in a namespace the checker reads, then the
@@ -171,17 +171,22 @@
 #      the copy is not a workbook as xl/workbook.xml has no sheet element in
 #      a namespace the checker reads, a PASS line for the sample workbook,
 #      and RESULT: FAIL as the last line.
-#  31. Under the en_US.UTF-8 locale, the copy of case 24 with the r
+#  32. Under the en_US.UTF-8 locale, the copy of case 25 with the r
 #      attribute M followed by U+0661 (ARABIC-INDIC DIGIT ONE) in place of
 #      1A. U+0661 is a Unicode decimal digit but not one of the digits 0 to
-#      9, and column M of the Welcome sheet is hidden. As case 27, with
+#      9, and column M of the Welcome sheet is hidden. As case 28, with
 #      this r attribute, written as UTF-8, in place of M1x in the FAIL line.
-#  32. As case 31, with U+FF11 (FULLWIDTH DIGIT ONE) in place of U+0661.
+#  33. As case 32, with U+FF11 (FULLWIDTH DIGIT ONE) in place of U+0661.
+#
+# Each case prints a title that starts with "case N:", where N is its
+# number. A FAIL line follows each title that gives the number of an
+# earlier one.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
 #
-# Exit status: 0 when every case passes, 1 when any case fails.
+# Exit status: 0 when every case passes, 1 when any case fails or two titles
+# give the same number.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -327,10 +332,29 @@ show_output() {
   printf '%s\n' "$err" | sed 's/^/  /'
 }
 
+# The numbers of the cases whose titles have been printed, each followed by
+# a space.
+case_numbers=" "
+
+# Prints the case title $1, which starts with "case N:". When an earlier
+# title gave the same N, prints a FAIL line after it and fails the run.
+print_title() {
+  local number="${1#case }"
+  number="${number%%:*}"
+  echo "$1"
+  case "$case_numbers" in
+    *" $number "*)
+      echo "  FAIL case $number is also the number of an earlier case"
+      failed=1
+      ;;
+  esac
+  case_numbers="$case_numbers$number "
+}
+
 # Runs one case: $1 is its title, the rest are run_checker arguments. Leaves
 # the result in out, err and status for the expect lines that follow.
 start_case() {
-  echo "$1"
+  print_title "$1"
   shift
   case_failed="$failed"
   failed=0
@@ -444,7 +468,7 @@ if [ "$probe" = "utf-8 iso8859-1" ]; then
   expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
   end_case
 else
-  echo "$title"
+  print_title "$title"
   echo "  skip python3 does not decode file names as UTF-8 and write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($probe)"
 fi
 
@@ -542,7 +566,7 @@ PY
 # True when stderr is empty or each of its lines holds "UserWarning:
 # Overlapped entries: '$1' (possible zip bomb)" or starts with two spaces,
 # as do the two lines of the warning Python 3.13.12 and 3.14.3 print for the
-# entry $1 of the archive of case 19: the second quotes the checker's line
+# entry $1 of the archive of case 20: the second quotes the checker's line
 # that read the entry. The first line of a traceback does neither.
 only_overlap_warning() {
   local rest
@@ -552,7 +576,7 @@ only_overlap_warning() {
   [ -z "$rest" ]
 }
 
-# Expectations for cases 11 to 17 and 19: $1 is the archive's file name.
+# Expectations for cases 11 to 17 and 20: $1 is the archive's file name.
 # With $2, stderr can hold the warning only_overlap_warning allows for the
 # entry $2.
 expect_not_a_workbook() {
@@ -654,7 +678,7 @@ PY
 # The checker is expected to print \u2192 in place of U+2192 and the byte
 # 0xd7 for U+00D7. The line with that byte is matched under LC_ALL=C, where
 # grep compares bytes, not characters.
-title="case 14: FAIL lines that quote a character stdout's encoding cannot hold"
+title="case 18: FAIL lines that quote a character stdout's encoding cannot hold"
 stdout_encoding="$(LC_ALL=en_US.ISO8859-1 python3 -I -c 'import codecs, sys; print(codecs.lookup(sys.stdout.encoding).name)' 2>&1 || true)"
 if [ "$stdout_encoding" = "iso8859-1" ]; then
   make_arrow_workbook "$work/arrow.xlsx"
@@ -670,11 +694,11 @@ if [ "$stdout_encoding" = "iso8859-1" ]; then
   expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
   end_case
 else
-  echo "$title"
+  print_title "$title"
   echo "  skip python3 does not write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($stdout_encoding)"
 fi
 
-# The FAIL line for the archive $1 of case 18: the one Python 3.9.6 gives, or
+# The FAIL line for the archive $1 of case 19: the one Python 3.9.6 gives, or
 # the one Python 3.13.12 and 3.14.3 give.
 past_end_fail() {
   has_fail "$1: cannot read (not a workbook)" ||
@@ -682,7 +706,7 @@ past_end_fail() {
 }
 
 make_damaged_zip "$work/past-end.xlsx" past-end
-start_case "case 18: entry sizes that run past the end of the file" \
+start_case "case 19: entry sizes that run past the end of the file" \
   "$checker" "$work/past-end.xlsx" toolkit/Sample_Assessment.xlsx
 expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "no traceback on stderr" '[ -z "$err" ]'
@@ -694,7 +718,7 @@ expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
 
 make_damaged_zip "$work/same-offset.xlsx" same-offset
-start_case "case 19: entry sizes past the end and a second header at the same offset" \
+start_case "case 20: entry sizes past the end and a second header at the same offset" \
   "$checker" "$work/same-offset.xlsx" toolkit/Sample_Assessment.xlsx
 expect_not_a_workbook "$work/same-offset.xlsx" xl/workbook.xml
 end_case
@@ -719,7 +743,7 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 20 and 21: $1 is the copy's file name and $2 the
+# Expectations for cases 21 and 22: $1 is the copy's file name and $2 the
 # attribute its hidden col element lacks.
 expect_no_column_bound() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
@@ -736,21 +760,21 @@ expect_no_column_bound() {
 # hidden.
 edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/nomin.xlsx" \
   xl/worksheets/sheet1.xml '<col min="13" max="13" ' '<col max="13" '
-start_case "case 20: a hidden col element with no min attribute" \
+start_case "case 21: a hidden col element with no min attribute" \
   "$checker" "$work/nomin.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_column_bound "$work/nomin.xlsx" min
 end_case
 
 edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/nomax.xlsx" \
   xl/worksheets/sheet1.xml '<col min="13" max="13" ' '<col min="13" '
-start_case "case 21: a hidden col element with no max attribute" \
+start_case "case 22: a hidden col element with no max attribute" \
   "$checker" "$work/nomax.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_column_bound "$work/nomax.xlsx" max
 end_case
 
 edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/notarget.xlsx" \
   xl/_rels/workbook.xml.rels ' Target="worksheets/sheet1.xml"' ''
-start_case "case 22: a sheet's Relationship element with no Target attribute" \
+start_case "case 23: a sheet's Relationship element with no Target attribute" \
   "$checker" "$work/notarget.xlsx" toolkit/Sample_Assessment.xlsx
 expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "no traceback on stderr" '[ -z "$err" ]'
@@ -762,7 +786,7 @@ expect "the sample workbook is checked" \
 expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
 
-# Expectations for cases 23 to 25, 27, 31 and 32: $1 is the copy's file
+# Expectations for cases 24 to 26, 28, 32 and 33: $1 is the copy's file
 # name and $2 what its FAIL line says xl/worksheets/sheet1.xml has.
 expect_no_cell_reference() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
@@ -779,14 +803,14 @@ expect_no_cell_reference() {
 error_cell='<c t="e"><f>1/0</f><v>#DIV/0!</v></c>'
 edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/nocellref.xlsx" \
   xl/worksheets/sheet1.xml '<c r="A1" s="28"/>' "$error_cell"
-start_case "case 23: a c element with no r attribute" \
+start_case "case 24: a c element with no r attribute" \
   "$checker" "$work/nocellref.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_cell_reference "$work/nocellref.xlsx" "a c element with no r attribute in row 1"
 end_case
 
 edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/badcellref.xlsx" \
   xl/worksheets/sheet1.xml '<c r="A1" s="28"/>' '<c r="1A" t="e"><f>1/0</f><v>#DIV/0!</v></c>'
-start_case "case 24: a c element whose r attribute is not a cell reference" \
+start_case "case 25: a c element whose r attribute is not a cell reference" \
   "$checker" "$work/badcellref.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_cell_reference "$work/badcellref.xlsx" \
   "a c element in row 1 whose r attribute 1A is not a cell reference"
@@ -794,14 +818,14 @@ end_case
 
 edit_part "$work/nocellref.xlsx" "$work/norowref.xlsx" \
   xl/worksheets/sheet1.xml '<row r="1" ' '<row '
-start_case "case 25: a c element with no r attribute in a row element with no r attribute" \
+start_case "case 26: a c element with no r attribute in a row element with no r attribute" \
   "$checker" "$work/norowref.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_cell_reference "$work/norowref.xlsx" "a c element with no r attribute"
 end_case
 
 edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/hiddenrow.xlsx" \
   xl/worksheets/sheet1.xml '<c r="E6" s="47"/>' "$error_cell"
-start_case "case 26: a c element with no r attribute in a hidden row" \
+start_case "case 27: a c element with no r attribute in a hidden row" \
   "$checker" "$work/hiddenrow.xlsx"
 expect "exit status is 0" '[ "$status" -eq 0 ]'
 expect "nothing on stderr" '[ -z "$err" ]'
@@ -813,7 +837,7 @@ end_case
 # M1x starts with M1, a cell reference in column M, which is hidden.
 edit_part "$work/badcellref.xlsx" "$work/prefixcellref.xlsx" \
   xl/worksheets/sheet1.xml '<c r="1A" ' '<c r="M1x" '
-start_case "case 27: a c element whose r attribute only starts with a cell reference" \
+start_case "case 28: a c element whose r attribute only starts with a cell reference" \
   "$checker" "$work/prefixcellref.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_cell_reference "$work/prefixcellref.xlsx" \
   "a c element in row 1 whose r attribute M1x is not a cell reference"
@@ -861,7 +885,7 @@ pass_line() {
 edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/a1error.xlsx" \
   xl/worksheets/sheet1.xml '<c r="A1" s="28"/>' '<c r="A1" t="e"><f>1/0</f><v>#DIV/0!</v></c>'
 make_strict "$work/a1error.xlsx" "$work/strict-a1error.xlsx"
-start_case "case 28: an error value in a visible cell of a workbook in the Strict namespaces" \
+start_case "case 29: an error value in a visible cell of a workbook in the Strict namespaces" \
   "$checker" "$work/strict-a1error.xlsx" toolkit/Sample_Assessment.xlsx
 expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "no traceback on stderr" '[ -z "$err" ]'
@@ -873,11 +897,11 @@ expect "the sample workbook is checked" \
 expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
 
-# Case 29 expects the PASS line the checker prints for the sample workbook.
+# Case 30 expects the PASS line the checker prints for the sample workbook.
 run_checker "$checker" toolkit/Sample_Assessment.xlsx
 sample_pass="$(pass_line)"
 make_strict "$root/toolkit/Sample_Assessment.xlsx" "$work/strict.xlsx"
-start_case "case 29: the sample workbook in the Strict namespaces" "$checker" "$work/strict.xlsx"
+start_case "case 30: the sample workbook in the Strict namespaces" "$checker" "$work/strict.xlsx"
 expect "exit status is 0" '[ "$status" -eq 0 ]'
 expect "nothing on stderr" '[ -z "$err" ]'
 expect "no FAIL line" '[ "$(fail_count)" -eq 0 ]'
@@ -891,7 +915,7 @@ end_case
 edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/othernamespace.xlsx" \
   xl/workbook.xml 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"' \
   'xmlns="urn:example:spreadsheetml"'
-start_case "case 30: sheet elements in a namespace the checker does not read" \
+start_case "case 31: sheet elements in a namespace the checker does not read" \
   "$checker" "$work/othernamespace.xlsx" toolkit/Sample_Assessment.xlsx
 expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "no traceback on stderr" '[ -z "$err" ]'
@@ -909,7 +933,7 @@ end_case
 # U+FF11.
 edit_part "$work/badcellref.xlsx" "$work/arabicdigit.xlsx" \
   xl/worksheets/sheet1.xml '<c r="1A" ' '<c r="M&#x661;" '
-LC_ALL=en_US.UTF-8 start_case "case 31: a c element whose r attribute holds an Arabic-Indic digit" \
+LC_ALL=en_US.UTF-8 start_case "case 32: a c element whose r attribute holds an Arabic-Indic digit" \
   "$checker" "$work/arabicdigit.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_cell_reference "$work/arabicdigit.xlsx" \
   "a c element in row 1 whose r attribute M$(printf '\331\241') is not a cell reference"
@@ -917,7 +941,7 @@ end_case
 
 edit_part "$work/badcellref.xlsx" "$work/fullwidthdigit.xlsx" \
   xl/worksheets/sheet1.xml '<c r="1A" ' '<c r="M&#xFF11;" '
-LC_ALL=en_US.UTF-8 start_case "case 32: a c element whose r attribute holds a fullwidth digit" \
+LC_ALL=en_US.UTF-8 start_case "case 33: a c element whose r attribute holds a fullwidth digit" \
   "$checker" "$work/fullwidthdigit.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_cell_reference "$work/fullwidthdigit.xlsx" \
   "a c element in row 1 whose r attribute M$(printf '\357\274\221') is not a cell reference"
