@@ -15,7 +15,7 @@
 
 ### 3. Profile-Based Risk Multiplier
 - [ ] Industry, size, data sensitivity factors
-- [ ] Multiplier calculation (0.8-1.5 range)
+- [ ] Multiplier calculation (1.00-1.50 range)
 - [ ] Impact on all scores
 
 ### 4. Dynamic Insights Engine

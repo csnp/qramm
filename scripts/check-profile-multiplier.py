@@ -24,17 +24,20 @@ to the decimal places the formula's ROUND gives, with halves rounded up.
 
 With no file arguments it checks the documents in DOCUMENTS; with file
 arguments it checks those files instead (paths relative to the repository
-root, or absolute). For each document:
+root, or absolute). A document is a text file, or a workbook (a path that
+ends in .xlsx) whose text cells, the cells of every sheet that hold a shared
+or inline string, are checked one cell at a time. For each document:
 
     1. Every multiplier range it gives runs from the lowest to the highest
        multiplier.
     2. The document gives a multiplier range.
 
 A multiplier range is two numbers with one decimal place or more, written as
-"A-B", "A - B", "A to B" or "between A and B", where each number may be
-followed by "x". It counts when it is on a line, outside code blocks, that
-contains "multiplier" in any case. The script uses the Python standard
-library only.
+"A-B", "A - B", "A to B", "between A and B" or with an en dash in place of
+the hyphen, where each number may be followed by "x". It counts when it is
+on a line, outside code blocks, that contains "multiplier" in any case; in a
+workbook, each line of a cell's text is a line. The script uses the Python
+standard library only.
 
 Exit status: 0 when the documents agree with the workbook, 1 when they do
 not or the workbook does not have the form described above, 2 on a usage
@@ -56,6 +59,9 @@ MATRIX = "RiskMatrix"
 DOCUMENTS = [
     "framework/scoring-methodology.md",
     "toolkit/toolkit-overview.md",
+    "toolkit-specs/MASTER_PLAN_Document_Checklist.md",
+    "toolkit/QRAMM_Assessment_Toolkit.xlsx",
+    "toolkit/Sample_Assessment.xlsx",
 ]
 
 MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
@@ -77,7 +83,7 @@ TERM = re.compile(
 
 RANGE = re.compile(
     r"(?<![\d.])(?:between (\d+\.\d+)x? and (\d+\.\d+)x?"
-    r"|(\d+\.\d+)x? ?(?:-|to) ?(\d+\.\d+)x?)(?!\.?\d)",
+    r"|(\d+\.\d+)x? ?(?:-|\N{EN DASH}|to) ?(\d+\.\d+)x?)(?!\.?\d)",
     re.IGNORECASE,
 )
 
@@ -247,6 +253,22 @@ def multiplier_range(path, problems):
     return where, answers, reference, groups, lowest, highest
 
 
+def workbook_texts(path):
+    """List of (Sheet!Cell, lines of its text) for every cell of a workbook
+    that holds a shared or inline string, in sheet order."""
+    texts = []
+    with zipfile.ZipFile(path) as book:
+        _, paths = sheet_paths(book)
+        strings = shared_strings(book)
+        for sheet, part in paths.items():
+            for cell in ET.fromstring(book.read(part)).iter(ns(MAIN_NS, "c")):
+                if cell.get("t") in ("s", "inlineStr"):
+                    text = cell_text(cell, strings) or ""
+                    place = "{}!{}".format(sheet, cell.get("r"))
+                    texts.append((place, text.splitlines()))
+    return texts
+
+
 def stated_ranges(lines):
     """List of (line number, low, high) outside fenced code blocks, as written."""
     found = []
@@ -265,18 +287,23 @@ def stated_ranges(lines):
     return found
 
 
-def check_document(path, lines, lowest, highest, problems):
-    stated = stated_ranges(lines)
-    for number, low, high in stated:
-        if (Decimal(low), Decimal(high)) != (lowest, highest):
-            problems.append(
-                "{} line {}: the multiplier range is {} to {} here, but {} "
-                "calculates {} to {}".format(
-                    path, number, low, high, WORKBOOK, lowest, highest
+def check_document(path, parts, lowest, highest, problems):
+    """parts is a list of (place, lines): place is "" for a text file and
+    Sheet!Cell for each text cell of a workbook."""
+    stated = 0
+    for place, lines in parts:
+        where = place + " " if place else ""
+        for number, low, high in stated_ranges(lines):
+            stated += 1
+            if (Decimal(low), Decimal(high)) != (lowest, highest):
+                problems.append(
+                    "{} {}line {}: the multiplier range is {} to {} here, but {} "
+                    "calculates {} to {}".format(
+                        path, where, number, low, high, WORKBOOK, lowest, highest
+                    )
                 )
-            )
-        else:
-            print("  PASS line {}: {} to {}".format(number, low, high))
+            else:
+                print("  PASS {}line {}: {} to {}".format(where, number, low, high))
     if not stated:
         problems.append("{}: gives no multiplier range".format(path))
 
@@ -312,12 +339,18 @@ def main(argv):
         for path in documents:
             print("== {} against {}".format(path, WORKBOOK))
             try:
-                with open(os.path.join(root, path), encoding="utf-8") as fh:
-                    lines = fh.read().splitlines()
+                if path.lower().endswith(".xlsx"):
+                    parts = workbook_texts(os.path.join(root, path))
+                else:
+                    with open(os.path.join(root, path), encoding="utf-8") as fh:
+                        parts = [("", fh.read().splitlines())]
             except OSError as error:
                 problems.append("{}: cannot read ({})".format(path, error.strerror))
                 continue
-            check_document(path, lines, lowest, highest, problems)
+            except zipfile.BadZipFile:
+                problems.append("{}: cannot read (not a zip file)".format(path))
+                continue
+            check_document(path, parts, lowest, highest, problems)
 
     for problem in problems:
         print("  FAIL {}".format(problem))
