@@ -86,34 +86,34 @@
 #      Data\u2192!BG3:BH108, then RESULT: PASS.
 #  Cases 15 and 16 are skipped, with a line that says so, when python3 -I
 #  does not write stdout as ISO-8859-1 under that locale on this machine.
-#  15. A zip archive whose xl/workbook.xml entry has bit 0 of its general
+#  17. A zip archive whose xl/workbook.xml entry has bit 0 of its general
 #      purpose flags set, which marks it as encrypted. zipfile raises
 #      RuntimeError("File 'xl/workbook.xml' is encrypted, password required
 #      for extraction").
-#  16. A zip archive whose xl/workbook.xml entry gives compression method
+#  18. A zip archive whose xl/workbook.xml entry gives compression method
 #      98 (PPMd), which zipfile does not support. zipfile raises
 #      NotImplementedError("That compression method is not supported").
-#  17. A zip archive whose xl/workbook.xml entry gives compression method
+#  19. A zip archive whose xl/workbook.xml entry gives compression method
 #      93 (Zstandard) and holds XML text, which is not Zstandard data. In
 #      Python 3.14.3, compression.zstd raises ZstdError("Unable to decompress
 #      Zstandard data: Unknown frame descriptor"). Python 3.13.12 and 3.9.6
 #      have no compression.zstd module, and zipfile raises
-#      NotImplementedError as in case 16.
-#  18. A zip archive whose xl/workbook.xml entry gives compression method
+#      NotImplementedError as in case 18.
+#  20. A zip archive whose xl/workbook.xml entry gives compression method
 #      14 (LZMA) and whose data starts with 11 bytes that do not decompress:
 #      the 4-byte header zipfile reads before LZMA data, which gives 5 bytes
 #      of LZMA properties, those properties, then 0xff 0xff. lzma raises
 #      LZMAError("Corrupt input data").
-#  Cases 15 to 18 pass the archive and then the sample workbook: exit 1,
+#  Cases 17 to 20 pass the archive and then the sample workbook: exit 1,
 #  nothing on stderr, one FAIL line, which says the map cannot be read (not
 #  a workbook), the map PASS line for the sample workbook, then
 #  RESULT: FAIL.
-#  19 to 22. A copy of the sample workbook whose Compliance sheet part is
-#      damaged as the xl/workbook.xml entry is in cases 15 to 18, in that
+#  21 to 24. A copy of the sample workbook whose Compliance sheet part is
+#      damaged as the xl/workbook.xml entry is in cases 17 to 20, in that
 #      order: exit 1, nothing on stderr, the map PASS line, then one FAIL
 #      line, which says the category name lookup cannot be read (not a
 #      workbook), then RESULT: FAIL.
-#  23. A zip archive whose xl/workbook.xml entry gives, in both of its
+#  25. A zip archive whose xl/workbook.xml entry gives, in both of its
 #      headers, a compressed and an uncompressed size equal to the length of
 #      the archive, which run past its end, then the sample workbook: exit
 #      1, nothing on stderr, one FAIL line, which says the map cannot be
@@ -123,43 +123,48 @@
 #      workbook. Python 3.13.12 and 3.14.3 raise
 #      zipfile.BadZipFile("Overlapped entries: 'xl/workbook.xml' (possible
 #      zip bomb)") instead, and the FAIL line gives that reason.
-#  24. The archive of case 23 with a second central directory header, for
+#  26. The archive of case 25 with a second central directory header, for
 #      an entry named xl/workbook.xmz, that gives the same local header
-#      offset, then the sample workbook: as cases 15 to 18, except that
+#      offset, then the sample workbook: as cases 17 to 20, except that
 #      stderr can hold a warning. Python 3.13.12 and 3.14.3 print the
 #      warning "UserWarning: Overlapped entries: 'xl/workbook.xml' (possible
 #      zip bomb)" and read on, and zipfile raises EOFError, as with Python
 #      3.9.6.
-#  25. A copy of the sample workbook whose Compliance sheet part is damaged
-#      as the xl/workbook.xml entry is in case 24, with the second central
-#      directory header for xl/worksheets/sheet8.xmz: as cases 19 to 22,
-#      except that stderr can hold the warning of case 24 for that part.
-#  26. A copy of the sample workbook whose row element for row 3 of the Data
+#  27. A copy of the sample workbook whose Compliance sheet part is damaged
+#      as the xl/workbook.xml entry is in case 26, with the second central
+#      directory header for xl/worksheets/sheet8.xmz: as cases 21 to 24,
+#      except that stderr can hold the warning of case 26 for that part.
+#  28. A copy of the sample workbook whose row element for row 3 of the Data
 #      sheet, xl/worksheets/sheet10.xml, the first row of the ComplianceMap
 #      range, has no r attribute.
-#  27. A copy of the sample workbook whose c element for cell A3 of the Data
+#  29. A copy of the sample workbook whose c element for cell A3 of the Data
 #      sheet, the first c element of row 3, has no r attribute.
-#  28. The same copy with r="1A", which is not a cell reference, on that c
+#  30. The same copy with r="1A", which is not a cell reference, on that c
 #      element.
-#  29. A copy of the sample workbook whose Relationship element with Id rId1
+#  31. A copy of the sample workbook whose Relationship element with Id rId1
 #      in xl/_rels/workbook.xml.rels, the one the Welcome sheet names, has no
 #      Target attribute.
-#  30. A copy of the sample workbook whose cell AV3 of the Data sheet, the
+#  32. A copy of the sample workbook whose cell AV3 of the Data sheet, the
 #      first cell of the ComplianceMap range and a shared string cell, stores
 #      the shared string index 999999, past the end of the shared strings.
-#  31. Under the en_US.UTF-8 locale, the copy of case 28 with the r
+#  33. Under the en_US.UTF-8 locale, the copy of case 30 with the r
 #      attribute A followed by U+0663 (ARABIC-INDIC DIGIT THREE) in place of
 #      1A. U+0663 is a Unicode decimal digit but not one of the digits 0 to
 #      9. The FAIL line quotes this r attribute as UTF-8.
-#  Cases 26 to 31 pass the copy and then the sample workbook: exit 1,
+#  Cases 28 to 33 pass the copy and then the sample workbook: exit 1,
 #  nothing on stderr, one FAIL line, which says the map cannot be read and
 #  names what the copy has, the map PASS line for the sample workbook, then
 #  RESULT: FAIL.
 #
+# Each case prints a title that starts with "case N:", where N is its
+# number. A FAIL line follows each title that gives the number of an
+# earlier one.
+#
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
 #
-# Exit status: 0 when every case passes, 1 when any case fails.
+# Exit status: 0 when every case passes, 1 when any case fails or two titles
+# give the same number.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -291,11 +296,30 @@ show_output() {
   printf '%s\n' "$err" | sed 's/^/  /'
 }
 
+# The numbers of the cases whose titles have been printed, each followed by
+# a space.
+case_numbers=" "
+
+# Prints the case title $1, which starts with "case N:". When an earlier
+# title gave the same N, prints a FAIL line after it and fails the run.
+print_title() {
+  local number="${1#case }"
+  number="${number%%:*}"
+  echo "$1"
+  case "$case_numbers" in
+    *" $number "*)
+      echo "  FAIL case $number is also the number of an earlier case"
+      failed=1
+      ;;
+  esac
+  case_numbers="$case_numbers$number "
+}
+
 # Runs one case: $1 is its title, $2 the checker, the rest are checker
 # arguments. Leaves the result in out, err and status for the expect lines
 # that follow.
 start_case() {
-  echo "$1"
+  print_title "$1"
   shift
   case_failed="$failed"
   failed=0
@@ -462,7 +486,7 @@ if [ "$probe" = "utf-8 iso8859-1" ]; then
   expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
   end_case
 else
-  echo "$title"
+  print_title "$title"
   echo "  skip python3 does not decode file names as UTF-8 and write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($probe)"
 fi
 
@@ -652,7 +676,7 @@ if [ "$stdout_encoding" = "iso8859-1" ]; then
   expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
   end_case
 else
-  echo "$title"
+  print_title "$title"
   echo "  skip python3 does not write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($stdout_encoding)"
 fi
 
@@ -670,7 +694,7 @@ if [ "$stdout_encoding" = "iso8859-1" ]; then
   expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
   end_case
 else
-  echo "$title"
+  print_title "$title"
   echo "  skip python3 does not write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($stdout_encoding)"
 fi
 
@@ -775,7 +799,7 @@ PY
 # True when stderr is empty or each of its lines holds "UserWarning:
 # Overlapped entries: '$1' (possible zip bomb)" or starts with two spaces,
 # as do the two lines of the warning Python 3.13.12 and 3.14.3 print for the
-# entry $1 of the archives of cases 24 and 25: the second quotes the
+# entry $1 of the archives of cases 26 and 27: the second quotes the
 # checker's line that read the entry. The first line of a traceback does
 # neither.
 only_overlap_warning() {
@@ -797,7 +821,7 @@ expect_no_traceback() {
   fi
 }
 
-# Expectations for cases 15 to 18 and 24: $1 is the archive's file name.
+# Expectations for cases 17 to 20 and 26: $1 is the archive's file name.
 # With $2, stderr can hold the warning only_overlap_warning allows for the
 # entry $2.
 expect_map_not_a_workbook() {
@@ -811,7 +835,7 @@ expect_map_not_a_workbook() {
   expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 }
 
-# Expectations for cases 19 to 22 and 25: $1 is the copy's file name. With
+# Expectations for cases 21 to 24 and 27: $1 is the copy's file name. With
 # $2, stderr can hold the warning only_overlap_warning allows for the entry
 # $2.
 expect_lookup_not_a_workbook() {
@@ -825,54 +849,54 @@ expect_lookup_not_a_workbook() {
 }
 
 make_damaged_entry "$work/encrypted.xlsx" xl/workbook.xml encrypted
-start_case "case 15: an entry marked as encrypted" \
+start_case "case 17: an entry marked as encrypted" \
   "$checker" "$work/encrypted.xlsx" "$sample"
 expect_map_not_a_workbook "$work/encrypted.xlsx"
 end_case
 
 make_damaged_entry "$work/ppmd.xlsx" xl/workbook.xml ppmd
-start_case "case 16: compression method 98 (PPMd)" \
+start_case "case 18: compression method 98 (PPMd)" \
   "$checker" "$work/ppmd.xlsx" "$sample"
 expect_map_not_a_workbook "$work/ppmd.xlsx"
 end_case
 
 make_damaged_entry "$work/zstd.xlsx" xl/workbook.xml zstd
-start_case "case 17: Zstandard data that does not decompress" \
+start_case "case 19: Zstandard data that does not decompress" \
   "$checker" "$work/zstd.xlsx" "$sample"
 expect_map_not_a_workbook "$work/zstd.xlsx"
 end_case
 
 make_damaged_entry "$work/lzma.xlsx" xl/workbook.xml lzma
-start_case "case 18: LZMA data that does not decompress" \
+start_case "case 20: LZMA data that does not decompress" \
   "$checker" "$work/lzma.xlsx" "$sample"
 expect_map_not_a_workbook "$work/lzma.xlsx"
 end_case
 
 make_damaged_entry "$work/lookup-encrypted.xlsx" xl/worksheets/sheet8.xml encrypted "$root/$sample"
-start_case "case 19: a Compliance sheet part marked as encrypted" \
+start_case "case 21: a Compliance sheet part marked as encrypted" \
   "$checker" "$work/lookup-encrypted.xlsx"
 expect_lookup_not_a_workbook "$work/lookup-encrypted.xlsx"
 end_case
 
 make_damaged_entry "$work/lookup-ppmd.xlsx" xl/worksheets/sheet8.xml ppmd "$root/$sample"
-start_case "case 20: a Compliance sheet part with compression method 98 (PPMd)" \
+start_case "case 22: a Compliance sheet part with compression method 98 (PPMd)" \
   "$checker" "$work/lookup-ppmd.xlsx"
 expect_lookup_not_a_workbook "$work/lookup-ppmd.xlsx"
 end_case
 
 make_damaged_entry "$work/lookup-zstd.xlsx" xl/worksheets/sheet8.xml zstd "$root/$sample"
-start_case "case 21: Zstandard data in the Compliance sheet that does not decompress" \
+start_case "case 23: Zstandard data in the Compliance sheet that does not decompress" \
   "$checker" "$work/lookup-zstd.xlsx"
 expect_lookup_not_a_workbook "$work/lookup-zstd.xlsx"
 end_case
 
 make_damaged_entry "$work/lookup-lzma.xlsx" xl/worksheets/sheet8.xml lzma "$root/$sample"
-start_case "case 22: LZMA data in the Compliance sheet that does not decompress" \
+start_case "case 24: LZMA data in the Compliance sheet that does not decompress" \
   "$checker" "$work/lookup-lzma.xlsx"
 expect_lookup_not_a_workbook "$work/lookup-lzma.xlsx"
 end_case
 
-# The FAIL line for the archive $1 of case 23: the one Python 3.9.6 gives, or
+# The FAIL line for the archive $1 of case 25: the one Python 3.9.6 gives, or
 # the one Python 3.13.12 and 3.14.3 give.
 past_end_fail() {
   has_line "  FAIL $1: cannot read the compliance map (not a workbook)" ||
@@ -880,7 +904,7 @@ past_end_fail() {
 }
 
 make_damaged_entry "$work/past-end.xlsx" xl/workbook.xml past-end
-start_case "case 23: entry sizes that run past the end of the file" \
+start_case "case 25: entry sizes that run past the end of the file" \
   "$checker" "$work/past-end.xlsx" "$sample"
 expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect_no_traceback
@@ -892,13 +916,13 @@ expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "R
 end_case
 
 make_damaged_entry "$work/same-offset.xlsx" xl/workbook.xml same-offset
-start_case "case 24: entry sizes past the end and a second header at the same offset" \
+start_case "case 26: entry sizes past the end and a second header at the same offset" \
   "$checker" "$work/same-offset.xlsx" "$sample"
 expect_map_not_a_workbook "$work/same-offset.xlsx" xl/workbook.xml
 end_case
 
 make_damaged_entry "$work/lookup-same-offset.xlsx" xl/worksheets/sheet8.xml same-offset "$root/$sample"
-start_case "case 25: Compliance sheet part sizes past the end and a second header at the same offset" \
+start_case "case 27: Compliance sheet part sizes past the end and a second header at the same offset" \
   "$checker" "$work/lookup-same-offset.xlsx"
 expect_lookup_not_a_workbook "$work/lookup-same-offset.xlsx" xl/worksheets/sheet8.xml
 end_case
@@ -923,7 +947,7 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 26 to 31, which pass a copy and then the sample
+# Expectations for cases 28 to 33, which pass a copy and then the sample
 # workbook: $1 is the copy's file name, $2 what the FAIL line says the copy
 # has and $3 the reason the map cannot be read.
 expect_map_unreadable() {
@@ -940,7 +964,7 @@ expect_map_unreadable() {
 # The Data sheet is xl/worksheets/sheet10.xml in the sample workbook, and
 # the ComplianceMap range, Data!$AV$3:$BA$962, starts at its row 3.
 edit_part "$root/$sample" "$work/norow.xlsx" xl/worksheets/sheet10.xml '<row r="3" ' '<row '
-start_case "case 26: a row element with no r attribute" \
+start_case "case 28: a row element with no r attribute" \
   "$checker" "$work/norow.xlsx" "$sample"
 expect_map_unreadable "$work/norow.xlsx" "a row element has no r attribute" \
   "xl/worksheets/sheet10.xml has a row element with no r attribute"
@@ -948,7 +972,7 @@ end_case
 
 edit_part "$root/$sample" "$work/nocellref.xlsx" xl/worksheets/sheet10.xml \
   '<c r="A3" s="2" t="s">' '<c s="2" t="s">'
-start_case "case 27: a c element with no r attribute" \
+start_case "case 29: a c element with no r attribute" \
   "$checker" "$work/nocellref.xlsx" "$sample"
 expect_map_unreadable "$work/nocellref.xlsx" "a c element has no r attribute" \
   "xl/worksheets/sheet10.xml has a c element with no r attribute in row 3"
@@ -956,7 +980,7 @@ end_case
 
 edit_part "$root/$sample" "$work/badcellref.xlsx" xl/worksheets/sheet10.xml \
   '<c r="A3" s="2" t="s">' '<c r="1A" s="2" t="s">'
-start_case "case 28: a c element whose r attribute is not a cell reference" \
+start_case "case 30: a c element whose r attribute is not a cell reference" \
   "$checker" "$work/badcellref.xlsx" "$sample"
 expect_map_unreadable "$work/badcellref.xlsx" "a c element's r attribute is not a cell reference" \
   "xl/worksheets/sheet10.xml has a c element in row 3 whose r attribute 1A is not a cell reference"
@@ -964,7 +988,7 @@ end_case
 
 edit_part "$root/$sample" "$work/notarget.xlsx" xl/_rels/workbook.xml.rels \
   ' Target="worksheets/sheet1.xml"' ''
-start_case "case 29: a sheet's Relationship element with no Target attribute" \
+start_case "case 31: a sheet's Relationship element with no Target attribute" \
   "$checker" "$work/notarget.xlsx" "$sample"
 expect_map_unreadable "$work/notarget.xlsx" "a Relationship element has no Target attribute" \
   "xl/_rels/workbook.xml.rels has a Relationship element with Id rId1 and no Target attribute"
@@ -981,7 +1005,7 @@ print(len(root.findall("{http://schemas.openxmlformats.org/spreadsheetml/2006/ma
 ' "$root/$sample")"
 edit_part "$root/$sample" "$work/nostring.xlsx" xl/worksheets/sheet10.xml \
   '<c r="AV3" s="2" t="s"><v>714</v>' '<c r="AV3" s="2" t="s"><v>999999</v>'
-start_case "case 30: a shared string index past the end of the shared strings" \
+start_case "case 32: a shared string index past the end of the shared strings" \
   "$checker" "$work/nostring.xlsx" "$sample"
 expect_map_unreadable "$work/nostring.xlsx" "a shared string index is past the end" \
   "xl/worksheets/sheet10.xml cell AV3 gives shared string index 999999, and the workbook has $strings_count shared strings"
@@ -992,7 +1016,7 @@ end_case
 # \331\243 is U+0663.
 edit_part "$work/badcellref.xlsx" "$work/arabicdigit.xlsx" xl/worksheets/sheet10.xml \
   '<c r="1A" ' '<c r="A&#x663;" '
-LC_ALL=en_US.UTF-8 start_case "case 31: a c element whose r attribute holds an Arabic-Indic digit" \
+LC_ALL=en_US.UTF-8 start_case "case 33: a c element whose r attribute holds an Arabic-Indic digit" \
   "$checker" "$work/arabicdigit.xlsx" "$sample"
 expect_map_unreadable "$work/arabicdigit.xlsx" "a c element's r attribute holds a digit that is not 0 to 9" \
   "xl/worksheets/sheet10.xml has a c element in row 3 whose r attribute A$(printf '\331\243') is not a cell reference"
