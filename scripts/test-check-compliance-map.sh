@@ -23,7 +23,8 @@
 #   4. A workbook argument that does not exist: exit 1, a FAIL line that
 #      says the map cannot be read.
 #   5. An option such as --help: exit 2, usage on stderr, then the checker's
-#      header text.
+#      header text, whose example of a CIS v8 safeguard a number cannot
+#      keep apart from another is 3.10 and 3.1.
 #   6. Workbooks whose Compliance sheet looks category names up in
 #      Data!$BG$3:$BH$106, which ends before the FISMA and FedRAMP SR rows:
 #      exit 1, a FAIL line for Q14 FISMA and Q14 FedRAMP in each workbook.
@@ -241,6 +242,8 @@ expect "exit status is 2" '[ "$status" -eq 2 ]'
 expect "usage on stderr" 'printf "%s\n" "$err" | grep -q "^usage:"'
 expect "header text on stderr" \
   'printf "%s\n" "$err" | grep -qx "Checks that the toolkit workbooks carry the compliance mapping in the spec."'
+expect "header text gives CIS v8 safeguards 3.10 and 3.1 as its example" \
+  'printf "%s\n" "$err" | grep -qx "       safeguard such as 3.10 apart from 3.1."'
 end_case
 
 make_copy "$work/narrow" ''
