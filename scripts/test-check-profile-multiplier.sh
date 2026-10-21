@@ -108,6 +108,12 @@
 #      and RESULT: FAIL as the last line. zipfile.is_zipfile() returns False
 #      for this archive in Python 3.13.12 and 3.14.3, and raises BadZipFile
 #      for it in Python 3.9.6.
+#  35. Under the en_US.UTF-8 locale, a file name argument that holds the
+#      byte 0xff, which is not valid UTF-8, and names no file, then a
+#      document that gives the workbook's range: exit 1, no traceback, the
+#      name printed with the byte as \xff on its == line and in a FAIL line
+#      that says it cannot be read, a PASS line for the second document,
+#      then RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -672,6 +678,24 @@ expect "FAIL line says it is not a zip file" \
   "has_fail 'twodisk.xlsx: cannot read (not a zip file)'"
 expect "the document after it is checked" \
   '[ "$(pass_count)" -eq 1 ] && has_line "  PASS line 1: 1.00 to 1.50"'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# \377 is the byte 0xff, which is not valid UTF-8, so Python holds it as a
+# lone surrogate. Under en_US.UTF-8 printing that raises UnicodeEncodeError;
+# the C, C.UTF-8 and UTF-8 locales write the byte as it is. The checker is
+# expected to print \xff in either case. No file is made with this name.
+LC_ALL=en_US.UTF-8 start_case "case 35: a file name argument that is not UTF-8" \
+  "$checker" "$work/bad$(printf '\377').md" "$work/new.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "the name is printed with the byte as \\xff" \
+  "has_line '== $work/bad\\xff.md against $toolkit'"
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the file cannot be read and gives the byte as \\xff" \
+  "has_fail '$work/bad\\xff.md: cannot read ('"
+expect "the next document is checked" \
+  "has_line '== $work/new.md against $toolkit' && has_line '  PASS line 1: 1.00 to 1.50'"
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
