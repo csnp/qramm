@@ -90,6 +90,23 @@
 #      with U+00D7 as the ISO-8859-1 byte 0xd7, then RESULT: FAIL. The case
 #      is skipped, with a line that says so, when python3 -I does not write
 #      stdout as ISO-8859-1 under that locale on this machine.
+#  18. A zip archive whose xl/workbook.xml entry gives, in both of its
+#      headers, a compressed and an uncompressed size equal to the length of
+#      the archive, which run past its end, then the sample workbook: exit
+#      1, nothing on stderr, one FAIL line, a PASS line for the sample
+#      workbook, and RESULT: FAIL as the last line. With Python 3.9.6,
+#      zipfile reads the entry to the end of the file and raises EOFError,
+#      and the FAIL line says the archive cannot be read (not a workbook).
+#      Python 3.13.12 and 3.14.3 raise zipfile.BadZipFile("Overlapped
+#      entries: 'xl/workbook.xml' (possible zip bomb)") instead, and the
+#      FAIL line says the archive is not a workbook and gives that reason.
+#  19. The archive of case 18 with a second central directory header, for
+#      an entry named xl/workbook.xmz, that gives the same local header
+#      offset, then the sample workbook: as cases 11 to 17, except that
+#      stderr can hold a warning. Python 3.13.12 and 3.14.3 print the
+#      warning "UserWarning: Overlapped entries: 'xl/workbook.xml' (possible
+#      zip bomb)" and read on, and zipfile raises EOFError, as with Python
+#      3.9.6.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -374,7 +391,11 @@ fi
 # bytes <workbook/>, which are not Zstandard data; for lzma, they are
 # replaced by the 4-byte header zipfile reads before LZMA data, which gives
 # 5 bytes of LZMA properties, the properties 0x5d (lc=3, lp=0, pb=2) and a
-# 64 KiB dictionary size, then 0xff 0xff.
+# 64 KiB dictionary size, then 0xff 0xff. past-end: both headers of the
+# entry give a compressed and an uncompressed size equal to the length of
+# the archive, which run past its end, as the entry's data starts after its
+# local file header. same-offset: as past-end, with a copy of the central
+# directory header, for an entry named xl/workbook.xmz, after it.
 make_damaged_zip() {
   python3 -I - "$@" <<'PY'
 import struct
@@ -422,6 +443,25 @@ elif damage in ("ppmd", "zstd", "lzma"):
         # the file name.
         start = 30 + len("xl/workbook.xml")
         data[start:start + 11] = bytes([9, 20, 5, 0, 0x5D, 0, 0, 1, 0, 255, 255])
+elif damage in ("past-end", "same-offset"):
+    headers = [directory]
+    if damage == "same-offset":
+        # A central directory header gives the file name from offset 46. The
+        # end of central directory record gives the number of entries on
+        # this disk and in all at offsets 8 and 10, and the size of the
+        # central directory at offset 12.
+        record = data[directory:len(data) - 22]
+        record[45 + len("xl/workbook.xml")] = ord("z")
+        end = data[len(data) - 22:]
+        struct.pack_into("<HHI", end, 8, 2, 2, 2 * len(record))
+        headers.append(len(data) - 22)
+        data = data[:len(data) - 22] + record + end
+    # The local file header gives the compressed and uncompressed sizes at
+    # offsets 18 and 22; a central directory header gives them at offsets 20
+    # and 24.
+    struct.pack_into("<II", data, 18, len(data), len(data))
+    for header in headers:
+        struct.pack_into("<II", data, header + 20, len(data), len(data))
 else:
     sys.exit("make_damaged_zip: unknown damage " + damage)
 with open(path, "wb") as fh:
@@ -429,10 +469,30 @@ with open(path, "wb") as fh:
 PY
 }
 
-# Expectations for cases 11 to 17: $1 is the archive's file name.
+# True when stderr is empty or each of its lines holds "UserWarning:
+# Overlapped entries: '$1' (possible zip bomb)" or starts with two spaces,
+# as do the two lines of the warning Python 3.13.12 and 3.14.3 print for the
+# entry $1 of the archive of case 19: the second quotes the checker's line
+# that read the entry. The first line of a traceback does neither.
+only_overlap_warning() {
+  local rest
+  rest="$(printf '%s\n' "$err" \
+    | grep -v -F -- "UserWarning: Overlapped entries: '$1' (possible zip bomb)" \
+    | grep -v '^  ' || true)"
+  [ -z "$rest" ]
+}
+
+# Expectations for cases 11 to 17 and 19: $1 is the archive's file name.
+# With $2, stderr can hold the warning only_overlap_warning allows for the
+# entry $2.
 expect_not_a_workbook() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
-  expect "no traceback on stderr" '[ -z "$err" ]'
+  if [ "$#" -gt 1 ]; then
+    expect "no traceback on stderr, at most a warning for $2" \
+      "only_overlap_warning '$2'"
+  else
+    expect "no traceback on stderr" '[ -z "$err" ]'
+  fi
   expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
   expect "FAIL line says it is not a workbook" \
     "has_fail '$1: cannot read (not a workbook)'"
@@ -543,6 +603,31 @@ else
   echo "$title"
   echo "  skip python3 does not write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($stdout_encoding)"
 fi
+
+# The FAIL line for the archive $1 of case 18: the one Python 3.9.6 gives, or
+# the one Python 3.13.12 and 3.14.3 give.
+past_end_fail() {
+  has_fail "$1: cannot read (not a workbook)" ||
+    has_fail "$1: not a workbook (Overlapped entries: 'xl/workbook.xml' (possible zip bomb))"
+}
+
+make_damaged_zip "$work/past-end.xlsx" past-end
+start_case "case 18: entry sizes that run past the end of the file" \
+  "$checker" "$work/past-end.xlsx" toolkit/Sample_Assessment.xlsx
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not a workbook" "past_end_fail '$work/past-end.xlsx'"
+expect "the sample workbook is checked" \
+  'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+make_damaged_zip "$work/same-offset.xlsx" same-offset
+start_case "case 19: entry sizes past the end and a second header at the same offset" \
+  "$checker" "$work/same-offset.xlsx" toolkit/Sample_Assessment.xlsx
+expect_not_a_workbook "$work/same-offset.xlsx" xl/workbook.xml
+end_case
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
