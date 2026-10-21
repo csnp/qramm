@@ -16,8 +16,8 @@
 #   2. A spec that differs from the workbooks in five cells: a different
 #      control (Q1 CMMC), "-" where the workbooks carry a control (Q2 CMMC),
 #      a control where the workbooks carry "-" (Q19 CMMC), a different weight
-#      (Q3 CMMC) and a different CIS safeguard stored as a number (Q1 CIS):
-#      exit 1, the 7 FAIL lines those cells give for each workbook.
+#      (Q3 CMMC) and a different CIS safeguard (Q1 CIS): exit 1, the 7 FAIL
+#      lines those cells give for each workbook.
 #   3. A spec with no row for Q120: exit 1, FAIL lines for the missing spec
 #      cells and for the workbook rows the spec does not give.
 #   4. A workbook argument that does not exist: exit 1, a FAIL line that
@@ -31,6 +31,10 @@
 #      exit 1, a FAIL line that says the lookup cannot be read.
 #   8. An empty workbook argument: exit 1, "FAIL '': no file name given",
 #      no "cannot read" line.
+#   9. Workbooks whose Q55 CIS v8 Control_ID (Data!AY442) is the number
+#      1.1000000000000001 and whose Q59 CIS v8 Control_ID (Data!AY474) is
+#      the text of Q1's (Data!AY10), where the spec gives 1.10 for both:
+#      exit 1, a FAIL line for each of the two cells in each workbook.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -86,6 +90,44 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
             data = text.replace(old, new).encode("utf-8")
         copy.writestr(info, data)
 sys.exit(0 if found else 1)
+PY
+}
+
+# Writes to $2 a copy of the workbook $1 whose Data sheet cell $3 holds the
+# number $4 and whose Data sheet cell $5 holds the stored value of its cell
+# $6. Fails when the Data sheet lacks one of the cells.
+edit_data_cells() {
+  python3 -I - "$@" <<'PY'
+import re
+import sys
+import zipfile
+
+source, target, number_ref, number, copy_ref, from_ref = sys.argv[1:7]
+data = "xl/worksheets/sheet10.xml"
+
+
+def cell(text, ref):
+    match = re.search(r'<c r="%s"( s="\d+")?[^>]*>.*?</c>' % ref, text)
+    if match is None:
+        sys.exit("no cell %s" % ref)
+    return match
+
+
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        part = book.read(info.filename)
+        if info.filename == data:
+            text = part.decode("utf-8")
+            old = cell(text, number_ref)
+            text = text.replace(
+                old.group(0),
+                '<c r="%s"%s><v>%s</v></c>' % (number_ref, old.group(1) or "", number),
+            )
+            old = cell(text, copy_ref)
+            text = text.replace(old.group(0), cell(text, from_ref).group(0).replace(
+                'r="%s"' % from_ref, 'r="%s"' % copy_ref, 1))
+            part = text.encode("utf-8")
+        copy.writestr(info, part)
 PY
 }
 
@@ -235,6 +277,23 @@ expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "FAIL says no file name was given" \
   'printf "%s\n" "$out" | grep -qxF "  FAIL '"''"': no file name given"'
 expect "no cannot read line" '! printf "%s\n" "$out" | grep -q "cannot read"'
+end_case
+
+make_copy "$work/numeric" ''
+for book in "$toolkit" "$sample"; do
+  edit_data_cells "$root/$book" "$work/numeric/$book" \
+    AY442 1.1000000000000001 AY474 AY10
+done
+start_case "case 9: Q55 CIS v8 stored as the number 1.1, Q59 as the text 1.1" \
+  "$work/numeric/scripts/check-compliance-map.py"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "4 FAIL lines (2 for each workbook)" '[ "$(fail_count)" -eq 4 ]'
+for book in "$toolkit" "$sample"; do
+  expect "$book: Q55 CIS control stored as a number" \
+    "has_fail '$book Q55 CIS v8: Data!AY442 is the number 1.1, the spec gives 1.10 (line 114)'"
+  expect "$book: Q59 CIS control stored as 1.1" \
+    "has_fail '$book Q59 CIS v8: Data!AY474 is 1.1, the spec gives 1.10 (line 118)'"
+done
 end_case
 
 if [ "$failed" -eq 0 ]; then

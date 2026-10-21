@@ -14,9 +14,9 @@ relative to the repository root, or absolute). For each workbook:
 
     1. Every question and framework in the spec has exactly one row in the
        map, and the map has no other rows.
-    2. The row's Control_ID is the spec's control. A Control_ID stored as a
-       number (CIS v8 safeguards such as 3.11) is compared as a number, so
-       the spec's "1.10" matches a stored 1.1.
+    2. The row's Control_ID is text equal to the spec's control. A
+       Control_ID stored as a number fails, as a number cannot keep a CIS v8
+       safeguard such as 1.10 apart from 1.1.
     3. The row's Weight is the spec's weight. A "-" in the spec matches a
        row whose Control_ID is "-" and whose Weight is empty.
     4. The row's Category, when it is not "-", has a name in each range the
@@ -314,13 +314,10 @@ def show(value):
     return value
 
 
-def same_control(stored, expected):
-    if isinstance(stored, float):
-        try:
-            return abs(stored - float(expected)) <= TOLERANCE
-        except ValueError:
-            return False
-    return stored == expected
+def show_control(value):
+    if isinstance(value, float):
+        return "the number {}".format(show(value))
+    return show(value)
 
 
 def check_workbook(label, path, spec, problems):
@@ -351,11 +348,11 @@ def check_workbook(label, path, spec, problems):
         stored_control = values.get(CONTROL_COLUMN)
         stored_weight = values.get(WEIGHT_COLUMN)
         expected_control = "-" if control is None else control
-        if not same_control(stored_control, expected_control):
+        if stored_control != expected_control:
             problems.append(
                 "{}: {}!{}{} is {}, the spec gives {} (line {})".format(
                     where, sheet, control_letters, number,
-                    show(stored_control), expected_control, line,
+                    show_control(stored_control), expected_control, line,
                 )
             )
         if weight is None:
