@@ -40,6 +40,17 @@
 #      exit 1, nothing on stderr, one FAIL line, which says the document is
 #      not UTF-8 text, a PASS line for the overview's Overall Score formula,
 #      then RESULT: FAIL.
+#  11. Under the en_US.ISO8859-1 locale, a document whose Overall Score
+#      formula holds the character U+2192, which ISO-8859-1 cannot encode,
+#      and whose Dimension Score formula holds U+00D7, which it can, then
+#      framework/qramm-overview.md: exit 1, nothing on stderr, three FAIL
+#      lines, two that say the Overall Score and Dimension Score formulas
+#      differ and one for the missing Practice Score formula, the Overall
+#      Score formula printed with U+2192 as →, the Dimension Score
+#      formula printed with U+00D7 as the ISO-8859-1 byte 0xd7, a PASS line
+#      for the overview's Overall Score formula, then RESULT: FAIL. The case
+#      is skipped, with a line that says so, when python3 -I does not write
+#      stdout as ISO-8859-1 under that locale on this machine.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -253,6 +264,43 @@ expect "PASS line for the overview's Overall Score" \
   'printf "%s\n" "$out" | grep -q "^  PASS Overall Score (line "'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
+
+# \342\206\222 is U+2192 and \303\227 is U+00D7, each encoded as UTF-8.
+# Under en_US.ISO8859-1 on macOS, python3 writes stdout as ISO-8859-1, which
+# has the byte 0xd7 (\327) for U+00D7 and no byte for U+2192, so printing
+# the Overall Score formula as it is raises UnicodeEncodeError. The checker
+# is expected to print → in place of U+2192 and the byte 0xd7 for
+# U+00D7. The line with that byte is matched under LC_ALL=C, where grep
+# compares bytes, not characters.
+title="case 11: a FAIL line that quotes a character stdout's encoding cannot hold"
+stdout_encoding="$(LC_ALL=en_US.ISO8859-1 python3 -I -c 'import codecs, sys; print(codecs.lookup(sys.stdout.encoding).name)' 2>&1 || true)"
+if [ "$stdout_encoding" = "iso8859-1" ]; then
+  printf '%s\n' \
+    "**Overall Score = (Dimension 1 + Dimension 2) $(printf '\342\206\222') 2**" \
+    "**Dimension Score = (Practice 1 Score $(printf '\303\227') 2)**" \
+    > "$work/arrow.md"
+  LC_ALL=en_US.ISO8859-1 start_case "$title" "$work/arrow.md" "$overview"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "three FAIL lines" '[ "$(fail_count)" -eq 3 ]'
+  expect "FAIL line says the Overall Score differs" \
+    "has_fail '$work/arrow.md line 1: Overall Score differs from $methodology line '"
+  expect "the Overall Score formula is printed with U+2192 as \\u2192" \
+    "has_line '         document:    Overall Score = (Dimension 1 + Dimension 2) \\u2192 2'"
+  expect "FAIL line says the Dimension Score differs" \
+    "has_fail '$work/arrow.md line 2: Dimension Score differs from $methodology line '"
+  expect "the Dimension Score formula is printed with U+00D7 as the byte 0xd7" \
+    "LC_ALL=C has_line '         document:    Dimension Score = (Practice 1 Score $(printf '\327') 2)'"
+  expect "FAIL line for Practice Score" "has_fail '$work/arrow.md: no formula for Practice Score'"
+  expect "the overview is checked" "has_line '== $overview against $methodology'"
+  expect "PASS line for the overview's Overall Score" \
+    'printf "%s\n" "$out" | grep -q "^  PASS Overall Score (line "'
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+  end_case
+else
+  echo "$title"
+  echo "  skip python3 does not write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($stdout_encoding)"
+fi
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
