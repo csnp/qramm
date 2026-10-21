@@ -22,7 +22,13 @@
 #              framework/Complete_QRAMM_Questions.md.
 #   links      Every relative link resolves to a file in the repository, and
 #              every external http(s) URL answers 200 (skipped with
-#              --no-network).
+#              --no-network). The exception is a URL on linkedin.com, or on
+#              a subdomain of it, that answers 999: it is listed as not
+#              verified, with a request to open it in a browser, and does
+#              not fail the check. On 2026-10-20 LinkedIn answered this
+#              checker 999 for the profile links in the framework documents
+#              and for a made-up profile address alike, so that answer does
+#              not show whether the page is there.
 #
 # Extra checks for framework/pqcmm-comparison.md (any file with that name):
 #   pqcmm      The first table whose header names "PQCMM level" lists each
@@ -68,6 +74,7 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 DEFAULT_DOCS = [
@@ -95,6 +102,12 @@ DEFAULT_DOCS = [
 
 PQCMM_DOC = "framework/pqcmm-comparison.md"
 PQCMM_LEVELS_URL = "https://pkic.org/wg/pqc/pqcmm/levels/"
+
+# Domain -> an answer that does not show whether a page on the domain exists
+# (the links entry in the header says how this was measured). A URL on the
+# domain or a subdomain that gives it is listed as not verified and does not
+# fail the links check.
+UNVERIFIABLE = {"linkedin.com": 999}
 
 MAPPING_DOC = "framework/compliance-mapping.md"
 NIST_COLUMN = "NIST PQC"
@@ -211,6 +224,18 @@ def url_status(url):
         return "no response ({})".format(err)
 
 
+def unverifiable(url, status):
+    """True when status is the UNVERIFIABLE answer of the URL's domain."""
+    try:
+        host = urllib.parse.urlsplit(url).hostname or ""
+    except ValueError:
+        return False
+    return any(
+        status == code and (host == domain or host.endswith("." + domain))
+        for domain, code in UNVERIFIABLE.items()
+    )
+
+
 def check_writing(lines):
     problems = []
     for number, line in enumerate(lines, 1):
@@ -256,6 +281,7 @@ def check_practices(lines, practices, questions):
 
 def check_links(path, lines, root, network):
     problems = []
+    unverified = []
     external = []
     base = os.path.dirname(path)
     for number, line in strip_code(lines):
@@ -277,11 +303,18 @@ def check_links(path, lines, root, network):
     if network:
         for number, url in external:
             status = url_status(url)
-            if status != 200:
+            if status == 200:
+                continue
+            if unverifiable(url, status):
+                unverified.append(
+                    "line {}: {} answered {}, not verified; open it in a "
+                    "browser".format(number, url, status)
+                )
+            else:
                 problems.append(
                     "line {}: {} answered {}, expected 200".format(number, url, status)
                 )
-    return problems, len(external)
+    return problems, unverified, len(external)
 
 
 def split_row(line):
@@ -437,28 +470,34 @@ def main(argv):
         with open(path, encoding="utf-8") as fh:
             lines = fh.read().splitlines()
 
+        # Each result: check name, problems, note, and lines listed after the
+        # result whether it passes or fails.
         results = []
-        results.append(("writing", check_writing(lines), ""))
+        results.append(("writing", check_writing(lines), "", []))
         practice_problems, practice_count = check_practices(lines, practices, questions)
         results.append(
-            ("practices", practice_problems, "{} references".format(practice_count))
+            ("practices", practice_problems, "{} references".format(practice_count), [])
         )
-        link_problems, url_count = check_links(path, lines, root, network)
+        link_problems, unverified, url_count = check_links(path, lines, root, network)
         note = "{} external URLs".format(url_count)
         if not network:
             note += ", not fetched (--no-network)"
-        results.append(("links", link_problems, note))
+        if unverified:
+            note += ", {} not verified".format(len(unverified))
+        results.append(("links", link_problems, note, unverified))
         if os.path.basename(path) == os.path.basename(PQCMM_DOC):
             pqcmm_note = "level table and quotes"
             if not network:
                 pqcmm_note += ", quotes not compared (--no-network)"
-            results.append(("pqcmm", check_pqcmm(lines, practice_count, network), pqcmm_note))
+            results.append(
+                ("pqcmm", check_pqcmm(lines, practice_count, network), pqcmm_note, [])
+            )
         if os.path.basename(path) == os.path.basename(MAPPING_DOC):
             nist_problems, rows, dashes = check_nist(lines)
             nist_note = "{} question rows, {} with '-'".format(rows, dashes)
-            results.append(("nist", nist_problems, nist_note))
+            results.append(("nist", nist_problems, nist_note, []))
 
-        for name, problems, note in results:
+        for name, problems, note, listed in results:
             suffix = " ({})".format(note) if note else ""
             if problems:
                 failed = True
@@ -467,6 +506,8 @@ def main(argv):
                     print("    {}".format(problem))
             else:
                 print("  PASS {}{}".format(name, suffix))
+            for item in listed:
+                print("    {}".format(item))
 
     print("RESULT: {}".format("FAIL" if failed else "PASS"))
     return 1 if failed else 0

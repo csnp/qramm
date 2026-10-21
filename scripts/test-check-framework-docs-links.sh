@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Tests the links check of scripts/check-framework-docs.sh on URLs at the end
-# of italic and bold text.
+# of italic and bold text, and on URLs that answer 999.
 #
 # Usage:
 #   scripts/test-check-framework-docs-links.sh [checker]
@@ -8,10 +8,14 @@
 # checker defaults to check-framework-docs.sh next to this script. Fixtures
 # are written to a new temporary directory and given to the checker by
 # absolute path. The checker is run with its network checks on, and every
-# URL in the fixtures points at a web server this script starts on
-# 127.0.0.1. The server holds one page, /page, so it answers 200 for /page
-# and 404 for /page* and /missing. no_proxy is set to "*" for the checker so
-# that an http_proxy setting does not send those requests to a proxy.
+# URL in the fixtures is answered by a web server this script starts on
+# 127.0.0.1. Asked for a path, the server answers 200 for /page and 404 for
+# any other path, such as /page* and /missing. In cases 1 to 3 no_proxy is
+# set to "*" for the checker so that an http_proxy setting does not send
+# those requests to a proxy. In cases 5 and 6 the server is the checker's
+# proxy: http_proxy names it and no_proxy is empty, so the checker asks the
+# server for the whole URL instead of asking the host the URL names, and
+# the server answers 999 to every such request.
 #
 # Cases:
 #   1. An italic sentence that ends with the URL of /page and the closing
@@ -24,6 +28,16 @@
 #      asterisk and the 404 answer, RESULT: FAIL.
 #   4. Where the fixtures were written: the directory is under .tmp-tests/
 #      at the repository root and holds the fixture of case 1.
+#   5. URLs on www.linkedin.com and linkedin.com that answer 999: exit 0,
+#      PASS links (2 external URLs, 2 not verified), a line for each that
+#      names the URL, the 999 answer and "not verified", RESULT: PASS,
+#      nothing on stderr, and the server's log holds both requests.
+#   6. URLs on linkedin.com.invalid and notlinkedin.com, hosts that only
+#      look like LinkedIn's, and on www.linkedin.com, all answering 999:
+#      exit 1, FAIL links (3 external URLs, 1 not verified), an "answered
+#      999, expected 200" line for each of the first two, the not verified
+#      line for the third, RESULT: FAIL, and the server's log holds all
+#      three requests.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -58,16 +72,37 @@ cleanup() {
 trap cleanup EXIT
 
 # The server listens on a port the system picks and names it in its first
-# line of output.
-mkdir -p "$work/site"
-printf 'page\n' > "$work/site/page"
+# line of output, "port N". It logs each request on stderr the way
+# python3 -m http.server does. A request for a whole URL, which is how a
+# client asks a proxy for a page, is answered 999.
 : > "$work/server.out"
-python3 -I -u -m http.server 0 --bind 127.0.0.1 --directory "$work/site" \
-  > "$work/server.out" 2> "$work/server.err" &
+python3 -I -u - > "$work/server.out" 2> "$work/server.err" <<'PY' &
+import http.server
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path.startswith("http://"):
+            code = 999
+        elif self.path == "/page":
+            code = 200
+        else:
+            code = 404
+        body = b"page\n" if code == 200 else b""
+        self.send_response(code)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+print("port {}".format(server.server_address[1]))
+server.serve_forever()
+PY
 server_pid=$!
 port=""
 for _ in $(seq 100); do
-  port="$(sed -n 's/^Serving HTTP on 127\.0\.0\.1 port \([0-9][0-9]*\) .*/\1/p' "$work/server.out")"
+  port="$(sed -n 's/^port \([0-9][0-9]*\)$/\1/p' "$work/server.out")"
   [ -n "$port" ] && break
   kill -0 "$server_pid" 2> /dev/null || break
   sleep 0.1
@@ -100,6 +135,22 @@ run_checker() {
   no_proxy='*' bash "$checker" "$@" > "$work/out" 2> "$work/err" || status=$?
   out="$(cat "$work/out")"
   err="$(cat "$work/err")"
+}
+
+# Runs the checker on the given files with its network checks on and the
+# server as its http proxy. Sets out, err and status.
+run_checker_via_server() {
+  status=0
+  http_proxy="$base" no_proxy='' bash "$checker" "$@" > "$work/out" 2> "$work/err" \
+    || status=$?
+  out="$(cat "$work/out")"
+  err="$(cat "$work/err")"
+}
+
+# True when the server's log shows a request for the whole URL $1 answered
+# 999, which means the checker asked the server and not the URL's host.
+served() {
+  grep -qF "\"GET $1 HTTP/1.1\" 999 " "$work/server.err"
 }
 
 expect() {
@@ -161,6 +212,52 @@ expect "fixtures directory is under .tmp-tests/ at the repository root" \
   'case "$work" in "$repo"/.tmp-tests/?*) true ;; *) false ;; esac'
 expect "the fixture of case 1 is in it" '[ -f "$work/italic/doc.md" ]'
 [ "$failed" -eq 0 ] || echo "  -- fixtures directory: $work"
+failed=$((failed | case_failed))
+
+echo "case 5: LinkedIn URLs that answer 999"
+case_failed="$failed"
+failed=0
+profile="/in/qramm-test-case-5/"
+write_doc "$work/linkedin/doc.md" \
+  "Profile: http://www.linkedin.com$profile" \
+  "Profile: http://linkedin.com$profile"
+run_checker_via_server "$work/linkedin/doc.md"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "links check passes with 2 external URLs, 2 not verified" \
+  'printf "%s\n" "$out" | grep -qxF "  PASS links (2 external URLs, 2 not verified)"'
+expect "the www.linkedin.com URL is listed as not verified" \
+  'printf "%s\n" "$out" | grep -qxF "    line 3: http://www.linkedin.com$profile answered 999, not verified; open it in a browser"'
+expect "the linkedin.com URL is listed as not verified" \
+  'printf "%s\n" "$out" | grep -qxF "    line 4: http://linkedin.com$profile answered 999, not verified; open it in a browser"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+expect "stderr is empty" '[ -z "$err" ]'
+expect "the server answered both requests" \
+  'served "http://www.linkedin.com$profile" && served "http://linkedin.com$profile"'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 6: hosts that only look like LinkedIn's answer 999"
+case_failed="$failed"
+failed=0
+profile="/in/qramm-test-case-6/"
+write_doc "$work/lookalike/doc.md" \
+  "Profile: http://linkedin.com.invalid$profile" \
+  "Profile: http://notlinkedin.com$profile" \
+  "Profile: http://www.linkedin.com$profile"
+run_checker_via_server "$work/lookalike/doc.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "links check fails with 3 external URLs, 1 not verified" \
+  'printf "%s\n" "$out" | grep -qxF "  FAIL links (3 external URLs, 1 not verified)"'
+expect "the linkedin.com.invalid URL fails on its 999 answer" \
+  'printf "%s\n" "$out" | grep -qxF "    line 3: http://linkedin.com.invalid$profile answered 999, expected 200"'
+expect "the notlinkedin.com URL fails on its 999 answer" \
+  'printf "%s\n" "$out" | grep -qxF "    line 4: http://notlinkedin.com$profile answered 999, expected 200"'
+expect "the www.linkedin.com URL is listed as not verified" \
+  'printf "%s\n" "$out" | grep -qxF "    line 5: http://www.linkedin.com$profile answered 999, not verified; open it in a browser"'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+expect "the server answered all three requests" \
+  'served "http://linkedin.com.invalid$profile" && served "http://notlinkedin.com$profile" && served "http://www.linkedin.com$profile"'
+[ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
 
 if [ "$failed" -eq 0 ]; then
