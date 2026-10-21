@@ -44,6 +44,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
+import zlib
 
 SPEC = "toolkit-specs/4_QRAMM_Compliance_Mapping_Details.md"
 
@@ -345,7 +346,11 @@ def reason(error, path):
     open, so the error was raised while reading the archive, as when zipfile
     raises OSError(22, "Invalid argument") on seeking to an entry at the
     negative offset it works out from an end of central directory record
-    that gives a central directory offset past the end of the file."""
+    that gives a central directory offset past the end of the file. The
+    zlib.error zipfile raises for an entry stored with the deflate method
+    whose data does not decompress gives "not a workbook" too."""
+    if isinstance(error, zlib.error):
+        return "not a workbook"
     if isinstance(error, OSError) and error.strerror:
         if is_zip_file(path):
             return "not a workbook"
@@ -357,7 +362,7 @@ def check_workbook(label, path, spec, problems):
     """label is the workbook's file name as printed; path is the file read."""
     try:
         sheet, first, rows = read_map(path)
-    except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError) as error:
+    except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError, zlib.error) as error:
         problems.append(
             "{}: cannot read the compliance map ({})".format(label, reason(error, path))
         )
@@ -417,7 +422,7 @@ def check_workbook(label, path, spec, problems):
 def check_category_names(label, path, sheet, first, rows, problems):
     try:
         lookups = read_name_lookups(path)
-    except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError) as error:
+    except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError, zlib.error) as error:
         problems.append(
             "{}: cannot read the category name lookup ({})".format(label, reason(error, path))
         )

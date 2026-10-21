@@ -30,6 +30,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
+import zlib
 
 WORKBOOKS = [
     "toolkit/QRAMM_Assessment_Toolkit.xlsx",
@@ -143,6 +144,12 @@ def check_workbook(label, path, problems):
             problems.append("{}: cannot read (not a workbook)".format(label))
             return
         problems.append("{}: cannot read ({})".format(label, error.strerror))
+        return
+    except zlib.error:
+        # deflate data that does not decompress, in an entry stored with the
+        # deflate method, the method a .xlsx file usually stores its entries
+        # with.
+        problems.append("{}: cannot read (not a workbook)".format(label))
         return
     except (zipfile.BadZipFile, KeyError, ET.ParseError, ValueError) as error:
         problems.append("{}: not a workbook ({})".format(label, error))
