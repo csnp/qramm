@@ -16,7 +16,7 @@ relative to the repository root, or absolute). For each workbook:
        map, and the map has no other rows.
     2. The row's Control_ID is text equal to the spec's control. A
        Control_ID stored as a number fails, as a number cannot keep a CIS v8
-       safeguard such as 1.10 apart from 1.1.
+       safeguard such as 3.10 apart from 3.1.
     3. The row's Weight is the spec's weight. A "-" in the spec matches a
        row whose Control_ID is "-" and whose Weight is empty.
     4. The row's Category, when it is not "-", has a name in each range the
