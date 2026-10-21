@@ -35,6 +35,32 @@ import xml.etree.ElementTree as ET
 import zipfile
 import zlib
 
+try:
+    import lzma
+except ImportError:
+    lzma = None
+try:
+    # New in Python 3.14.
+    from compression import zstd
+except ImportError:
+    zstd = None
+
+# The errors other than OSError and zipfile.BadZipFile that zipfile raises
+# for an entry of a zip archive that it cannot read. RuntimeError: an entry
+# whose flags mark it as encrypted, or a compression method whose module
+# this Python lacks. NotImplementedError, a subclass of RuntimeError: a
+# compression method zipfile does not support, such as 98 (PPMd), or 93
+# (Zstandard) before Python 3.14. The error of the module that decompresses
+# the entry, for data that does not decompress: zlib.error for deflate, the
+# method a .xlsx file usually stores its entries with, lzma.LZMAError for
+# LZMA and compression.zstd.ZstdError for Zstandard. bz2 raises OSError
+# instead.
+ENTRY_ERRORS = (RuntimeError, zlib.error)
+if lzma is not None:
+    ENTRY_ERRORS += (lzma.LZMAError,)
+if zstd is not None:
+    ENTRY_ERRORS += (zstd.ZstdError,)
+
 WORKBOOKS = [
     "toolkit/QRAMM_Assessment_Toolkit.xlsx",
     "toolkit/Sample_Assessment.xlsx",
@@ -148,10 +174,7 @@ def check_workbook(label, path, problems):
             return
         problems.append("{}: cannot read ({})".format(label, error.strerror))
         return
-    except zlib.error:
-        # deflate data that does not decompress, in an entry stored with the
-        # deflate method, the method a .xlsx file usually stores its entries
-        # with.
+    except ENTRY_ERRORS:
         problems.append("{}: cannot read (not a workbook)".format(label))
         return
     except (zipfile.BadZipFile, KeyError, ET.ParseError, ValueError) as error:
