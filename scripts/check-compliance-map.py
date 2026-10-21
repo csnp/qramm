@@ -272,11 +272,18 @@ def cell_value(node, strings):
 
 def read_block(book, part, strings, first, width, top, bottom):
     """{row number: {offset: value}} for rows top to bottom and the width
-    columns from column number first of the sheet part."""
+    columns from column number first of the sheet part. Raises ValueError
+    for a row element of the part with no r attribute, as int() does for an
+    r such as "x"."""
     root = ET.fromstring(book.read(part))
     rows = {number: {} for number in range(top, bottom + 1)}
     for row in root.iter(ns(MAIN_NS, "row")):
-        number = int(row.get("r"))
+        # A row element with no r attribute does not give its row number,
+        # so this script cannot tell whether the row is one of top to bottom.
+        reference = row.get("r")
+        if reference is None:
+            raise ValueError("{} has a row element with no r attribute".format(part))
+        number = int(reference)
         if number not in rows:
             continue
         for node in row.iter(ns(MAIN_NS, "c")):

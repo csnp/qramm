@@ -107,6 +107,15 @@
 #      warning "UserWarning: Overlapped entries: 'xl/workbook.xml' (possible
 #      zip bomb)" and read on, and zipfile raises EOFError, as with Python
 #      3.9.6.
+#  18. A copy of the sample workbook whose col element for column M of the
+#      Welcome sheet, xl/worksheets/sheet1.xml, has hidden="1" and no min
+#      attribute. The Welcome sheet is the first sheet and is not hidden.
+#  19. The same copy with the min attribute and no max attribute.
+#  Cases 18 and 19 pass the copy and then the sample workbook: exit 1,
+#  nothing on stderr, one FAIL line, which says the copy is not a workbook
+#  as xl/worksheets/sheet1.xml has a hidden col element with no min (case 18)
+#  or no max (case 19) attribute, a PASS line for the sample workbook, and
+#  RESULT: FAIL as the last line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -627,6 +636,55 @@ make_damaged_zip "$work/same-offset.xlsx" same-offset
 start_case "case 19: entry sizes past the end and a second header at the same offset" \
   "$checker" "$work/same-offset.xlsx" toolkit/Sample_Assessment.xlsx
 expect_not_a_workbook "$work/same-offset.xlsx" xl/workbook.xml
+end_case
+
+# Writes to $2 a copy of the workbook $1 whose part $3 has its first "$4"
+# replaced by "$5". Fails when the part does not hold "$4".
+edit_part() {
+  python3 -I - "$@" <<'PY'
+import sys
+import zipfile
+
+source, target, part, old, new = sys.argv[1:6]
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        data = book.read(info.filename)
+        if info.filename == part:
+            text = data.decode("utf-8")
+            if old not in text:
+                sys.exit("edit_part: no %s in %s" % (old, part))
+            data = text.replace(old, new, 1).encode("utf-8")
+        copy.writestr(info, data)
+PY
+}
+
+# Expectations for cases 18 and 19: $1 is the copy's file name and $2 the
+# attribute its hidden col element lacks.
+expect_no_column_bound() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says it is not a workbook as a hidden col element has no $2 attribute" \
+    "has_fail '$1: not a workbook (xl/worksheets/sheet1.xml has a hidden col element with no $2 attribute)'"
+  expect "the sample workbook is checked" \
+    'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+  expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+}
+
+# Column M of the Welcome sheet, the first sheet of the sample workbook, is
+# hidden.
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/nomin.xlsx" \
+  xl/worksheets/sheet1.xml '<col min="13" max="13" ' '<col max="13" '
+start_case "case 18: a hidden col element with no min attribute" \
+  "$checker" "$work/nomin.xlsx" toolkit/Sample_Assessment.xlsx
+expect_no_column_bound "$work/nomin.xlsx" min
+end_case
+
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/nomax.xlsx" \
+  xl/worksheets/sheet1.xml '<col min="13" max="13" ' '<col min="13" '
+start_case "case 19: a hidden col element with no max attribute" \
+  "$checker" "$work/nomax.xlsx" toolkit/Sample_Assessment.xlsx
+expect_no_column_bound "$work/nomax.xlsx" max
 end_case
 
 if [ "$failed" -eq 0 ]; then
