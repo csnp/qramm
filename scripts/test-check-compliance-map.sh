@@ -58,6 +58,18 @@
 #      workbook, then RESULT: FAIL. zipfile.is_zipfile() accepts this
 #      archive, and zipfile raises OSError(22, "Invalid argument") when it
 #      reads the xl/workbook.xml entry.
+#  13. A zip archive whose xl/workbook.xml entry is stored with the deflate
+#      method and whose first 4 bytes of deflate data are 0xff, which does
+#      not decompress, then the sample workbook: exit 1, nothing on stderr,
+#      one FAIL line, which says the map cannot be read (not a workbook),
+#      the map PASS line for the sample workbook, then RESULT: FAIL. zlib
+#      raises zlib.error("Error -3 while decompressing data: invalid block
+#      type") when zipfile reads the entry.
+#  14. A copy of the sample workbook whose Compliance sheet part has its
+#      first 4 bytes of deflate data replaced by 0xff: exit 1, nothing on
+#      stderr, the map PASS line, then one FAIL line, which says the
+#      category name lookup cannot be read (not a workbook), then
+#      RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -402,6 +414,64 @@ expect "FAIL line says the map cannot be read as it is not a workbook" \
   "has_line '  FAIL $work/badoffset.xlsx: cannot read the compliance map (not a workbook)'"
 expect "the sample workbook is checked" \
   "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# Writes to $1 a zip archive whose entry $2 is stored with the deflate method
+# and has its first 4 bytes of deflate data replaced by 0xff, which start a
+# block of the reserved type 3. With $3, the archive holds every entry of the
+# workbook $3; without it, it holds only $2, a compressible xl/workbook.xml.
+make_bad_deflate() {
+  python3 -I - "$@" <<'PY'
+import struct
+import sys
+import zipfile
+
+path, entry = sys.argv[1:3]
+with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as book:
+    if len(sys.argv) > 3:
+        with zipfile.ZipFile(sys.argv[3]) as source:
+            for info in source.infolist():
+                book.writestr(info.filename, source.read(info.filename))
+    else:
+        book.writestr(entry, "<workbook>" + "AB" * 1500 + "</workbook>")
+with zipfile.ZipFile(path) as book:
+    offset = book.getinfo(entry).header_offset
+with open(path, "rb") as fh:
+    data = bytearray(fh.read())
+# The entry's data follows its 30-byte local file header, which gives the
+# lengths of the file name and of the extra field at offsets 26 and 28.
+name_length, extra_length = struct.unpack_from("<HH", data, offset + 26)
+start = offset + 30 + name_length + extra_length
+data[start:start + 4] = bytes([255] * 4)
+with open(path, "wb") as fh:
+    fh.write(data)
+PY
+}
+
+make_bad_deflate "$work/deflate.xlsx" xl/workbook.xml
+start_case "case 13: deflate data that does not decompress" \
+  "$checker" "$work/deflate.xlsx" "$sample"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the map cannot be read as it is not a workbook" \
+  "has_line '  FAIL $work/deflate.xlsx: cannot read the compliance map (not a workbook)'"
+expect "the sample workbook is checked" \
+  "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# The Compliance sheet is rId8 in the sample workbook, xl/worksheets/sheet8.xml.
+make_bad_deflate "$work/lookup.xlsx" xl/worksheets/sheet8.xml "$root/$sample"
+start_case "case 14: deflate data in the Compliance sheet that does not decompress" \
+  "$checker" "$work/lookup.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "the map is checked" "has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the category name lookup cannot be read as it is not a workbook" \
+  "has_line '  FAIL $work/lookup.xlsx: cannot read the category name lookup (not a workbook)'"
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 

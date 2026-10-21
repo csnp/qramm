@@ -55,7 +55,11 @@
 #      zipfile.is_zipfile() accepts this archive, and zipfile raises
 #      OSError(22, "Invalid argument") when it reads the xl/workbook.xml
 #      entry.
-#  Cases 11 and 12 pass the archive and then the sample workbook: exit 1,
+#  13. A zip archive whose xl/workbook.xml entry is stored with the deflate
+#      method and whose first 4 bytes of deflate data are 0xff, which does
+#      not decompress. zlib raises zlib.error("Error -3 while decompressing
+#      data: invalid block type").
+#  Cases 11 to 13 pass the archive and then the sample workbook: exit 1,
 #  nothing on stderr, one FAIL line, which says the archive cannot be read
 #  (not a workbook), a PASS line for the sample workbook, and RESULT: FAIL
 #  as the last line.
@@ -334,7 +338,9 @@ fi
 # names. bzip2: both headers of the entry give compression method 12
 # (bzip2), and the entry holds bytes that are not bzip2 data. offset: the
 # end of central directory record gives a central directory offset 1000
-# bytes past the end of the file.
+# bytes past the end of the file. deflate: the entry is stored with the
+# deflate method, and its first 4 bytes of deflate data are 0xff, which
+# start a block of the reserved type 3.
 make_damaged_zip() {
   python3 -I - "$@" <<'PY'
 import struct
@@ -342,8 +348,12 @@ import sys
 import zipfile
 
 path, damage = sys.argv[1:3]
-with zipfile.ZipFile(path, "w") as book:
-    book.writestr("xl/workbook.xml", "<workbook/>")
+if damage == "deflate":
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as book:
+        book.writestr("xl/workbook.xml", "<workbook>" + "AB" * 1500 + "</workbook>")
+else:
+    with zipfile.ZipFile(path, "w") as book:
+        book.writestr("xl/workbook.xml", "<workbook/>")
 with open(path, "rb") as fh:
     data = bytearray(fh.read())
 # The archive has no comment, so its last 22 bytes are the end of central
@@ -358,6 +368,11 @@ if damage == "bzip2":
     struct.pack_into("<H", data, directory + 10, 12)
 elif damage == "offset":
     struct.pack_into("<I", data, len(data) - 6, len(data) + 1000)
+elif damage == "deflate":
+    # The entry's data follows its 30-byte local file header and the file
+    # name; writestr() writes no extra field there.
+    start = 30 + len("xl/workbook.xml")
+    data[start:start + 4] = bytes([255] * 4)
 else:
     sys.exit("make_damaged_zip: unknown damage " + damage)
 with open(path, "wb") as fh:
@@ -365,7 +380,7 @@ with open(path, "wb") as fh:
 PY
 }
 
-# Expectations for cases 11 and 12: $1 is the archive's file name.
+# Expectations for cases 11 to 13: $1 is the archive's file name.
 expect_not_a_workbook() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "no traceback on stderr" '[ -z "$err" ]'
@@ -387,6 +402,12 @@ make_damaged_zip "$work/badoffset.xlsx" offset
 start_case "case 12: a central directory offset past the end of the file" \
   "$checker" "$work/badoffset.xlsx" toolkit/Sample_Assessment.xlsx
 expect_not_a_workbook "$work/badoffset.xlsx"
+end_case
+
+make_damaged_zip "$work/deflate.xlsx" deflate
+start_case "case 13: deflate data that does not decompress" \
+  "$checker" "$work/deflate.xlsx" toolkit/Sample_Assessment.xlsx
+expect_not_a_workbook "$work/deflate.xlsx"
 end_case
 
 if [ "$failed" -eq 0 ]; then
