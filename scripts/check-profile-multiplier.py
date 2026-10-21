@@ -354,10 +354,13 @@ def main(argv):
             except zipfile.BadZipFile:
                 problems.append("{}: cannot read (not a zip file)".format(path))
                 continue
-            except (KeyError, IndexError, ValueError, ET.ParseError):
-                # A zip archive without the workbook parts, with an XML part
-                # that does not parse, or with a shared-string index that is
-                # not in the table.
+            except Exception:
+                # A zip archive that is not a readable workbook. A missing part
+                # or relationship Target, an encrypted entry, a compression
+                # method zipfile does not support, deflate, LZMA or Zstandard
+                # data that does not decompress, XML that does not parse or
+                # declares an unknown encoding, and a shared-string index past
+                # the end of the table each raise a different error type.
                 if not is_workbook:
                     raise
                 problems.append("{}: cannot read (not a workbook)".format(path))

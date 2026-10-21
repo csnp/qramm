@@ -69,6 +69,20 @@
 #  22. A workbook with a text cell whose shared-string index is past the end
 #      of the shared string table: exit 1, a FAIL line that says it is not a
 #      workbook.
+#  23. A workbook whose relationship for its sheet has no Target attribute.
+#  24. A workbook whose sheet XML declares the unknown encoding "bogus".
+#  25. A workbook whose xl/workbook.xml entry gives compression method 6
+#      (implode), which zipfile does not support.
+#  26. A workbook whose sheet entry gives compression method 8 (deflate) but
+#      holds bytes that are not deflate data.
+#  27. A workbook whose xl/workbook.xml entry has the encrypted flag that
+#      zip -P sets (general purpose flag bit 0).
+#  28. A workbook whose sheet entry gives compression method 93 (Zstandard)
+#      but holds bytes that are not Zstandard data.
+#  Cases 23 to 28 pass the workbook and then a text document that gives the
+#  workbook's range: exit 1, nothing on stderr, one FAIL line, which says
+#  the workbook is not a workbook, a PASS line for the text document, and
+#  RESULT: FAIL as the last line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -439,6 +453,98 @@ expect "no traceback on stderr" '[ -z "$err" ]'
 expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
 expect "FAIL line says it is not a workbook" \
   "has_fail 'badindex.xlsx: cannot read (not a workbook)'"
+end_case
+
+# Sets the compression method ($3) and the general purpose flags ($4) that
+# both headers of the entry $2 give in the zip archive at $1, and leaves the
+# bytes stored for the entry as they are.
+set_entry() {
+  python3 -I - "$@" <<'PY'
+import struct
+import sys
+import zipfile
+
+path, name = sys.argv[1:3]
+method, flags = int(sys.argv[3]), int(sys.argv[4])
+with zipfile.ZipFile(path) as book:
+    infos = book.infolist()
+with open(path, "rb") as fh:
+    data = bytearray(fh.read())
+# The archive has no comment, so its last 22 bytes are the end of central
+# directory record, which ends with the central directory's offset and a
+# 2-byte comment length.
+(directory,) = struct.unpack_from("<I", data, len(data) - 6)
+found = 0
+for info in infos:
+    if info.filename == name:
+        found += 1
+        struct.pack_into("<HH", data, info.header_offset + 6, flags, method)
+        struct.pack_into("<HH", data, directory + 8, flags, method)
+    names, extra, comment = struct.unpack_from("<HHH", data, directory + 28)
+    directory += 46 + names + extra + comment
+with open(path, "wb") as fh:
+    fh.write(data)
+sys.exit(0 if found else 1)
+PY
+}
+
+# Expectations for cases 23 to 28: $1 is the workbook's file name.
+expect_not_a_workbook() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says it is not a workbook" \
+    "has_fail '$1: cannot read (not a workbook)'"
+  expect "the document after it is checked" \
+    '[ "$(pass_count)" -eq 1 ] && has_line "  PASS line 1: 1.00 to 1.50"'
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
+sheet_xml="xl/worksheets/sheet1.xml=<worksheet xmlns=\"$main_ns\"><sheetData><row r=\"1\"><c r=\"A1\" t=\"s\"><v>0</v></c></row></sheetData></worksheet>"
+
+make_zip "$work/notarget.xlsx" "$book_xml" \
+  "xl/_rels/workbook.xml.rels=<Relationships xmlns=\"$pkg_rel_ns\"><Relationship Id=\"rId1\"/></Relationships>" \
+  "$strings_xml" "$sheet_xml"
+start_case "case 23: a relationship without a Target" \
+  "$checker" "$work/notarget.xlsx" "$work/new.md"
+expect_not_a_workbook notarget.xlsx
+end_case
+
+make_zip "$work/encoding.xlsx" "$book_xml" "$rels_xml" "$strings_xml" \
+  "xl/worksheets/sheet1.xml=<?xml version=\"1.0\" encoding=\"bogus\"?>${sheet_xml#*=}"
+start_case "case 24: XML that declares an unknown encoding" \
+  "$checker" "$work/encoding.xlsx" "$work/new.md"
+expect_not_a_workbook encoding.xlsx
+end_case
+
+make_zip "$work/method.xlsx" "$book_xml" "$rels_xml" "$strings_xml" "$sheet_xml"
+set_entry "$work/method.xlsx" xl/workbook.xml 6 0
+start_case "case 25: a compression method zipfile does not support" \
+  "$checker" "$work/method.xlsx" "$work/new.md"
+expect_not_a_workbook method.xlsx
+end_case
+
+make_zip "$work/deflate.xlsx" "$book_xml" "$rels_xml" "$strings_xml" \
+  "xl/worksheets/sheet1.xml=not deflate data"
+set_entry "$work/deflate.xlsx" xl/worksheets/sheet1.xml 8 0
+start_case "case 26: deflate data that does not decompress" \
+  "$checker" "$work/deflate.xlsx" "$work/new.md"
+expect_not_a_workbook deflate.xlsx
+end_case
+
+make_zip "$work/encrypted.xlsx" "$book_xml" "$rels_xml" "$strings_xml" "$sheet_xml"
+set_entry "$work/encrypted.xlsx" xl/workbook.xml 0 1
+start_case "case 27: an encrypted entry" \
+  "$checker" "$work/encrypted.xlsx" "$work/new.md"
+expect_not_a_workbook encrypted.xlsx
+end_case
+
+make_zip "$work/zstd.xlsx" "$book_xml" "$rels_xml" "$strings_xml" \
+  "xl/worksheets/sheet1.xml=not zstd data"
+set_entry "$work/zstd.xlsx" xl/worksheets/sheet1.xml 93 0
+start_case "case 28: Zstandard data that does not decompress" \
+  "$checker" "$work/zstd.xlsx" "$work/new.md"
+expect_not_a_workbook zstd.xlsx
 end_case
 
 if [ "$failed" -eq 0 ]; then
