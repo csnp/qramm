@@ -61,6 +61,14 @@
 #      it is not a zip file.
 #  19. An empty file argument: exit 1, "FAIL '': no file name given", no
 #      "cannot read" line.
+#  20. A zip archive whose name ends in .xlsx and that holds only a text
+#      file: exit 1, a FAIL line that says it is not a workbook, then
+#      RESULT: FAIL.
+#  21. A workbook whose sheet XML part does not parse: exit 1, a FAIL line
+#      that says it is not a workbook.
+#  22. A workbook with a text cell whose shared-string index is past the end
+#      of the shared string table: exit 1, a FAIL line that says it is not a
+#      workbook.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -380,6 +388,57 @@ expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
 expect "FAIL says no file name was given" \
   'printf "%s\n" "$out" | grep -qxF "  FAIL '"''"': no file name given"'
 expect "no cannot read line" '! printf "%s\n" "$out" | grep -q "cannot read"'
+end_case
+
+# Writes a zip archive at $1 with one entry per remaining argument, each of
+# the form name=content.
+make_zip() {
+  python3 -I - "$@" <<'PY'
+import sys
+import zipfile
+
+with zipfile.ZipFile(sys.argv[1], "w") as book:
+    for entry in sys.argv[2:]:
+        name, _, content = entry.partition("=")
+        book.writestr(name, content)
+PY
+}
+
+main_ns='http://schemas.openxmlformats.org/spreadsheetml/2006/main'
+rel_ns='http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+pkg_rel_ns='http://schemas.openxmlformats.org/package/2006/relationships'
+book_xml="xl/workbook.xml=<workbook xmlns=\"$main_ns\" xmlns:r=\"$rel_ns\"><sheets><sheet name=\"Notes\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>"
+rels_xml="xl/_rels/workbook.xml.rels=<Relationships xmlns=\"$pkg_rel_ns\"><Relationship Id=\"rId1\" Target=\"worksheets/sheet1.xml\"/></Relationships>"
+strings_xml="xl/sharedStrings.xml=<sst xmlns=\"$main_ns\"><si><t>The profile multiplier is between 1.00 and 1.50.</t></si></sst>"
+
+make_zip "$work/notabook.xlsx" 'note.txt=note'
+start_case "case 20: a zip archive that is not a workbook" "$checker" "$work/notabook.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not a workbook" \
+  "has_fail 'notabook.xlsx: cannot read (not a workbook)'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+make_zip "$work/badxml.xlsx" "$book_xml" "$rels_xml" "$strings_xml" \
+  "xl/worksheets/sheet1.xml=<worksheet xmlns=\"$main_ns\"><sheetData>"
+start_case "case 21: a workbook whose sheet XML does not parse" "$checker" "$work/badxml.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not a workbook" \
+  "has_fail 'badxml.xlsx: cannot read (not a workbook)'"
+end_case
+
+make_zip "$work/badindex.xlsx" "$book_xml" "$rels_xml" "$strings_xml" \
+  "xl/worksheets/sheet1.xml=<worksheet xmlns=\"$main_ns\"><sheetData><row r=\"1\"><c r=\"A1\" t=\"s\"><v>5</v></c></row></sheetData></worksheet>"
+start_case "case 22: a shared-string index past the end of the table" "$checker" "$work/badindex.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not a workbook" \
+  "has_fail 'badindex.xlsx: cannot read (not a workbook)'"
 end_case
 
 if [ "$failed" -eq 0 ]; then

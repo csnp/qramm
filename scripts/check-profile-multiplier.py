@@ -341,8 +341,9 @@ def main(argv):
             if not path:
                 problems.append("'': no file name given")
                 continue
+            is_workbook = path.lower().endswith(".xlsx")
             try:
-                if path.lower().endswith(".xlsx"):
+                if is_workbook:
                     parts = workbook_texts(os.path.join(root, path))
                 else:
                     with open(os.path.join(root, path), encoding="utf-8") as fh:
@@ -352,6 +353,14 @@ def main(argv):
                 continue
             except zipfile.BadZipFile:
                 problems.append("{}: cannot read (not a zip file)".format(path))
+                continue
+            except (KeyError, IndexError, ValueError, ET.ParseError):
+                # A zip archive without the workbook parts, with an XML part
+                # that does not parse, or with a shared-string index that is
+                # not in the table.
+                if not is_workbook:
+                    raise
+                problems.append("{}: cannot read (not a workbook)".format(path))
                 continue
             check_document(path, parts, lowest, highest, problems)
 
