@@ -28,7 +28,7 @@ The Scorecard labels each raw dimension score and the raw overall score with one
 - **2.5 to below 3.5**: Established - Systematic and consistent practices
 - **3.5 to 4.0**: Advanced - Optimized processes with continuous improvement
 
-A raw dimension or overall score of 4.0 is labelled Advanced. The Scorecard does not label a dimension or overall score Optimizing; its Maturity Distribution chart counts a practice score of 4 as Optimizing. See [Maturity Level Interpretation](../framework/scoring-methodology.md#maturity-level-interpretation) in the scoring methodology.
+A raw dimension or overall score of 4.0 is labelled Advanced. The Scorecard does not label a dimension or overall score Optimizing, and its Maturity Distribution chart sorts the practice scores with the same cut-offs, so a practice score of 4 is counted as Advanced. See [Maturity Level Interpretation](../framework/scoring-methodology.md#maturity-level-interpretation) in the scoring methodology.
 
 ### Weighted Scores
 Your organization's unique context affects your target quantum readiness level. The Organization Profile Tab captures this context through a profile multiplier between 1.00 and 1.50 that adjusts raw scores based on:

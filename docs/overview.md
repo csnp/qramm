@@ -203,7 +203,7 @@ The toolkit's Scorecard labels each dimension score and the overall score with a
 - **Level 3 (Established)**: Score 2.5 to below 3.5
 - **Level 4 (Advanced)**: Score 3.5 to 4.0
 
-A dimension or overall score of 4.0 is labelled Advanced. The Scorecard does not label a dimension or overall score Level 5 (Optimizing); its Maturity Distribution chart counts a practice score of 4 as Optimizing. See [Maturity Level Interpretation](../framework/scoring-methodology.md#maturity-level-interpretation) in the scoring methodology.
+A dimension or overall score of 4.0 is labelled Advanced. The Scorecard does not label a dimension or overall score Level 5 (Optimizing), and its Maturity Distribution chart sorts the practice scores with the same cut-offs, so a practice score of 4 is counted as Advanced. See [Maturity Level Interpretation](../framework/scoring-methodology.md#maturity-level-interpretation) in the scoring methodology.
 
 ## QRAMM Assessment Toolkit
 
