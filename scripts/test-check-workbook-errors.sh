@@ -41,7 +41,7 @@
 #  10. Under the en_US.ISO8859-1 locale, a workbook argument that is valid
 #      UTF-8 and holds the character U+65E5, which ISO-8859-1 cannot encode,
 #      and names no file, then the sample workbook: exit 1, nothing on
-#      stderr, the name printed with the character as 日 on its == line
+#      stderr, the name printed with the character as \u65e5 on its == line
 #      and in a FAIL line that says it cannot be read (No such file or
 #      directory), a PASS line for the sample workbook, then RESULT: FAIL.
 #      The case is skipped, with a line that says so, when python3 -I does
@@ -307,7 +307,7 @@ end_case
 # \346\227\245 is U+65E5 encoded as UTF-8. Under en_US.ISO8859-1 on macOS,
 # python3 decodes the name as UTF-8 and writes stdout as ISO-8859-1, which
 # has no byte for U+65E5, so printing the name as it is raises
-# UnicodeEncodeError. The checker is expected to print 日 in its place.
+# UnicodeEncodeError. The checker is expected to print \u65e5 in its place.
 # No file is made with this name.
 title="case 10: a workbook argument that stdout's encoding cannot hold"
 probe="$(LC_ALL=en_US.ISO8859-1 python3 -I -c 'import codecs, sys; print(codecs.lookup(sys.getfilesystemencoding()).name, codecs.lookup(sys.stdout.encoding).name)' 2>&1 || true)"
