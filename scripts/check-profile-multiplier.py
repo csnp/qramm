@@ -41,7 +41,8 @@ standard library only.
 
 Exit status: 0 when the documents agree with the workbook, 1 when they do
 not or the workbook does not have the form described above, 2 on a usage
-error. An empty file argument fails with "no file name given". --help (or -h)
+error. An empty file argument fails with "no file name given", and a text
+document whose bytes are not UTF-8 fails with "not UTF-8 text". --help (or -h)
 prints the usage line and this text on stderr and exits 2.
 """
 
@@ -354,15 +355,19 @@ def main(argv):
             except zipfile.BadZipFile:
                 problems.append("{}: cannot read (not a zip file)".format(path))
                 continue
-            except Exception:
+            except Exception as error:
+                if not is_workbook:
+                    # A text document whose bytes are not UTF-8.
+                    if isinstance(error, UnicodeDecodeError):
+                        problems.append("{}: cannot read (not UTF-8 text)".format(path))
+                        continue
+                    raise
                 # A zip archive that is not a readable workbook. A missing part
                 # or relationship Target, an encrypted entry, a compression
                 # method zipfile does not support, deflate, LZMA or Zstandard
                 # data that does not decompress, XML that does not parse or
                 # declares an unknown encoding, and a shared-string index past
                 # the end of the table each raise a different error type.
-                if not is_workbook:
-                    raise
                 problems.append("{}: cannot read (not a workbook)".format(path))
                 continue
             check_document(path, parts, lowest, highest, problems)

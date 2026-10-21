@@ -83,6 +83,10 @@
 #  workbook's range: exit 1, nothing on stderr, one FAIL line, which says
 #  the workbook is not a workbook, a PASS line for the text document, and
 #  RESULT: FAIL as the last line.
+#  29. A text document with a Latin-1 byte, then a document that gives the
+#      workbook's range: exit 1, no traceback, a FAIL line that says the
+#      first is not UTF-8 text, a PASS line for the second, then
+#      RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -545,6 +549,19 @@ set_entry "$work/zstd.xlsx" xl/worksheets/sheet1.xml 93 0
 start_case "case 28: Zstandard data that does not decompress" \
   "$checker" "$work/zstd.xlsx" "$work/new.md"
 expect_not_a_workbook zstd.xlsx
+end_case
+
+# \351 is e with an acute accent in Latin-1, and not valid UTF-8 here.
+printf 'The profile multiplier is between 1.00 and 1.50, caf\351.\n' > "$work/latin1.md"
+start_case "case 29: a text document that is not UTF-8" "$checker" "$work/latin1.md" "$work/new.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not UTF-8 text" \
+  "has_fail 'latin1.md: cannot read (not UTF-8 text)'"
+expect "the next document is checked" \
+  "has_line '== $work/new.md against $toolkit' && has_line '  PASS line 1: 1.00 to 1.50'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
