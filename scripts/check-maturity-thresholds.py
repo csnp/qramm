@@ -396,6 +396,15 @@ def read_workbook(path):
     return parts, charts
 
 
+def is_zip_file(path):
+    """zipfile.is_zipfile(path), or False where that raises BadZipFile, as it
+    does in Python 3.9.6 for an archive whose zip64 locator gives two disks."""
+    try:
+        return zipfile.is_zipfile(path)
+    except zipfile.BadZipFile:
+        return False
+
+
 def count_criteria(formula):
     """Criteria of a COUNTIF or COUNTIFS formula over one range, divided by
     a whole number, or None."""
@@ -545,10 +554,30 @@ def main(argv):
                     with open(os.path.join(root, path), encoding="utf-8") as fh:
                         parts, charts = [("", fh.read().splitlines())], []
             except OSError as error:
+                if is_workbook and (
+                    error.errno is None or is_zip_file(os.path.join(root, path))
+                ):
+                    # An entry of a zip archive that cannot be read. bz2
+                    # raises OSError("Invalid data stream"), which has no
+                    # errno and so no strerror, for bzip2 data that does not
+                    # decompress. A central directory offset past the end of
+                    # the file can give an entry a negative offset, and the
+                    # seek to it raises OSError(22, "Invalid argument").
+                    problems.append("{}: cannot read (not a workbook)".format(name))
+                    continue
                 problems.append("{}: cannot read ({})".format(name, error.strerror))
                 continue
             except zipfile.BadZipFile:
-                problems.append("{}: cannot read (not a zip file)".format(name))
+                # zipfile raises BadZipFile for a file that is not a zip
+                # archive, and also when it reads an entry of a zip archive
+                # whose data does not match its CRC-32, or whose local file
+                # header signature is not at the offset zipfile works out
+                # for it, which a central directory offset past the end of
+                # the file can also cause.
+                if is_zip_file(os.path.join(root, path)):
+                    problems.append("{}: cannot read (not a workbook)".format(name))
+                else:
+                    problems.append("{}: cannot read (not a zip file)".format(name))
                 continue
             except Exception:
                 if not is_workbook:
