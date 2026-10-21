@@ -42,8 +42,10 @@ standard library only.
 Exit status: 0 when the documents agree with the workbook, 1 when they do
 not or the workbook does not have the form described above, 2 on a usage
 error. An empty file argument fails with "no file name given", and a text
-document whose bytes are not UTF-8 fails with "not UTF-8 text". --help (or -h)
-prints the usage line and this text on stderr and exits 2.
+document whose bytes are not UTF-8 fails with "not UTF-8 text". A file name
+is printed with each byte that the file system encoding cannot decode as a
+backslash escape, such as \\xff for the byte 0xff. --help (or -h) prints the
+usage line and this text on stderr and exits 2.
 """
 
 import os
@@ -297,9 +299,10 @@ def stated_ranges(lines):
     return found
 
 
-def check_document(path, parts, lowest, highest, problems):
-    """parts is a list of (place, lines): place is "" for a text file and
-    Sheet!Cell for each text cell of a workbook."""
+def check_document(name, parts, lowest, highest, problems):
+    """name is the document's file name as printed. parts is a list of
+    (place, lines): place is "" for a text file and Sheet!Cell for each text
+    cell of a workbook."""
     stated = 0
     for place, lines in parts:
         where = place + " " if place else ""
@@ -309,13 +312,22 @@ def check_document(path, parts, lowest, highest, problems):
                 problems.append(
                     "{} {}line {}: the multiplier range is {} to {} here, but {} "
                     "calculates {} to {}".format(
-                        path, where, number, low, high, WORKBOOK, lowest, highest
+                        name, where, number, low, high, WORKBOOK, lowest, highest
                     )
                 )
             else:
                 print("  PASS {}line {}: {} to {}".format(where, number, low, high))
     if not stated:
-        problems.append("{}: gives no multiplier range".format(path))
+        problems.append("{}: gives no multiplier range".format(name))
+
+
+def shown(path):
+    """path in a form stdout can encode: the bytes os.fsencode gives back,
+    decoded with each byte the file system encoding cannot decode written as
+    a backslash escape, such as \\xff for the byte 0xff. Python holds such a
+    byte of a command-line argument as a lone surrogate, which print() cannot
+    encode under a locale such as en_US.UTF-8."""
+    return os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
 
 
 def main(argv):
@@ -347,7 +359,8 @@ def main(argv):
         print("  lowest {}, highest {}".format(lowest, highest))
 
         for path in documents:
-            print("== {} against {}".format(path or "''", WORKBOOK))
+            name = shown(path)
+            print("== {} against {}".format(name or "''", WORKBOOK))
             if not path:
                 problems.append("'': no file name given")
                 continue
@@ -363,9 +376,9 @@ def main(argv):
                     # bzip2 data that does not decompress. bz2 raises
                     # OSError("Invalid data stream"), which has no errno and
                     # so no strerror to give as the reason.
-                    problems.append("{}: cannot read (not a workbook)".format(path))
+                    problems.append("{}: cannot read (not a workbook)".format(name))
                     continue
-                problems.append("{}: cannot read ({})".format(path, error.strerror))
+                problems.append("{}: cannot read ({})".format(name, error.strerror))
                 continue
             except zipfile.BadZipFile:
                 # zipfile raises BadZipFile for a file that is not a zip
@@ -373,15 +386,15 @@ def main(argv):
                 # whose data does not match its CRC-32 or whose local file
                 # header gives another file name than the central directory.
                 if is_zip_file(os.path.join(root, path)):
-                    problems.append("{}: cannot read (not a workbook)".format(path))
+                    problems.append("{}: cannot read (not a workbook)".format(name))
                 else:
-                    problems.append("{}: cannot read (not a zip file)".format(path))
+                    problems.append("{}: cannot read (not a zip file)".format(name))
                 continue
             except Exception as error:
                 if not is_workbook:
                     # A text document whose bytes are not UTF-8.
                     if isinstance(error, UnicodeDecodeError):
-                        problems.append("{}: cannot read (not UTF-8 text)".format(path))
+                        problems.append("{}: cannot read (not UTF-8 text)".format(name))
                         continue
                     raise
                 # A zip archive that is not a readable workbook. A missing part
@@ -390,9 +403,9 @@ def main(argv):
                 # data that does not decompress, XML that does not parse or
                 # declares an unknown encoding, and a shared-string index past
                 # the end of the table each raise a different error type.
-                problems.append("{}: cannot read (not a workbook)".format(path))
+                problems.append("{}: cannot read (not a workbook)".format(name))
                 continue
-            check_document(path, parts, lowest, highest, problems)
+            check_document(name, parts, lowest, highest, problems)
 
     for problem in problems:
         print("  FAIL {}".format(problem))
