@@ -93,6 +93,21 @@
 #      workbook's range: exit 1, nothing on stderr, a FAIL line that gives
 #      the reason "No such file or directory", a PASS line for the second,
 #      then RESULT: FAIL.
+#  32. A workbook whose sheet entry holds bytes that do not match the CRC-32
+#      its headers give.
+#  33. A workbook whose first entry gives another file name in its local
+#      file header than in the central directory.
+#  Cases 32 and 33 are zip archives that zipfile.is_zipfile() accepts.
+#  zipfile raises BadZipFile when it reads the damaged entry. They pass the
+#  workbook and then a text document that gives the workbook's range, and
+#  expect the results of cases 23 to 28.
+#  34. A zip archive whose zip64 end of central directory locator gives two
+#      disks, which zipfile does not open, then a text document that gives
+#      the workbook's range: exit 1, nothing on stderr, one FAIL line, which
+#      says the archive is not a zip file, a PASS line for the text document,
+#      and RESULT: FAIL as the last line. zipfile.is_zipfile() returns False
+#      for this archive in Python 3.13.12 and 3.14.3, and raises BadZipFile
+#      for it in Python 3.9.6.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -587,6 +602,76 @@ expect "FAIL line gives the reason No such file or directory" \
   "has_fail 'missing.xlsx: cannot read (No such file or directory)'"
 expect "the next document is checked" \
   "has_line '== $work/new.md against $toolkit' && has_line '  PASS line 1: 1.00 to 1.50'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# Replaces the first "$2" in the bytes of the zip archive at $1 with "$3",
+# which has the same length, and changes nothing else. Fails when the
+# archive does not hold "$2" or when "$3" has another length.
+replace_first() {
+  python3 -I - "$@" <<'PY'
+import sys
+
+path = sys.argv[1]
+old, new = sys.argv[2].encode("utf-8"), sys.argv[3].encode("utf-8")
+with open(path, "rb") as fh:
+    data = fh.read()
+if old not in data or len(new) != len(old):
+    sys.exit(1)
+with open(path, "wb") as fh:
+    fh.write(data.replace(old, new, 1))
+PY
+}
+
+# Puts a zip64 end of central directory locator that gives two disks just
+# before the end of central directory record of the zip archive at $1.
+give_two_disks() {
+  python3 -I - "$1" <<'PY'
+import struct
+import sys
+
+path = sys.argv[1]
+with open(path, "rb") as fh:
+    data = fh.read()
+# The archive has no comment, so its last 22 bytes are the end of central
+# directory record. The locator is its signature, the disk that holds the
+# zip64 end of central directory record, that record's offset and the
+# number of disks.
+locator = struct.pack("<4sLQL", b"PK\x06\x07", 0, 0, 2)
+with open(path, "wb") as fh:
+    fh.write(data[:-22] + locator + data[-22:])
+PY
+}
+
+# The cell reference is changed in the stored sheet data, so only the CRC-32
+# check fails: the cell still holds the text that gives the range.
+make_zip "$work/badcrc.xlsx" "$book_xml" "$rels_xml" "$strings_xml" "$sheet_xml"
+replace_first "$work/badcrc.xlsx" 'r="A1"' 'r="B1"'
+start_case "case 32: an entry whose data does not match its CRC-32" \
+  "$checker" "$work/badcrc.xlsx" "$work/new.md"
+expect_not_a_workbook badcrc.xlsx
+end_case
+
+# The first entry is xl/workbook.xml, so the first copy of its name is the
+# one in its local file header.
+make_zip "$work/badname.xlsx" "$book_xml" "$rels_xml" "$strings_xml" "$sheet_xml"
+replace_first "$work/badname.xlsx" xl/workbook.xml xl/workbook.xmm
+start_case "case 33: a local file header that gives another file name" \
+  "$checker" "$work/badname.xlsx" "$work/new.md"
+expect_not_a_workbook badname.xlsx
+end_case
+
+make_zip "$work/twodisk.xlsx" "$book_xml" "$rels_xml" "$strings_xml" "$sheet_xml"
+give_two_disks "$work/twodisk.xlsx"
+start_case "case 34: a zip64 locator that gives two disks" \
+  "$checker" "$work/twodisk.xlsx" "$work/new.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not a zip file" \
+  "has_fail 'twodisk.xlsx: cannot read (not a zip file)'"
+expect "the document after it is checked" \
+  '[ "$(pass_count)" -eq 1 ] && has_line "  PASS line 1: 1.00 to 1.50"'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
