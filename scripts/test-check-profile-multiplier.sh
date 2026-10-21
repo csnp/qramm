@@ -59,6 +59,8 @@
 #      a FAIL line that says the workbook gives no multiplier range.
 #  18. A text file whose name ends in .xlsx: exit 1, a FAIL line that says
 #      it is not a zip file.
+#  19. An empty file argument: exit 1, "FAIL '': no file name given", no
+#      "cannot read" line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -370,6 +372,14 @@ expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
 expect "FAIL line says it is not a zip file" \
   "has_fail 'text.xlsx: cannot read (not a zip file)'"
+end_case
+
+start_case "case 19: an empty file argument" "$checker" ""
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL says no file name was given" \
+  'printf "%s\n" "$out" | grep -qxF "  FAIL '"''"': no file name given"'
+expect "no cannot read line" '! printf "%s\n" "$out" | grep -q "cannot read"'
 end_case
 
 if [ "$failed" -eq 0 ]; then
