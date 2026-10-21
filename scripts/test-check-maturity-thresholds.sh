@@ -83,6 +83,15 @@
 #      Scorecard's four ranges: exit 1, no traceback, one FAIL line, which
 #      says the first is not UTF-8 text, four PASS lines for the second,
 #      then RESULT: FAIL.
+#  23. Under the en_US.ISO8859-1 locale, a file argument that is valid UTF-8
+#      and holds the character U+65E5, which ISO-8859-1 cannot encode, and
+#      names no file, then the document from case 5: exit 1, nothing on
+#      stderr, the name printed with the character as 日 on its == line
+#      and in a FAIL line that says it cannot be read (No such file or
+#      directory), a PASS line for the Basic range of the case 5 document,
+#      then RESULT: FAIL. The case is skipped, with a line that says so, when
+#      python3 -I does not decode file names as UTF-8 and write stdout as
+#      ISO-8859-1 under that locale on this machine.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -633,6 +642,32 @@ expect "the next document is checked" \
 expect "four PASS lines" '[ "$(printf "%s\n" "$out" | grep -c "^  PASS")" -eq 4 ]'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
+
+# \346\227\245 is U+65E5 encoded as UTF-8. Under en_US.ISO8859-1 on macOS,
+# python3 decodes the name as UTF-8 and writes stdout as ISO-8859-1, which
+# has no byte for U+65E5, so printing the name as it is raises
+# UnicodeEncodeError. The checker is expected to print 日 in its place.
+# No file is made with this name.
+title="case 23: a file argument that stdout's encoding cannot hold"
+probe="$(LC_ALL=en_US.ISO8859-1 python3 -I -c 'import codecs, sys; print(codecs.lookup(sys.getfilesystemencoding()).name, codecs.lookup(sys.stdout.encoding).name)' 2>&1 || true)"
+if [ "$probe" = "utf-8 iso8859-1" ]; then
+  LC_ALL=en_US.ISO8859-1 start_case "$title" \
+    "$work/$(printf '\346\227\245').md" "$work/fenced.md"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "the name is printed with the character as \\u65e5" \
+    "has_line '== $work/\\u65e5.md against the Scorecard'"
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says the file cannot be read and gives the character as \\u65e5" \
+    "has_line '  FAIL $work/\\u65e5.md: cannot read (No such file or directory)'"
+  expect "the case 5 document is checked" \
+    "has_line '== $work/fenced.md against the Scorecard' && has_line '  PASS line 1: Basic below 1.5'"
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+  end_case
+else
+  echo "$title"
+  echo "  skip python3 does not decode file names as UTF-8 and write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($probe)"
+fi
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"

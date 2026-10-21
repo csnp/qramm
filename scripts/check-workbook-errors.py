@@ -19,9 +19,10 @@ The script uses the Python standard library only. Exit status: 0 when no
 workbook stores an error value in a visible cell, 1 when one does or a
 workbook cannot be read, 2 on a usage error. An empty workbook argument
 fails with "no file name given". A file name is printed with each byte that
-the file system encoding cannot decode as a backslash escape, such as \\xff
-for the byte 0xff. --help (or -h) prints the usage line and this text on
-stderr and exits 2.
+the file system encoding cannot decode, and each character that the encoding
+of stdout cannot encode, as a backslash escape, such as \\xff for the byte
+0xff and \\u65e5 for the character U+65E5. --help (or -h) prints the usage
+line and this text on stderr and exits 2.
 """
 
 import os
@@ -129,6 +130,18 @@ def check_workbook(label, path, problems):
                 root = ET.fromstring(book.read(part))
                 formulas += check_sheet(name, root, label, problems)
     except OSError as error:
+        if error.errno is None or is_zip_file(path):
+            # bzip2 data that does not decompress. bz2 raises
+            # OSError("Invalid data stream"), which has no errno and so no
+            # strerror to give as the reason. Or a zip archive that
+            # zipfile.is_zipfile() accepts, which it does only for a file it
+            # can open, so the error was raised while reading the archive:
+            # zipfile raises OSError(22, "Invalid argument") when it seeks to
+            # an entry at the negative offset it works out from an end of
+            # central directory record that gives a central directory offset
+            # past the end of the file.
+            problems.append("{}: cannot read (not a workbook)".format(label))
+            return
         problems.append("{}: cannot read ({})".format(label, error.strerror))
         return
     except (zipfile.BadZipFile, KeyError, ET.ParseError, ValueError) as error:
@@ -138,12 +151,33 @@ def check_workbook(label, path, problems):
         print("  PASS {} visible formula cells, none stores an error value".format(formulas))
 
 
+def is_zip_file(path):
+    """zipfile.is_zipfile(path), or False where that raises BadZipFile, as it
+    does in Python 3.9.6 for an archive whose zip64 locator gives two disks."""
+    try:
+        return zipfile.is_zipfile(path)
+    except zipfile.BadZipFile:
+        return False
+
+
 def shown(path):
-    """path with each byte that the file system encoding cannot decode
-    written as a backslash escape, such as \\xff for the byte 0xff. Python
-    holds such a byte of a command-line argument as a lone surrogate, which
-    print() cannot encode under a locale such as en_US.UTF-8."""
-    return os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
+    """path in a form stdout can encode: the bytes os.fsencode gives back,
+    decoded with each byte the file system encoding cannot decode written as
+    a backslash escape, such as \\xff for the byte 0xff, then with each
+    character the encoding of stdout cannot encode written as a backslash
+    escape, such as \\u65e5 for U+65E5. Python holds such a byte of a
+    command-line argument as a lone surrogate, which print() cannot encode
+    under a locale such as en_US.UTF-8. Under en_US.ISO8859-1 on macOS, the
+    file system encoding is UTF-8 and the encoding of stdout is ISO-8859-1,
+    so a file name that is valid UTF-8 can hold a character, such as U+65E5,
+    that print() cannot encode."""
+    name = os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
+    # sys.stdout is None when file descriptor 1 is closed, and print() then
+    # writes nothing.
+    encoding = getattr(sys.stdout, "encoding", None)
+    if encoding is None:
+        return name
+    return name.encode(encoding, "backslashreplace").decode(encoding)
 
 
 def main(argv):

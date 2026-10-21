@@ -56,9 +56,11 @@ Exit status: 0 when the documents agree with the Scorecard, 1 when they do
 not, 2 on a usage error. An empty file argument fails with "no file name
 given", a workbook that cannot be read fails with "cannot read", and a text
 document whose bytes are not UTF-8 fails with "not UTF-8 text". A file
-name is printed with each byte that the file system encoding cannot decode
-as a backslash escape, such as \\xff for the byte 0xff. --help
-(or -h) prints the usage line and this text on stderr and exits 2.
+name is printed with each byte that the file system encoding cannot decode,
+and each character that the encoding of stdout cannot encode, as a backslash
+escape, such as \\xff for the byte 0xff and \\u65e5 for the character
+U+65E5. --help (or -h) prints the usage line and this text on stderr and
+exits 2.
 """
 
 import os
@@ -511,11 +513,23 @@ def check_chart(path, chart, bands, problems):
 
 
 def shown(path):
-    """path with each byte that the file system encoding cannot decode
-    written as a backslash escape, such as \\xff for the byte 0xff. Python
-    holds such a byte of a command-line argument as a lone surrogate, which
-    print() cannot encode under a locale such as en_US.UTF-8."""
-    return os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
+    """path in a form stdout can encode: the bytes os.fsencode gives back,
+    decoded with each byte the file system encoding cannot decode written as
+    a backslash escape, such as \\xff for the byte 0xff, then with each
+    character the encoding of stdout cannot encode written as a backslash
+    escape, such as \\u65e5 for U+65E5. Python holds such a byte of a
+    command-line argument as a lone surrogate, which print() cannot encode
+    under a locale such as en_US.UTF-8. Under en_US.ISO8859-1 on macOS, the
+    file system encoding is UTF-8 and the encoding of stdout is ISO-8859-1,
+    so a file name that is valid UTF-8 can hold a character, such as U+65E5,
+    that print() cannot encode."""
+    name = os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
+    # sys.stdout is None when file descriptor 1 is closed, and print() then
+    # writes nothing.
+    encoding = getattr(sys.stdout, "encoding", None)
+    if encoding is None:
+        return name
+    return name.encode(encoding, "backslashreplace").decode(encoding)
 
 
 def main(argv):

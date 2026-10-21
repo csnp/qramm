@@ -38,6 +38,27 @@
 #      workbook: exit 1, no traceback, the name printed with the byte as
 #      \xff on its == line and in a FAIL line that says it cannot be read,
 #      a PASS line for the sample workbook, then RESULT: FAIL.
+#  10. Under the en_US.ISO8859-1 locale, a workbook argument that is valid
+#      UTF-8 and holds the character U+65E5, which ISO-8859-1 cannot encode,
+#      and names no file, then the sample workbook: exit 1, nothing on
+#      stderr, the name printed with the character as 日 on its == line
+#      and in a FAIL line that says it cannot be read (No such file or
+#      directory), a PASS line for the sample workbook, then RESULT: FAIL.
+#      The case is skipped, with a line that says so, when python3 -I does
+#      not decode file names as UTF-8 and write stdout as ISO-8859-1 under
+#      that locale on this machine.
+#  11. A zip archive whose xl/workbook.xml entry gives compression method 12
+#      (bzip2) but holds bytes that are not bzip2 data. bz2 raises
+#      OSError("Invalid data stream"), which has no errno.
+#  12. A zip archive whose end of central directory record gives a central
+#      directory offset 1000 bytes past the end of the file.
+#      zipfile.is_zipfile() accepts this archive, and zipfile raises
+#      OSError(22, "Invalid argument") when it reads the xl/workbook.xml
+#      entry.
+#  Cases 11 and 12 pass the archive and then the sample workbook: exit 1,
+#  nothing on stderr, one FAIL line, which says the archive cannot be read
+#  (not a workbook), a PASS line for the sample workbook, and RESULT: FAIL
+#  as the last line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -281,6 +302,91 @@ expect "FAIL line says the workbook cannot be read and gives the byte as \\xff" 
 expect "the sample workbook is checked" \
   'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
 expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+# \346\227\245 is U+65E5 encoded as UTF-8. Under en_US.ISO8859-1 on macOS,
+# python3 decodes the name as UTF-8 and writes stdout as ISO-8859-1, which
+# has no byte for U+65E5, so printing the name as it is raises
+# UnicodeEncodeError. The checker is expected to print 日 in its place.
+# No file is made with this name.
+title="case 10: a workbook argument that stdout's encoding cannot hold"
+probe="$(LC_ALL=en_US.ISO8859-1 python3 -I -c 'import codecs, sys; print(codecs.lookup(sys.getfilesystemencoding()).name, codecs.lookup(sys.stdout.encoding).name)' 2>&1 || true)"
+if [ "$probe" = "utf-8 iso8859-1" ]; then
+  LC_ALL=en_US.ISO8859-1 start_case "$title" \
+    "$checker" "$work/$(printf '\346\227\245').xlsx" toolkit/Sample_Assessment.xlsx
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "the name is printed with the character as \\u65e5" \
+    "has_line '== $work/\\u65e5.xlsx'"
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says the workbook cannot be read and gives the character as \\u65e5" \
+    "has_fail '$work/\\u65e5.xlsx: cannot read (No such file or directory)'"
+  expect "the sample workbook is checked" \
+    'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+  expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+  end_case
+else
+  echo "$title"
+  echo "  skip python3 does not decode file names as UTF-8 and write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($probe)"
+fi
+
+# Writes to $1 a zip archive with one entry, xl/workbook.xml, damaged as $2
+# names. bzip2: both headers of the entry give compression method 12
+# (bzip2), and the entry holds bytes that are not bzip2 data. offset: the
+# end of central directory record gives a central directory offset 1000
+# bytes past the end of the file.
+make_damaged_zip() {
+  python3 -I - "$@" <<'PY'
+import struct
+import sys
+import zipfile
+
+path, damage = sys.argv[1:3]
+with zipfile.ZipFile(path, "w") as book:
+    book.writestr("xl/workbook.xml", "<workbook/>")
+with open(path, "rb") as fh:
+    data = bytearray(fh.read())
+# The archive has no comment, so its last 22 bytes are the end of central
+# directory record, which ends with the central directory's offset and a
+# 2-byte comment length.
+(directory,) = struct.unpack_from("<I", data, len(data) - 6)
+if damage == "bzip2":
+    # The entry's local file header starts the archive and gives the
+    # compression method at offset 8; its central directory header gives it
+    # at offset 10.
+    struct.pack_into("<H", data, 8, 12)
+    struct.pack_into("<H", data, directory + 10, 12)
+elif damage == "offset":
+    struct.pack_into("<I", data, len(data) - 6, len(data) + 1000)
+else:
+    sys.exit("make_damaged_zip: unknown damage " + damage)
+with open(path, "wb") as fh:
+    fh.write(data)
+PY
+}
+
+# Expectations for cases 11 and 12: $1 is the archive's file name.
+expect_not_a_workbook() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says it is not a workbook" \
+    "has_fail '$1: cannot read (not a workbook)'"
+  expect "the sample workbook is checked" \
+    'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+  expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+}
+
+make_damaged_zip "$work/bzip2.xlsx" bzip2
+start_case "case 11: bzip2 data that does not decompress" \
+  "$checker" "$work/bzip2.xlsx" toolkit/Sample_Assessment.xlsx
+expect_not_a_workbook "$work/bzip2.xlsx"
+end_case
+
+make_damaged_zip "$work/badoffset.xlsx" offset
+start_case "case 12: a central directory offset past the end of the file" \
+  "$checker" "$work/badoffset.xlsx" toolkit/Sample_Assessment.xlsx
+expect_not_a_workbook "$work/badoffset.xlsx"
 end_case
 
 if [ "$failed" -eq 0 ]; then

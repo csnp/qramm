@@ -33,8 +33,10 @@ sheet, and uses the Python standard library only.
 Exit status: 0 when the workbooks pass checks 1 to 4, 1 when they do not, 2
 on a usage error. An empty workbook argument fails with "no file name given".
 A file name is printed with each byte that the file system encoding cannot
-decode as a backslash escape, such as \\xff for the byte 0xff. --help (or -h)
-prints the usage line and this text on stderr and exits 2.
+decode, and each character that the encoding of stdout cannot encode, as a
+backslash escape, such as \\xff for the byte 0xff and \\u65e5 for the
+character U+65E5. --help (or -h) prints the usage line and this text on
+stderr and exits 2.
 """
 
 import os
@@ -322,13 +324,31 @@ def show_control(value):
     return show(value)
 
 
-def reason(error):
-    """The reason given for a workbook that cannot be read. An operating
-    system error gives its description, such as "No such file or directory",
-    as str() of it repeats the path the way repr() writes it, with a byte
-    that is not UTF-8 as \\udcff. An error with no description, such as the
-    OSError bz2 raises for data that does not decompress, gives str() of it."""
+def is_zip_file(path):
+    """zipfile.is_zipfile(path), or False where that raises BadZipFile, as it
+    does in Python 3.9.6 for an archive whose zip64 locator gives two disks."""
+    try:
+        return zipfile.is_zipfile(path)
+    except zipfile.BadZipFile:
+        return False
+
+
+def reason(error, path):
+    """The reason given for the workbook at path when reading it raised
+    error. An operating system error gives its description, such as "No such
+    file or directory", as str() of it repeats the path the way repr()
+    writes it, with a byte that is not UTF-8 as \\udcff. An error with no
+    description, such as the OSError bz2 raises for data that does not
+    decompress, gives str() of it. An operating system error for a zip
+    archive that zipfile.is_zipfile() accepts gives "not a workbook" instead
+    of its description: zipfile.is_zipfile() accepts only a file it can
+    open, so the error was raised while reading the archive, as when zipfile
+    raises OSError(22, "Invalid argument") on seeking to an entry at the
+    negative offset it works out from an end of central directory record
+    that gives a central directory offset past the end of the file."""
     if isinstance(error, OSError) and error.strerror:
+        if is_zip_file(path):
+            return "not a workbook"
         return error.strerror
     return str(error)
 
@@ -338,7 +358,9 @@ def check_workbook(label, path, spec, problems):
     try:
         sheet, first, rows = read_map(path)
     except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError) as error:
-        problems.append("{}: cannot read the compliance map ({})".format(label, reason(error)))
+        problems.append(
+            "{}: cannot read the compliance map ({})".format(label, reason(error, path))
+        )
         return
     control_letters = column_letters(first + CONTROL_COLUMN)
     weight_letters = column_letters(first + WEIGHT_COLUMN)
@@ -396,7 +418,9 @@ def check_category_names(label, path, sheet, first, rows, problems):
     try:
         lookups = read_name_lookups(path)
     except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError) as error:
-        problems.append("{}: cannot read the category name lookup ({})".format(label, reason(error)))
+        problems.append(
+            "{}: cannot read the category name lookup ({})".format(label, reason(error, path))
+        )
         return
     category_letters = column_letters(first + CATEGORY_COLUMN)
     named = 0
@@ -427,11 +451,23 @@ def check_category_names(label, path, sheet, first, rows, problems):
 
 
 def shown(path):
-    """path with each byte that the file system encoding cannot decode
-    written as a backslash escape, such as \\xff for the byte 0xff. Python
-    holds such a byte of a command-line argument as a lone surrogate, which
-    print() cannot encode under a locale such as en_US.UTF-8."""
-    return os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
+    """path in a form stdout can encode: the bytes os.fsencode gives back,
+    decoded with each byte the file system encoding cannot decode written as
+    a backslash escape, such as \\xff for the byte 0xff, then with each
+    character the encoding of stdout cannot encode written as a backslash
+    escape, such as \\u65e5 for U+65E5. Python holds such a byte of a
+    command-line argument as a lone surrogate, which print() cannot encode
+    under a locale such as en_US.UTF-8. Under en_US.ISO8859-1 on macOS, the
+    file system encoding is UTF-8 and the encoding of stdout is ISO-8859-1,
+    so a file name that is valid UTF-8 can hold a character, such as U+65E5,
+    that print() cannot encode."""
+    name = os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
+    # sys.stdout is None when file descriptor 1 is closed, and print() then
+    # writes nothing.
+    encoding = getattr(sys.stdout, "encoding", None)
+    if encoding is None:
+        return name
+    return name.encode(encoding, "backslashreplace").decode(encoding)
 
 
 def main(argv):
