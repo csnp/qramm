@@ -78,7 +78,7 @@ F9:F12 hold the four adjusted dimension scores.
 ```excel
 =IFS(E14="-", "Incomplete Assessment", E14>=3.5,"Advanced",E14>=2.5,"Established",E14>=1.5,"Developing",1=1,"Basic")
 ```
-These labels have no "Optimizing": a dimension or overall score of 4.0 is "Advanced". The Scorecard's Maturity Distribution chart (Scorecard!L21:M26) sorts the 12 practice scores with other cut-offs (1.6, 2.6, 3.6 and 4) and counts a practice score of 4 as "Optimizing".
+These labels have no "Optimizing": a dimension or overall score of 4.0 is "Advanced". The Scorecard's Maturity Distribution chart (Scorecard!L21:M25) sorts the 12 practice scores with the same cut-offs (1.5, 2.5 and 3.5) and counts a practice score of 4 as "Advanced"; its fifth category, "Incomplete Assessment", counts the practices that do not have a score yet.
 
 ### Top Strength Practice (D8)
 ```excel
@@ -171,11 +171,11 @@ Benchmark Scores: ={F8_CVI;F8_SGRM;F8_DPE;F8_ITR}
 
 ### Maturity Distribution (Donut Chart)
 ```excel
-Basic Count: =COUNTIF(AllPracticeScores, "<1.6")
-Developing Count: =COUNTIFS(AllPracticeScores, ">=1.6", AllPracticeScores, "<2.6")
-Established Count: =COUNTIFS(AllPracticeScores, ">=2.6", AllPracticeScores, "<3.6")
-Advanced Count: =COUNTIFS(AllPracticeScores, ">=3.6", AllPracticeScores, "<4")
-Optimizing Count: =COUNTIF(AllPracticeScores, "=4")
+Basic Count: =COUNTIF(AllPracticeScores, "<1.5")
+Developing Count: =COUNTIFS(AllPracticeScores, ">=1.5", AllPracticeScores, "<2.5")
+Established Count: =COUNTIFS(AllPracticeScores, ">=2.5", AllPracticeScores, "<3.5")
+Advanced Count: =COUNTIF(AllPracticeScores, ">=3.5")
+Incomplete Assessment Count: =COUNTIF(AllPracticeScores, "-")
 ```
 
 ### Progress Bar

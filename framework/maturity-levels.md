@@ -298,7 +298,7 @@ Each level is characterized by specific capabilities, organizational attributes,
 
 ## Level 5: Optimizing
 
-The toolkit does not assign this level to a dimension score or the overall score. Its Maturity Distribution chart counts a practice score of 4 as Optimizing.
+The toolkit does not assign this level to a dimension score or the overall score, and its Maturity Distribution chart counts a practice score of 4 as Advanced.
 
 ### General Characteristics
 
