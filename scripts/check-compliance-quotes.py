@@ -29,10 +29,13 @@ cell, for example) is a FAIL line here too. The script uses the Python
 standard library only.
 
 Exit status: 0 when the documents match the spec, 1 when they do not, 2 on a
-usage error. An empty document argument fails with "no file name given". A
-file name is printed with each byte that the file system encoding cannot
-decode as a backslash escape, such as \\xff for the byte 0xff. --help (or -h)
-prints the usage line and this text on stderr and exits 2.
+usage error. An empty document argument fails with "no file name given", and
+a document whose bytes are not UTF-8 fails with "not UTF-8 text". A file name
+is printed with each byte that the file system encoding cannot decode, and
+each character that the encoding of stdout cannot encode, as a backslash
+escape, such as \\xff for the byte 0xff and \\u65e5 for the character
+U+65E5. --help (or -h) prints the usage line and this text on stderr and
+exits 2.
 """
 
 import importlib.util
@@ -103,6 +106,10 @@ def check_document(label, path, mapping, spec, problems):
             lines = fh.read().splitlines()
     except OSError as error:
         problems.append("{}: cannot read ({})".format(label, error.strerror))
+        return
+    except UnicodeDecodeError:
+        # A document whose bytes are not UTF-8.
+        problems.append("{}: cannot read (not UTF-8 text)".format(label))
         return
     header = ["Question"] + [column for column, _ in mapping.FRAMEWORKS]
     rows = quoted_rows(lines, header)

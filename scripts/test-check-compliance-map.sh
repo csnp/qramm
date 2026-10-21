@@ -42,6 +42,22 @@
 #      \xff on its == line and in a FAIL line that says the map cannot be
 #      read (No such file or directory), the map PASS line for the sample
 #      workbook, then RESULT: FAIL.
+#  11. Under the en_US.ISO8859-1 locale, a workbook argument that is valid
+#      UTF-8 and holds the character U+65E5, which ISO-8859-1 cannot encode,
+#      and names no file, then the sample workbook: exit 1, nothing on
+#      stderr, the name printed with the character as 日 on its == line
+#      and in a FAIL line that says the map cannot be read (No such file or
+#      directory), the map PASS line for the sample workbook, then
+#      RESULT: FAIL. The case is skipped, with a line that says so, when
+#      python3 -I does not decode file names as UTF-8 and write stdout as
+#      ISO-8859-1 under that locale on this machine.
+#  12. A zip archive whose end of central directory record gives a central
+#      directory offset 1000 bytes past the end of the file, then the sample
+#      workbook: exit 1, nothing on stderr, one FAIL line, which says the map
+#      cannot be read (not a workbook), the map PASS line for the sample
+#      workbook, then RESULT: FAIL. zipfile.is_zipfile() accepts this
+#      archive, and zipfile raises OSError(22, "Invalid argument") when it
+#      reads the xl/workbook.xml entry.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -322,6 +338,68 @@ expect "the name is printed with the byte as \\xff" \
 expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
 expect "FAIL line says the map cannot be read and gives the byte as \\xff" \
   "has_line '  FAIL $work/bad\\xff.xlsx: cannot read the compliance map (No such file or directory)'"
+expect "the sample workbook is checked" \
+  "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# \346\227\245 is U+65E5 encoded as UTF-8. Under en_US.ISO8859-1 on macOS,
+# python3 decodes the name as UTF-8 and writes stdout as ISO-8859-1, which
+# has no byte for U+65E5, so printing the name as it is raises
+# UnicodeEncodeError. The checker is expected to print 日 in its place.
+# No file is made with this name.
+title="case 11: a workbook argument that stdout's encoding cannot hold"
+probe="$(LC_ALL=en_US.ISO8859-1 python3 -I -c 'import codecs, sys; print(codecs.lookup(sys.getfilesystemencoding()).name, codecs.lookup(sys.stdout.encoding).name)' 2>&1 || true)"
+if [ "$probe" = "utf-8 iso8859-1" ]; then
+  LC_ALL=en_US.ISO8859-1 start_case "$title" \
+    "$checker" "$work/$(printf '\346\227\245').xlsx" "$sample"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "the name is printed with the character as \\u65e5" \
+    "has_line '== $work/\\u65e5.xlsx against $spec'"
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says the map cannot be read and gives the character as \\u65e5" \
+    "has_line '  FAIL $work/\\u65e5.xlsx: cannot read the compliance map (No such file or directory)'"
+  expect "the sample workbook is checked" \
+    "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+  end_case
+else
+  echo "$title"
+  echo "  skip python3 does not decode file names as UTF-8 and write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($probe)"
+fi
+
+# Writes to $1 a zip archive with one entry, xl/workbook.xml, whose end of
+# central directory record gives a central directory offset 1000 bytes past
+# the end of the file.
+make_bad_offset() {
+  python3 -I - "$1" <<'PY'
+import struct
+import sys
+import zipfile
+
+path = sys.argv[1]
+with zipfile.ZipFile(path, "w") as book:
+    book.writestr("xl/workbook.xml", "<workbook/>")
+with open(path, "rb") as fh:
+    data = bytearray(fh.read())
+# The archive has no comment, so its last 22 bytes are the end of central
+# directory record, which ends with the central directory's offset and a
+# 2-byte comment length.
+struct.pack_into("<I", data, len(data) - 6, len(data) + 1000)
+with open(path, "wb") as fh:
+    fh.write(data)
+PY
+}
+
+make_bad_offset "$work/badoffset.xlsx"
+start_case "case 12: a central directory offset past the end of the file" \
+  "$checker" "$work/badoffset.xlsx" "$sample"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the map cannot be read as it is not a workbook" \
+  "has_line '  FAIL $work/badoffset.xlsx: cannot read the compliance map (not a workbook)'"
 expect "the sample workbook is checked" \
   "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
