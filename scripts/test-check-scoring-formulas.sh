@@ -46,7 +46,7 @@
 #      framework/qramm-overview.md: exit 1, nothing on stderr, three FAIL
 #      lines, two that say the Overall Score and Dimension Score formulas
 #      differ and one for the missing Practice Score formula, the Overall
-#      Score formula printed with U+2192 as →, the Dimension Score
+#      Score formula printed with U+2192 as \u2192, the Dimension Score
 #      formula printed with U+00D7 as the ISO-8859-1 byte 0xd7, a PASS line
 #      for the overview's Overall Score formula, then RESULT: FAIL. The case
 #      is skipped, with a line that says so, when python3 -I does not write
@@ -269,7 +269,7 @@ end_case
 # Under en_US.ISO8859-1 on macOS, python3 writes stdout as ISO-8859-1, which
 # has the byte 0xd7 (\327) for U+00D7 and no byte for U+2192, so printing
 # the Overall Score formula as it is raises UnicodeEncodeError. The checker
-# is expected to print → in place of U+2192 and the byte 0xd7 for
+# is expected to print \u2192 in place of U+2192 and the byte 0xd7 for
 # U+00D7. The line with that byte is matched under LC_ALL=C, where grep
 # compares bytes, not characters.
 title="case 11: a FAIL line that quotes a character stdout's encoding cannot hold"
