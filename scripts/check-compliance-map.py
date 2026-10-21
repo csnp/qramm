@@ -49,6 +49,35 @@ import xml.etree.ElementTree as ET
 import zipfile
 import zlib
 
+try:
+    import lzma
+except ImportError:
+    lzma = None
+try:
+    # New in Python 3.14.
+    from compression import zstd
+except ImportError:
+    zstd = None
+
+# The errors other than OSError and zipfile.BadZipFile that zipfile raises
+# for an entry of a zip archive that it cannot read. RuntimeError: an entry
+# whose flags mark it as encrypted, or a compression method whose module
+# this Python lacks. NotImplementedError, a subclass of RuntimeError: a
+# compression method zipfile does not support, such as 98 (PPMd), or 93
+# (Zstandard) before Python 3.14. The error of the module that decompresses
+# the entry, for data that does not decompress: zlib.error for deflate,
+# lzma.LZMAError for LZMA and compression.zstd.ZstdError for Zstandard. bz2
+# raises OSError instead.
+ENTRY_ERRORS = (RuntimeError, zlib.error)
+if lzma is not None:
+    ENTRY_ERRORS += (lzma.LZMAError,)
+if zstd is not None:
+    ENTRY_ERRORS += (zstd.ZstdError,)
+
+# The errors check_workbook() and check_category_names() report as a
+# workbook that cannot be read, each with the reason reason() gives for it.
+READ_ERRORS = (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError) + ENTRY_ERRORS
+
 SPEC = "toolkit-specs/4_QRAMM_Compliance_Mapping_Details.md"
 
 WORKBOOKS = [
@@ -349,10 +378,11 @@ def reason(error, path):
     open, so the error was raised while reading the archive, as when zipfile
     raises OSError(22, "Invalid argument") on seeking to an entry at the
     negative offset it works out from an end of central directory record
-    that gives a central directory offset past the end of the file. The
-    zlib.error zipfile raises for an entry stored with the deflate method
-    whose data does not decompress gives "not a workbook" too."""
-    if isinstance(error, zlib.error):
+    that gives a central directory offset past the end of the file. An
+    error in ENTRY_ERRORS, which zipfile raises for an entry it cannot read,
+    such as the zlib.error for an entry stored with the deflate method whose
+    data does not decompress, gives "not a workbook" too."""
+    if isinstance(error, ENTRY_ERRORS):
         return "not a workbook"
     if isinstance(error, OSError) and error.strerror:
         if is_zip_file(path):
@@ -365,7 +395,7 @@ def check_workbook(label, path, spec, problems):
     """label is the workbook's file name as printed; path is the file read."""
     try:
         sheet, first, rows = read_map(path)
-    except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError, zlib.error) as error:
+    except READ_ERRORS as error:
         problems.append(
             "{}: cannot read the compliance map ({})".format(label, reason(error, path))
         )
@@ -425,7 +455,7 @@ def check_workbook(label, path, spec, problems):
 def check_category_names(label, path, sheet, first, rows, problems):
     try:
         lookups = read_name_lookups(path)
-    except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError, zlib.error) as error:
+    except READ_ERRORS as error:
         problems.append(
             "{}: cannot read the category name lookup ({})".format(label, reason(error, path))
         )

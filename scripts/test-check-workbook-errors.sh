@@ -59,7 +59,25 @@
 #      method and whose first 4 bytes of deflate data are 0xff, which does
 #      not decompress. zlib raises zlib.error("Error -3 while decompressing
 #      data: invalid block type").
-#  Cases 11 to 13 pass the archive and then the sample workbook: exit 1,
+#  14. A zip archive whose xl/workbook.xml entry has bit 0 of its general
+#      purpose flags set, which marks it as encrypted. zipfile raises
+#      RuntimeError("File 'xl/workbook.xml' is encrypted, password required
+#      for extraction").
+#  15. A zip archive whose xl/workbook.xml entry gives compression method
+#      98 (PPMd), which zipfile does not support. zipfile raises
+#      NotImplementedError("That compression method is not supported").
+#  16. A zip archive whose xl/workbook.xml entry gives compression method
+#      93 (Zstandard) but holds bytes that are not Zstandard data. In Python
+#      3.14.3, compression.zstd raises ZstdError("Unable to decompress
+#      Zstandard data: Unknown frame descriptor"). Python 3.13.12 and 3.9.6
+#      have no compression.zstd module, and zipfile raises
+#      NotImplementedError as in case 15.
+#  17. A zip archive whose xl/workbook.xml entry gives compression method
+#      14 (LZMA) and holds 11 bytes that do not decompress: the 4-byte header
+#      zipfile reads before LZMA data, which gives 5 bytes of LZMA
+#      properties, those properties, then 0xff 0xff. lzma raises
+#      LZMAError("Corrupt input data").
+#  Cases 11 to 17 pass the archive and then the sample workbook: exit 1,
 #  nothing on stderr, one FAIL line, which says the archive cannot be read
 #  (not a workbook), a PASS line for the sample workbook, and RESULT: FAIL
 #  as the last line.
@@ -349,7 +367,14 @@ fi
 # end of central directory record gives a central directory offset 1000
 # bytes past the end of the file. deflate: the entry is stored with the
 # deflate method, and its first 4 bytes of deflate data are 0xff, which
-# start a block of the reserved type 3.
+# start a block of the reserved type 3. encrypted: both headers of the entry
+# set bit 0 of the general purpose flags, which marks the entry as
+# encrypted. ppmd, zstd and lzma: both headers of the entry give compression
+# method 98 (PPMd), 93 (Zstandard) or 14 (LZMA). The entry holds the 11
+# bytes <workbook/>, which are not Zstandard data; for lzma, they are
+# replaced by the 4-byte header zipfile reads before LZMA data, which gives
+# 5 bytes of LZMA properties, the properties 0x5d (lc=3, lp=0, pb=2) and a
+# 64 KiB dictionary size, then 0xff 0xff.
 make_damaged_zip() {
   python3 -I - "$@" <<'PY'
 import struct
@@ -382,6 +407,21 @@ elif damage == "deflate":
     # name; writestr() writes no extra field there.
     start = 30 + len("xl/workbook.xml")
     data[start:start + 4] = bytes([255] * 4)
+elif damage == "encrypted":
+    # The local file header gives the general purpose flags at offset 6; the
+    # central directory header gives them at offset 8.
+    for offset in (6, directory + 8):
+        (flags,) = struct.unpack_from("<H", data, offset)
+        struct.pack_into("<H", data, offset, flags | 1)
+elif damage in ("ppmd", "zstd", "lzma"):
+    method = {"ppmd": 98, "zstd": 93, "lzma": 14}[damage]
+    struct.pack_into("<H", data, 8, method)
+    struct.pack_into("<H", data, directory + 10, method)
+    if damage == "lzma":
+        # The entry's 11 bytes of data follow its local file header and
+        # the file name.
+        start = 30 + len("xl/workbook.xml")
+        data[start:start + 11] = bytes([9, 20, 5, 0, 0x5D, 0, 0, 1, 0, 255, 255])
 else:
     sys.exit("make_damaged_zip: unknown damage " + damage)
 with open(path, "wb") as fh:
@@ -389,7 +429,7 @@ with open(path, "wb") as fh:
 PY
 }
 
-# Expectations for cases 11 to 13: $1 is the archive's file name.
+# Expectations for cases 11 to 17: $1 is the archive's file name.
 expect_not_a_workbook() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "no traceback on stderr" '[ -z "$err" ]'
@@ -417,6 +457,30 @@ make_damaged_zip "$work/deflate.xlsx" deflate
 start_case "case 13: deflate data that does not decompress" \
   "$checker" "$work/deflate.xlsx" toolkit/Sample_Assessment.xlsx
 expect_not_a_workbook "$work/deflate.xlsx"
+end_case
+
+make_damaged_zip "$work/encrypted.xlsx" encrypted
+start_case "case 14: an entry marked as encrypted" \
+  "$checker" "$work/encrypted.xlsx" toolkit/Sample_Assessment.xlsx
+expect_not_a_workbook "$work/encrypted.xlsx"
+end_case
+
+make_damaged_zip "$work/ppmd.xlsx" ppmd
+start_case "case 15: compression method 98 (PPMd)" \
+  "$checker" "$work/ppmd.xlsx" toolkit/Sample_Assessment.xlsx
+expect_not_a_workbook "$work/ppmd.xlsx"
+end_case
+
+make_damaged_zip "$work/zstd.xlsx" zstd
+start_case "case 16: Zstandard data that does not decompress" \
+  "$checker" "$work/zstd.xlsx" toolkit/Sample_Assessment.xlsx
+expect_not_a_workbook "$work/zstd.xlsx"
+end_case
+
+make_damaged_zip "$work/lzma.xlsx" lzma
+start_case "case 17: LZMA data that does not decompress" \
+  "$checker" "$work/lzma.xlsx" toolkit/Sample_Assessment.xlsx
+expect_not_a_workbook "$work/lzma.xlsx"
 end_case
 
 # Writes to $1 a workbook with one visible sheet, named "Scores \u2192

@@ -86,6 +86,33 @@
 #      Data\u2192!BG3:BH108, then RESULT: PASS.
 #  Cases 15 and 16 are skipped, with a line that says so, when python3 -I
 #  does not write stdout as ISO-8859-1 under that locale on this machine.
+#  15. A zip archive whose xl/workbook.xml entry has bit 0 of its general
+#      purpose flags set, which marks it as encrypted. zipfile raises
+#      RuntimeError("File 'xl/workbook.xml' is encrypted, password required
+#      for extraction").
+#  16. A zip archive whose xl/workbook.xml entry gives compression method
+#      98 (PPMd), which zipfile does not support. zipfile raises
+#      NotImplementedError("That compression method is not supported").
+#  17. A zip archive whose xl/workbook.xml entry gives compression method
+#      93 (Zstandard) and holds XML text, which is not Zstandard data. In
+#      Python 3.14.3, compression.zstd raises ZstdError("Unable to decompress
+#      Zstandard data: Unknown frame descriptor"). Python 3.13.12 and 3.9.6
+#      have no compression.zstd module, and zipfile raises
+#      NotImplementedError as in case 16.
+#  18. A zip archive whose xl/workbook.xml entry gives compression method
+#      14 (LZMA) and whose data starts with 11 bytes that do not decompress:
+#      the 4-byte header zipfile reads before LZMA data, which gives 5 bytes
+#      of LZMA properties, those properties, then 0xff 0xff. lzma raises
+#      LZMAError("Corrupt input data").
+#  Cases 15 to 18 pass the archive and then the sample workbook: exit 1,
+#  nothing on stderr, one FAIL line, which says the map cannot be read (not
+#  a workbook), the map PASS line for the sample workbook, then
+#  RESULT: FAIL.
+#  19 to 22. A copy of the sample workbook whose Compliance sheet part is
+#      damaged as the xl/workbook.xml entry is in cases 15 to 18, in that
+#      order: exit 1, nothing on stderr, the map PASS line, then one FAIL
+#      line, which says the category name lookup cannot be read (not a
+#      workbook), then RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -604,6 +631,149 @@ else
   echo "$title"
   echo "  skip python3 does not write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($stdout_encoding)"
 fi
+
+# Writes to $1 a zip archive whose entry $2 is stored, with no compression,
+# and damaged as $3 names. encrypted: both headers of the entry set bit 0 of
+# the general purpose flags, which marks the entry as encrypted. ppmd, zstd
+# and lzma: both headers of the entry give compression method 98 (PPMd), 93
+# (Zstandard) or 14 (LZMA); for lzma, the first 11 bytes of the entry's data
+# are replaced by the 4-byte header zipfile reads before LZMA data, which
+# gives 5 bytes of LZMA properties, the properties 0x5d (lc=3, lp=0, pb=2)
+# and a 64 KiB dictionary size, then 0xff 0xff. With $4, the archive holds
+# every entry of the workbook $4, the others stored with the deflate method;
+# without it, it holds only $2, an xl/workbook.xml of XML text.
+make_damaged_entry() {
+  python3 -I - "$@" <<'PY'
+import struct
+import sys
+import zipfile
+
+path, entry, damage = sys.argv[1:4]
+with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as book:
+    if len(sys.argv) > 4:
+        with zipfile.ZipFile(sys.argv[4]) as source:
+            for info in source.infolist():
+                book.writestr(
+                    info.filename,
+                    source.read(info.filename),
+                    compress_type=zipfile.ZIP_STORED if info.filename == entry else None,
+                )
+    else:
+        book.writestr(
+            entry,
+            "<workbook>" + "AB" * 1500 + "</workbook>",
+            compress_type=zipfile.ZIP_STORED,
+        )
+with zipfile.ZipFile(path) as book:
+    names = book.namelist()
+    local = book.getinfo(entry).header_offset
+with open(path, "rb") as fh:
+    data = bytearray(fh.read())
+# The archive has no comment, so its last 22 bytes are the end of central
+# directory record, which ends with the central directory's offset and a
+# 2-byte comment length. The central directory holds a header for each entry
+# in the order namelist() gives: 46 bytes, then the file name, the extra
+# field and the comment, whose lengths the header gives at offsets 28, 30
+# and 32.
+(central,) = struct.unpack_from("<I", data, len(data) - 6)
+for _ in range(names.index(entry)):
+    central += 46 + sum(struct.unpack_from("<HHH", data, central + 28))
+if damage == "encrypted":
+    # The local file header gives the general purpose flags at offset 6; the
+    # central directory header gives them at offset 8.
+    for offset in (local + 6, central + 8):
+        (flags,) = struct.unpack_from("<H", data, offset)
+        struct.pack_into("<H", data, offset, flags | 1)
+elif damage in ("ppmd", "zstd", "lzma"):
+    # The local file header gives the compression method at offset 8; the
+    # central directory header gives it at offset 10.
+    method = {"ppmd": 98, "zstd": 93, "lzma": 14}[damage]
+    struct.pack_into("<H", data, local + 8, method)
+    struct.pack_into("<H", data, central + 10, method)
+    if damage == "lzma":
+        # The entry's data follows its 30-byte local file header, which
+        # gives the lengths of the file name and of the extra field at
+        # offsets 26 and 28.
+        name_length, extra_length = struct.unpack_from("<HH", data, local + 26)
+        start = local + 30 + name_length + extra_length
+        data[start:start + 11] = bytes([9, 20, 5, 0, 0x5D, 0, 0, 1, 0, 255, 255])
+else:
+    sys.exit("make_damaged_entry: unknown damage " + damage)
+with open(path, "wb") as fh:
+    fh.write(data)
+PY
+}
+
+# Expectations for cases 15 to 18: $1 is the archive's file name.
+expect_map_not_a_workbook() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says the map cannot be read as it is not a workbook" \
+    "has_line '  FAIL $1: cannot read the compliance map (not a workbook)'"
+  expect "the sample workbook is checked" \
+    "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
+# Expectations for cases 19 to 22: $1 is the copy's file name.
+expect_lookup_not_a_workbook() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "the map is checked" "has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says the category name lookup cannot be read as it is not a workbook" \
+    "has_line '  FAIL $1: cannot read the category name lookup (not a workbook)'"
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
+make_damaged_entry "$work/encrypted.xlsx" xl/workbook.xml encrypted
+start_case "case 15: an entry marked as encrypted" \
+  "$checker" "$work/encrypted.xlsx" "$sample"
+expect_map_not_a_workbook "$work/encrypted.xlsx"
+end_case
+
+make_damaged_entry "$work/ppmd.xlsx" xl/workbook.xml ppmd
+start_case "case 16: compression method 98 (PPMd)" \
+  "$checker" "$work/ppmd.xlsx" "$sample"
+expect_map_not_a_workbook "$work/ppmd.xlsx"
+end_case
+
+make_damaged_entry "$work/zstd.xlsx" xl/workbook.xml zstd
+start_case "case 17: Zstandard data that does not decompress" \
+  "$checker" "$work/zstd.xlsx" "$sample"
+expect_map_not_a_workbook "$work/zstd.xlsx"
+end_case
+
+make_damaged_entry "$work/lzma.xlsx" xl/workbook.xml lzma
+start_case "case 18: LZMA data that does not decompress" \
+  "$checker" "$work/lzma.xlsx" "$sample"
+expect_map_not_a_workbook "$work/lzma.xlsx"
+end_case
+
+make_damaged_entry "$work/lookup-encrypted.xlsx" xl/worksheets/sheet8.xml encrypted "$root/$sample"
+start_case "case 19: a Compliance sheet part marked as encrypted" \
+  "$checker" "$work/lookup-encrypted.xlsx"
+expect_lookup_not_a_workbook "$work/lookup-encrypted.xlsx"
+end_case
+
+make_damaged_entry "$work/lookup-ppmd.xlsx" xl/worksheets/sheet8.xml ppmd "$root/$sample"
+start_case "case 20: a Compliance sheet part with compression method 98 (PPMd)" \
+  "$checker" "$work/lookup-ppmd.xlsx"
+expect_lookup_not_a_workbook "$work/lookup-ppmd.xlsx"
+end_case
+
+make_damaged_entry "$work/lookup-zstd.xlsx" xl/worksheets/sheet8.xml zstd "$root/$sample"
+start_case "case 21: Zstandard data in the Compliance sheet that does not decompress" \
+  "$checker" "$work/lookup-zstd.xlsx"
+expect_lookup_not_a_workbook "$work/lookup-zstd.xlsx"
+end_case
+
+make_damaged_entry "$work/lookup-lzma.xlsx" xl/worksheets/sheet8.xml lzma "$root/$sample"
+start_case "case 22: LZMA data in the Compliance sheet that does not decompress" \
+  "$checker" "$work/lookup-lzma.xlsx"
+expect_lookup_not_a_workbook "$work/lookup-lzma.xlsx"
+end_case
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
