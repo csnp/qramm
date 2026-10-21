@@ -350,6 +350,12 @@ def main(argv):
                     with open(os.path.join(root, path), encoding="utf-8") as fh:
                         parts = [("", fh.read().splitlines())]
             except OSError as error:
+                if is_workbook and error.errno is None:
+                    # bzip2 data that does not decompress. bz2 raises
+                    # OSError("Invalid data stream"), which has no errno and
+                    # so no strerror to give as the reason.
+                    problems.append("{}: cannot read (not a workbook)".format(path))
+                    continue
                 problems.append("{}: cannot read ({})".format(path, error.strerror))
                 continue
             except zipfile.BadZipFile:

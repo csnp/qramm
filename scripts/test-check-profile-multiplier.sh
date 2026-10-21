@@ -79,14 +79,20 @@
 #      zip -P sets (general purpose flag bit 0).
 #  28. A workbook whose sheet entry gives compression method 93 (Zstandard)
 #      but holds bytes that are not Zstandard data.
-#  Cases 23 to 28 pass the workbook and then a text document that gives the
-#  workbook's range: exit 1, nothing on stderr, one FAIL line, which says
-#  the workbook is not a workbook, a PASS line for the text document, and
-#  RESULT: FAIL as the last line.
+#  Cases 23 to 28, and case 30 below, pass the workbook and then a text
+#  document that gives the workbook's range: exit 1, nothing on stderr, one
+#  FAIL line, which says the workbook is not a workbook, a PASS line for the
+#  text document, and RESULT: FAIL as the last line.
 #  29. A text document with a Latin-1 byte, then a document that gives the
 #      workbook's range: exit 1, no traceback, a FAIL line that says the
 #      first is not UTF-8 text, a PASS line for the second, then
 #      RESULT: FAIL.
+#  30. A workbook whose sheet entry gives compression method 12 (bzip2) but
+#      holds bytes that are not bzip2 data.
+#  31. A .xlsx document that does not exist, then a document that gives the
+#      workbook's range: exit 1, nothing on stderr, a FAIL line that gives
+#      the reason "No such file or directory", a PASS line for the second,
+#      then RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -492,7 +498,7 @@ sys.exit(0 if found else 1)
 PY
 }
 
-# Expectations for cases 23 to 28: $1 is the workbook's file name.
+# Expectations for cases 23 to 28 and 30: $1 is the workbook's file name.
 expect_not_a_workbook() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "no traceback on stderr" '[ -z "$err" ]'
@@ -559,6 +565,26 @@ expect "no traceback on stderr" '[ -z "$err" ]'
 expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
 expect "FAIL line says it is not UTF-8 text" \
   "has_fail 'latin1.md: cannot read (not UTF-8 text)'"
+expect "the next document is checked" \
+  "has_line '== $work/new.md against $toolkit' && has_line '  PASS line 1: 1.00 to 1.50'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+make_zip "$work/bzip2.xlsx" "$book_xml" "$rels_xml" "$strings_xml" \
+  "xl/worksheets/sheet1.xml=not bzip2 data"
+set_entry "$work/bzip2.xlsx" xl/worksheets/sheet1.xml 12 0
+start_case "case 30: bzip2 data that does not decompress" \
+  "$checker" "$work/bzip2.xlsx" "$work/new.md"
+expect_not_a_workbook bzip2.xlsx
+end_case
+
+start_case "case 31: a .xlsx document that does not exist" \
+  "$checker" "$work/missing.xlsx" "$work/new.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line gives the reason No such file or directory" \
+  "has_fail 'missing.xlsx: cannot read (No such file or directory)'"
 expect "the next document is checked" \
   "has_line '== $work/new.md against $toolkit' && has_line '  PASS line 1: 1.00 to 1.50'"
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
