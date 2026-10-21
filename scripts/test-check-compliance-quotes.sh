@@ -30,6 +30,11 @@
 #      header text.
 #   8. An empty document argument: exit 1, "FAIL '': no file name given",
 #      no "cannot read" line.
+#   9. Under the en_US.UTF-8 locale, a document argument that holds the byte
+#      0xff, which is not valid UTF-8, and names no file, then the vision
+#      summary: exit 1, no traceback, the name printed with the byte as \xff
+#      on its == line and in a FAIL line that says it cannot be read, a PASS
+#      line for the vision summary, then RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -92,6 +97,10 @@ has_fail() {
 
 fail_count() {
   printf '%s\n' "$out" | grep -c '^  FAIL' || true
+}
+
+has_line() {
+  printf '%s\n' "$out" | grep -q -x -F -- "$1"
 }
 
 show_output() {
@@ -200,6 +209,25 @@ expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "FAIL says no file name was given" \
   'printf "%s\n" "$out" | grep -qxF "  FAIL '"''"': no file name given"'
 expect "no cannot read line" '! printf "%s\n" "$out" | grep -q "cannot read"'
+end_case
+
+# \377 is the byte 0xff, which is not valid UTF-8, so Python holds it as a
+# lone surrogate. Under en_US.UTF-8 printing that raises UnicodeEncodeError;
+# the C, C.UTF-8 and UTF-8 locales write the byte as it is. The checker is
+# expected to print \xff in either case. No file is made with this name.
+summary="toolkit-specs/compliance-tab-vision/compliance-vision-summary.md"
+LC_ALL=en_US.UTF-8 start_case "case 9: a document argument that is not UTF-8" \
+  "$work/bad$(printf '\377').md" "$summary"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "the name is printed with the byte as \\xff" \
+  "has_line '== $work/bad\\xff.md against $spec'"
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the document cannot be read and gives the byte as \\xff" \
+  "has_fail '$work/bad\\xff.md: cannot read ('"
+expect "the vision summary is checked" \
+  "has_line '== $summary against $spec' && has_line '  PASS 1 quoted row'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then

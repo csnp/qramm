@@ -18,8 +18,10 @@ reader does not see it.
 The script uses the Python standard library only. Exit status: 0 when no
 workbook stores an error value in a visible cell, 1 when one does or a
 workbook cannot be read, 2 on a usage error. An empty workbook argument
-fails with "no file name given". --help (or -h) prints the usage line and
-this text on stderr and exits 2.
+fails with "no file name given". A file name is printed with each byte that
+the file system encoding cannot decode as a backslash escape, such as \\xff
+for the byte 0xff. --help (or -h) prints the usage line and this text on
+stderr and exits 2.
 """
 
 import os
@@ -116,6 +118,7 @@ def check_sheet(name, root, label, problems):
 
 
 def check_workbook(label, path, problems):
+    """label is the workbook's file name as printed; path is the file read."""
     before = len(problems)
     try:
         with zipfile.ZipFile(path) as book:
@@ -135,6 +138,14 @@ def check_workbook(label, path, problems):
         print("  PASS {} visible formula cells, none stores an error value".format(formulas))
 
 
+def shown(path):
+    """path with each byte that the file system encoding cannot decode
+    written as a backslash escape, such as \\xff for the byte 0xff. Python
+    holds such a byte of a command-line argument as a lone surrogate, which
+    print() cannot encode under a locale such as en_US.UTF-8."""
+    return os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
+
+
 def main(argv):
     if "--help" in argv or "-h" in argv:
         print(USAGE, file=sys.stderr)
@@ -150,11 +161,12 @@ def main(argv):
 
     problems = []
     for label in argv or WORKBOOKS:
-        print("== {}".format(label or "''"))
+        name = shown(label)
+        print("== {}".format(name or "''"))
         if not label:
             problems.append("'': no file name given")
             continue
-        check_workbook(label, os.path.join(root, label), problems)
+        check_workbook(name, os.path.join(root, label), problems)
 
     for problem in problems:
         print("  FAIL {}".format(problem))

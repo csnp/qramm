@@ -54,7 +54,9 @@ standard library only.
 
 Exit status: 0 when the documents agree with the Scorecard, 1 when they do
 not, 2 on a usage error. An empty file argument fails with "no file name
-given", and a workbook that cannot be read fails with "cannot read". --help
+given", and a workbook that cannot be read fails with "cannot read". A file
+name is printed with each byte that the file system encoding cannot decode
+as a backslash escape, such as \\xff for the byte 0xff. --help
 (or -h) prints the usage line and this text on stderr and exits 2.
 """
 
@@ -252,9 +254,10 @@ def stated_ranges(lines):
     return found
 
 
-def check_document(path, parts, bands, problems):
-    """parts is a list of (place, lines): place is "" for a text file and
-    Sheet!Cell for each text cell of a workbook."""
+def check_document(name, parts, bands, problems):
+    """name is the document's file name as printed. parts is a list of
+    (place, lines): place is "" for a text file and Sheet!Cell for each text
+    cell of a workbook."""
     stated = set()
     for place, lines in parts:
         where = place + " " if place else ""
@@ -264,14 +267,14 @@ def check_document(path, parts, bands, problems):
                 problems.append(
                     "{} {}line {}: {} is given the score range {}, but the {} labels "
                     "no dimension or overall score {} ({}!H9:H12 and H14)".format(
-                        path, where, number, level, describe(band), SHEET, level,
+                        name, where, number, level, describe(band), SHEET, level,
                         SHEET,
                     )
                 )
             elif band != bands[level]:
                 problems.append(
                     "{} {}line {}: {} is {} here, but on the {} it is {}".format(
-                        path, where, number, level, describe(band), SHEET,
+                        name, where, number, level, describe(band), SHEET,
                         describe(bands[level]),
                     )
                 )
@@ -281,7 +284,7 @@ def check_document(path, parts, bands, problems):
                 ))
     for level in LEVELS:
         if level in bands and level not in stated:
-            problems.append("{}: no score range for {}".format(path, level))
+            problems.append("{}: no score range for {}".format(name, level))
 
 
 def shared_strings(book):
@@ -497,6 +500,14 @@ def check_chart(path, chart, bands, problems):
             )
 
 
+def shown(path):
+    """path with each byte that the file system encoding cannot decode
+    written as a backslash escape, such as \\xff for the byte 0xff. Python
+    holds such a byte of a command-line argument as a lone surrogate, which
+    print() cannot encode under a locale such as en_US.UTF-8."""
+    return os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
+
+
 def main(argv):
     if "--help" in argv or "-h" in argv:
         print(USAGE, file=sys.stderr)
@@ -521,7 +532,8 @@ def main(argv):
 
     if bands:
         for path in documents:
-            print("== {} against the {}".format(path or "''", SHEET))
+            name = shown(path)
+            print("== {} against the {}".format(name or "''", SHEET))
             if not path:
                 problems.append("'': no file name given")
                 continue
@@ -533,10 +545,10 @@ def main(argv):
                     with open(os.path.join(root, path), encoding="utf-8") as fh:
                         parts, charts = [("", fh.read().splitlines())], []
             except OSError as error:
-                problems.append("{}: cannot read ({})".format(path, error.strerror))
+                problems.append("{}: cannot read ({})".format(name, error.strerror))
                 continue
             except zipfile.BadZipFile:
-                problems.append("{}: cannot read (not a zip file)".format(path))
+                problems.append("{}: cannot read (not a zip file)".format(name))
                 continue
             except Exception:
                 if not is_workbook:
@@ -544,11 +556,11 @@ def main(argv):
                 # A zip archive that is not a readable workbook: a missing
                 # part or relationship Target, XML that does not parse, or a
                 # shared-string index past the end of the table, for example.
-                problems.append("{}: cannot read (not a workbook)".format(path))
+                problems.append("{}: cannot read (not a workbook)".format(name))
                 continue
-            check_document(path, parts, bands, problems)
+            check_document(name, parts, bands, problems)
             for chart in charts:
-                check_chart(path, chart, bands, problems)
+                check_chart(name, chart, bands, problems)
 
     for problem in problems:
         print("  FAIL {}".format(problem))

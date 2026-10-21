@@ -21,6 +21,12 @@
 #      "scored from 1 to 4." or the decimal in "score 1-2.5".
 #   7. An empty file argument: exit 1, "FAIL '': no file name given", no
 #      "cannot read" line.
+#   8. Under the en_US.UTF-8 locale, a file argument that holds the byte
+#      0xff, which is not valid UTF-8, and names no file, then
+#      framework/qramm-overview.md: exit 1, no traceback, the name printed
+#      with the byte as \xff on its == line and in a FAIL line that says it
+#      cannot be read, a PASS line for the overview's Overall Score formula,
+#      then RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -65,6 +71,14 @@ expect() {
 
 has_fail() {
   printf '%s\n' "$out" | grep '^  FAIL' | grep -q -F -- "$1"
+}
+
+fail_count() {
+  printf '%s\n' "$out" | grep -c '^  FAIL' || true
+}
+
+has_line() {
+  printf '%s\n' "$out" | grep -q -x -F -- "$1"
 }
 
 show_output() {
@@ -163,6 +177,27 @@ expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "FAIL says no file name was given" \
   'printf "%s\n" "$out" | grep -qxF "  FAIL '"''"': no file name given"'
 expect "no cannot read line" '! printf "%s\n" "$out" | grep -q "cannot read"'
+end_case
+
+# \377 is the byte 0xff, which is not valid UTF-8, so Python holds it as a
+# lone surrogate. Under en_US.UTF-8 printing that raises UnicodeEncodeError;
+# the C, C.UTF-8 and UTF-8 locales write the byte as it is. The checker is
+# expected to print \xff in either case. No file is made with this name.
+methodology="framework/scoring-methodology.md"
+overview="framework/qramm-overview.md"
+LC_ALL=en_US.UTF-8 start_case "case 8: a file argument that is not UTF-8" \
+  "$work/bad$(printf '\377').md" "$overview"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "the name is printed with the byte as \\xff" \
+  "has_line '== $work/bad\\xff.md against $methodology'"
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the file cannot be read and gives the byte as \\xff" \
+  "has_fail '$work/bad\\xff.md: cannot read ('"
+expect "the overview is checked" "has_line '== $overview against $methodology'"
+expect "PASS line for the overview's Overall Score" \
+  'printf "%s\n" "$out" | grep -q "^  PASS Overall Score (line "'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then

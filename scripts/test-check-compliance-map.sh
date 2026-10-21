@@ -36,6 +36,12 @@
 #      1.1000000000000001 and whose Q59 CIS v8 Control_ID (Data!AY474) is
 #      the text of Q1's (Data!AY10), where the spec gives 1.10 for both:
 #      exit 1, a FAIL line for each of the two cells in each workbook.
+#  10. Under the en_US.UTF-8 locale, a workbook argument that holds the byte
+#      0xff, which is not valid UTF-8, and names no file, then the sample
+#      workbook: exit 1, no traceback, the name printed with the byte as
+#      \xff on its == line and in a FAIL line that says the map cannot be
+#      read (No such file or directory), the map PASS line for the sample
+#      workbook, then RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -159,6 +165,10 @@ has_fail() {
 
 fail_count() {
   printf '%s\n' "$out" | grep -c '^  FAIL' || true
+}
+
+has_line() {
+  printf '%s\n' "$out" | grep -q -x -F -- "$1"
 }
 
 show_output() {
@@ -297,6 +307,24 @@ for book in "$toolkit" "$sample"; do
   expect "$book: Q59 CIS control stored as 1.1" \
     "has_fail '$book Q59 CIS v8: Data!AY474 is 1.1, the spec gives 1.10 (line 118)'"
 done
+end_case
+
+# \377 is the byte 0xff, which is not valid UTF-8, so Python holds it as a
+# lone surrogate. Under en_US.UTF-8 printing that raises UnicodeEncodeError;
+# the C, C.UTF-8 and UTF-8 locales write the byte as it is. The checker is
+# expected to print \xff in either case. No file is made with this name.
+LC_ALL=en_US.UTF-8 start_case "case 10: a workbook argument that is not UTF-8" \
+  "$checker" "$work/bad$(printf '\377').xlsx" "$sample"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "the name is printed with the byte as \\xff" \
+  "has_line '== $work/bad\\xff.xlsx against $spec'"
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the map cannot be read and gives the byte as \\xff" \
+  "has_line '  FAIL $work/bad\\xff.xlsx: cannot read the compliance map (No such file or directory)'"
+expect "the sample workbook is checked" \
+  "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then

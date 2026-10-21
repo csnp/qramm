@@ -33,6 +33,11 @@
 #   7. --help under python3 -OO, which removes the header text: exit 2 and
 #      only the usage line on stderr, with no traceback.
 #   8. -h under python3 -OO: the same as case 7.
+#   9. Under the en_US.UTF-8 locale, a workbook argument that holds the byte
+#      0xff, which is not valid UTF-8, and names no file, then the sample
+#      workbook: exit 1, no traceback, the name printed with the byte as
+#      \xff on its == line and in a FAIL line that says it cannot be read,
+#      a PASS line for the sample workbook, then RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -260,6 +265,23 @@ expect "only the usage line on stderr" \
   '[ "$err" = "usage: python3 -I scripts/check-workbook-errors.py [workbook ...]" ]'
 end_case
 optimize=""
+
+# \377 is the byte 0xff, which is not valid UTF-8, so Python holds it as a
+# lone surrogate. Under en_US.UTF-8 printing that raises UnicodeEncodeError;
+# the C, C.UTF-8 and UTF-8 locales write the byte as it is. The checker is
+# expected to print \xff in either case. No file is made with this name.
+LC_ALL=en_US.UTF-8 start_case "case 9: a workbook argument that is not UTF-8" \
+  "$checker" "$work/bad$(printf '\377').xlsx" toolkit/Sample_Assessment.xlsx
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "the name is printed with the byte as \\xff" "has_line '== $work/bad\\xff.xlsx'"
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the workbook cannot be read and gives the byte as \\xff" \
+  "has_fail '$work/bad\\xff.xlsx: cannot read ('"
+expect "the sample workbook is checked" \
+  'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"

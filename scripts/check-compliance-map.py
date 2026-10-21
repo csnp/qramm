@@ -32,7 +32,9 @@ sheet, and uses the Python standard library only.
 
 Exit status: 0 when the workbooks pass checks 1 to 4, 1 when they do not, 2
 on a usage error. An empty workbook argument fails with "no file name given".
---help (or -h) prints the usage line and this text on stderr and exits 2.
+A file name is printed with each byte that the file system encoding cannot
+decode as a backslash escape, such as \\xff for the byte 0xff. --help (or -h)
+prints the usage line and this text on stderr and exits 2.
 """
 
 import os
@@ -320,11 +322,23 @@ def show_control(value):
     return show(value)
 
 
+def reason(error):
+    """The reason given for a workbook that cannot be read. An operating
+    system error gives its description, such as "No such file or directory",
+    as str() of it repeats the path the way repr() writes it, with a byte
+    that is not UTF-8 as \\udcff. An error with no description, such as the
+    OSError bz2 raises for data that does not decompress, gives str() of it."""
+    if isinstance(error, OSError) and error.strerror:
+        return error.strerror
+    return str(error)
+
+
 def check_workbook(label, path, spec, problems):
+    """label is the workbook's file name as printed; path is the file read."""
     try:
         sheet, first, rows = read_map(path)
     except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError) as error:
-        problems.append("{}: cannot read the compliance map ({})".format(label, error))
+        problems.append("{}: cannot read the compliance map ({})".format(label, reason(error)))
         return
     control_letters = column_letters(first + CONTROL_COLUMN)
     weight_letters = column_letters(first + WEIGHT_COLUMN)
@@ -382,7 +396,7 @@ def check_category_names(label, path, sheet, first, rows, problems):
     try:
         lookups = read_name_lookups(path)
     except (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError) as error:
-        problems.append("{}: cannot read the category name lookup ({})".format(label, error))
+        problems.append("{}: cannot read the category name lookup ({})".format(label, reason(error)))
         return
     category_letters = column_letters(first + CATEGORY_COLUMN)
     named = 0
@@ -392,24 +406,32 @@ def check_category_names(label, path, sheet, first, rows, problems):
         framework = values.get(FRAMEWORK_COLUMN)
         if category is None or framework is None:
             continue
-        shown = excel_trim(as_text(category))
-        if shown in ("", "-"):
+        trimmed = excel_trim(as_text(category))
+        if trimmed in ("", "-"):
             continue
         named += 1
-        key = (as_text(framework) + shown).casefold()
+        key = (as_text(framework) + trimmed).casefold()
         for range_label, names in lookups:
             if names.get(key) in (None, ""):
                 problems.append(
                     "{} {} {}: {}!{}{} is {}, which has no name in {}, the range the {} "
                     "sheet looks category names up in".format(
                         label, show(values.get(QUESTION_COLUMN)), show(framework),
-                        sheet, category_letters, number, shown, range_label, COMPLIANCE_SHEET,
+                        sheet, category_letters, number, trimmed, range_label, COMPLIANCE_SHEET,
                     )
                 )
     if len(problems) == before:
         print("  PASS {} rows with a category, each named in {}".format(
             named, ", ".join(range_label for range_label, _ in lookups)
         ))
+
+
+def shown(path):
+    """path with each byte that the file system encoding cannot decode
+    written as a backslash escape, such as \\xff for the byte 0xff. Python
+    holds such a byte of a command-line argument as a lone surrogate, which
+    print() cannot encode under a locale such as en_US.UTF-8."""
+    return os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
 
 
 def main(argv):
@@ -435,11 +457,12 @@ def main(argv):
         return 1
 
     for label in workbooks:
-        print("== {} against {}".format(label or "''", SPEC))
+        name = shown(label)
+        print("== {} against {}".format(name or "''", SPEC))
         if not label:
             problems.append("'': no file name given")
             continue
-        check_workbook(label, os.path.join(root, label), spec, problems)
+        check_workbook(name, os.path.join(root, label), spec, problems)
 
     for problem in problems:
         print("  FAIL {}".format(problem))
