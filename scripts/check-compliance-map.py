@@ -67,8 +67,12 @@ except ImportError:
 # (Zstandard) before Python 3.14. The error of the module that decompresses
 # the entry, for data that does not decompress: zlib.error for deflate,
 # lzma.LZMAError for LZMA and compression.zstd.ZstdError for Zstandard. bz2
-# raises OSError instead.
-ENTRY_ERRORS = (RuntimeError, zlib.error)
+# raises OSError instead. EOFError: an entry whose compressed size runs past
+# the end of the file, when zipfile reaches the end of the file as it reads
+# the entry. Python 3.13.12 and 3.14.3 raise zipfile.BadZipFile for such an
+# entry before reading it, except when a later central directory header
+# gives the same local header offset: zipfile then only warns and reads on.
+ENTRY_ERRORS = (RuntimeError, zlib.error, EOFError)
 if lzma is not None:
     ENTRY_ERRORS += (lzma.LZMAError,)
 if zstd is not None:

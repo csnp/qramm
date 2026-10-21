@@ -113,6 +113,27 @@
 #      order: exit 1, nothing on stderr, the map PASS line, then one FAIL
 #      line, which says the category name lookup cannot be read (not a
 #      workbook), then RESULT: FAIL.
+#  23. A zip archive whose xl/workbook.xml entry gives, in both of its
+#      headers, a compressed and an uncompressed size equal to the length of
+#      the archive, which run past its end, then the sample workbook: exit
+#      1, nothing on stderr, one FAIL line, which says the map cannot be
+#      read, the map PASS line for the sample workbook, then RESULT: FAIL.
+#      With Python 3.9.6, zipfile reads the entry to the end of the file and
+#      raises EOFError, and the FAIL line gives the reason as not a
+#      workbook. Python 3.13.12 and 3.14.3 raise
+#      zipfile.BadZipFile("Overlapped entries: 'xl/workbook.xml' (possible
+#      zip bomb)") instead, and the FAIL line gives that reason.
+#  24. The archive of case 23 with a second central directory header, for
+#      an entry named xl/workbook.xmz, that gives the same local header
+#      offset, then the sample workbook: as cases 15 to 18, except that
+#      stderr can hold a warning. Python 3.13.12 and 3.14.3 print the
+#      warning "UserWarning: Overlapped entries: 'xl/workbook.xml' (possible
+#      zip bomb)" and read on, and zipfile raises EOFError, as with Python
+#      3.9.6.
+#  25. A copy of the sample workbook whose Compliance sheet part is damaged
+#      as the xl/workbook.xml entry is in case 24, with the second central
+#      directory header for xl/worksheets/sheet8.xmz: as cases 19 to 22,
+#      except that stderr can hold the warning of case 24 for that part.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -639,9 +660,14 @@ fi
 # (Zstandard) or 14 (LZMA); for lzma, the first 11 bytes of the entry's data
 # are replaced by the 4-byte header zipfile reads before LZMA data, which
 # gives 5 bytes of LZMA properties, the properties 0x5d (lc=3, lp=0, pb=2)
-# and a 64 KiB dictionary size, then 0xff 0xff. With $4, the archive holds
-# every entry of the workbook $4, the others stored with the deflate method;
-# without it, it holds only $2, an xl/workbook.xml of XML text.
+# and a 64 KiB dictionary size, then 0xff 0xff. past-end: both headers of
+# the entry give a compressed and an uncompressed size equal to the length
+# of the archive, which run past its end, as the entry's data starts after
+# its local file header. same-offset: as past-end, with a copy of the
+# entry's central directory header, whose file name ends in z in place of
+# the last letter, at the end of the central directory. With $4, the archive
+# holds every entry of the workbook $4, the others stored with the deflate
+# method; without it, it holds only $2, an xl/workbook.xml of XML text.
 make_damaged_entry() {
   python3 -I - "$@" <<'PY'
 import struct
@@ -697,6 +723,27 @@ elif damage in ("ppmd", "zstd", "lzma"):
         name_length, extra_length = struct.unpack_from("<HH", data, local + 26)
         start = local + 30 + name_length + extra_length
         data[start:start + 11] = bytes([9, 20, 5, 0, 0x5D, 0, 0, 1, 0, 255, 255])
+elif damage in ("past-end", "same-offset"):
+    headers = [central]
+    if damage == "same-offset":
+        # The end of central directory record gives the number of entries on
+        # this disk and in all at offsets 8 and 10, and the size of the
+        # central directory at offset 12.
+        name_length = struct.unpack_from("<H", data, central + 28)[0]
+        size = 46 + sum(struct.unpack_from("<HHH", data, central + 28))
+        record = data[central:central + size]
+        record[45 + name_length] = ord("z")
+        end = data[len(data) - 22:]
+        entries, _, directory_size = struct.unpack_from("<HHI", end, 8)
+        struct.pack_into("<HHI", end, 8, entries + 1, entries + 1, directory_size + size)
+        headers.append(len(data) - 22)
+        data = data[:len(data) - 22] + record + end
+    # The local file header gives the compressed and uncompressed sizes at
+    # offsets 18 and 22; a central directory header gives them at offsets 20
+    # and 24.
+    struct.pack_into("<II", data, local + 18, len(data), len(data))
+    for header in headers:
+        struct.pack_into("<II", data, header + 20, len(data), len(data))
 else:
     sys.exit("make_damaged_entry: unknown damage " + damage)
 with open(path, "wb") as fh:
@@ -704,10 +751,37 @@ with open(path, "wb") as fh:
 PY
 }
 
-# Expectations for cases 15 to 18: $1 is the archive's file name.
+# True when stderr is empty or each of its lines holds "UserWarning:
+# Overlapped entries: '$1' (possible zip bomb)" or starts with two spaces,
+# as do the two lines of the warning Python 3.13.12 and 3.14.3 print for the
+# entry $1 of the archives of cases 24 and 25: the second quotes the
+# checker's line that read the entry. The first line of a traceback does
+# neither.
+only_overlap_warning() {
+  local rest
+  rest="$(printf '%s\n' "$err" \
+    | grep -v -F -- "UserWarning: Overlapped entries: '$1' (possible zip bomb)" \
+    | grep -v '^  ' || true)"
+  [ -z "$rest" ]
+}
+
+# Expects nothing on stderr or, with $1, at most the warning
+# only_overlap_warning allows for the entry $1.
+expect_no_traceback() {
+  if [ "$#" -gt 0 ]; then
+    expect "no traceback on stderr, at most a warning for $1" \
+      "only_overlap_warning '$1'"
+  else
+    expect "no traceback on stderr" '[ -z "$err" ]'
+  fi
+}
+
+# Expectations for cases 15 to 18 and 24: $1 is the archive's file name.
+# With $2, stderr can hold the warning only_overlap_warning allows for the
+# entry $2.
 expect_map_not_a_workbook() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
-  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect_no_traceback "${@:2}"
   expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
   expect "FAIL line says the map cannot be read as it is not a workbook" \
     "has_line '  FAIL $1: cannot read the compliance map (not a workbook)'"
@@ -716,10 +790,12 @@ expect_map_not_a_workbook() {
   expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 }
 
-# Expectations for cases 19 to 22: $1 is the copy's file name.
+# Expectations for cases 19 to 22 and 25: $1 is the copy's file name. With
+# $2, stderr can hold the warning only_overlap_warning allows for the entry
+# $2.
 expect_lookup_not_a_workbook() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
-  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect_no_traceback "${@:2}"
   expect "the map is checked" "has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
   expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
   expect "FAIL line says the category name lookup cannot be read as it is not a workbook" \
@@ -773,6 +849,37 @@ make_damaged_entry "$work/lookup-lzma.xlsx" xl/worksheets/sheet8.xml lzma "$root
 start_case "case 22: LZMA data in the Compliance sheet that does not decompress" \
   "$checker" "$work/lookup-lzma.xlsx"
 expect_lookup_not_a_workbook "$work/lookup-lzma.xlsx"
+end_case
+
+# The FAIL line for the archive $1 of case 23: the one Python 3.9.6 gives, or
+# the one Python 3.13.12 and 3.14.3 give.
+past_end_fail() {
+  has_line "  FAIL $1: cannot read the compliance map (not a workbook)" ||
+    has_line "  FAIL $1: cannot read the compliance map (Overlapped entries: 'xl/workbook.xml' (possible zip bomb))"
+}
+
+make_damaged_entry "$work/past-end.xlsx" xl/workbook.xml past-end
+start_case "case 23: entry sizes that run past the end of the file" \
+  "$checker" "$work/past-end.xlsx" "$sample"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect_no_traceback
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the map cannot be read" "past_end_fail '$work/past-end.xlsx'"
+expect "the sample workbook is checked" \
+  "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+make_damaged_entry "$work/same-offset.xlsx" xl/workbook.xml same-offset
+start_case "case 24: entry sizes past the end and a second header at the same offset" \
+  "$checker" "$work/same-offset.xlsx" "$sample"
+expect_map_not_a_workbook "$work/same-offset.xlsx" xl/workbook.xml
+end_case
+
+make_damaged_entry "$work/lookup-same-offset.xlsx" xl/worksheets/sheet8.xml same-offset "$root/$sample"
+start_case "case 25: Compliance sheet part sizes past the end and a second header at the same offset" \
+  "$checker" "$work/lookup-same-offset.xlsx"
+expect_lookup_not_a_workbook "$work/lookup-same-offset.xlsx" xl/worksheets/sheet8.xml
 end_case
 
 if [ "$failed" -eq 0 ]; then
