@@ -54,7 +54,8 @@ standard library only.
 
 Exit status: 0 when the documents agree with the Scorecard, 1 when they do
 not, 2 on a usage error. An empty file argument fails with "no file name
-given", and a workbook that cannot be read fails with "cannot read". A file
+given", a workbook that cannot be read fails with "cannot read", and a text
+document whose bytes are not UTF-8 fails with "not UTF-8 text". A file
 name is printed with each byte that the file system encoding cannot decode
 as a backslash escape, such as \\xff for the byte 0xff. --help
 (or -h) prints the usage line and this text on stderr and exits 2.
@@ -579,8 +580,12 @@ def main(argv):
                 else:
                     problems.append("{}: cannot read (not a zip file)".format(name))
                 continue
-            except Exception:
+            except Exception as error:
                 if not is_workbook:
+                    # A text document whose bytes are not UTF-8.
+                    if isinstance(error, UnicodeDecodeError):
+                        problems.append("{}: cannot read (not UTF-8 text)".format(name))
+                        continue
                     raise
                 # A zip archive that is not a readable workbook: a missing
                 # part or relationship Target, XML that does not parse, or a

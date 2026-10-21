@@ -79,6 +79,10 @@
 #      copy is not a zip file. zipfile.is_zipfile() returns False for this
 #      archive in Python 3.13.12 and 3.14.3, and raises BadZipFile for it in
 #      Python 3.9.6.
+#  22. A text document with a Latin-1 byte, then a document that gives the
+#      Scorecard's four ranges: exit 1, no traceback, one FAIL line, which
+#      says the first is not UTF-8 text, four PASS lines for the second,
+#      then RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -607,6 +611,27 @@ give_two_disks "$work/twodisk.xlsx"
 start_case "case 21: a zip64 locator that gives two disks" \
   "$work/twodisk.xlsx" "$work/ranges.md"
 expect_cannot_read twodisk.xlsx "not a zip file"
+end_case
+
+# \351 is e with an acute accent in Latin-1, and not valid UTF-8 here.
+printf 'Basic: below 1.5, caf\351.\n' > "$work/latin1.md"
+printf '%s\n' \
+  '## Level 1: Basic (Score below 1.5)' \
+  '## Level 2: Developing (Score 1.5 to below 2.5)' \
+  '## Level 3: Established (Score 2.5 to below 3.5)' \
+  '## Level 4: Advanced (Score 3.5 to 4.0)' \
+  > "$work/levels.md"
+start_case "case 22: a text document that is not UTF-8" "$work/latin1.md" "$work/levels.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not UTF-8 text" \
+  'has_fail "latin1.md: cannot read (not UTF-8 text)"'
+expect "the next document is checked" \
+  'has_line "== $work/levels.md against the Scorecard" &&
+   has_line "  PASS line 4: Advanced 3.5 to 4.0"'
+expect "four PASS lines" '[ "$(printf "%s\n" "$out" | grep -c "^  PASS")" -eq 4 ]'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
