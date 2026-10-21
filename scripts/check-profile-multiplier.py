@@ -41,8 +41,8 @@ standard library only.
 
 Exit status: 0 when the documents agree with the workbook, 1 when they do
 not or the workbook does not have the form described above, 2 on a usage
-error. --help (or -h) prints the usage line and this text on stderr and
-exits 2.
+error. An empty file argument fails with "no file name given". --help (or -h)
+prints the usage line and this text on stderr and exits 2.
 """
 
 import os
@@ -337,7 +337,10 @@ def main(argv):
         print("  lowest {}, highest {}".format(lowest, highest))
 
         for path in documents:
-            print("== {} against {}".format(path, WORKBOOK))
+            print("== {} against {}".format(path or "''", WORKBOOK))
+            if not path:
+                problems.append("'': no file name given")
+                continue
             try:
                 if path.lower().endswith(".xlsx"):
                     parts = workbook_texts(os.path.join(root, path))
