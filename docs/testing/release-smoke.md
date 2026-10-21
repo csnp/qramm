@@ -22,6 +22,8 @@ Run from the repository root.
 
   `check-framework-docs.sh` fetches every external URL. Without network
   access, add `--no-network` and follow the README links by hand in step 3.
+  A LinkedIn link that answers 999 is listed under its document as not
+  verified and does not fail the run; open those links in step 3.
 - [ ] Each test script ends with `RESULT: PASS` and exits 0:
 
   ```
@@ -64,6 +66,8 @@ Open both files in Excel or LibreOffice Calc.
   shown at the end.
 - [ ] Follow every link in `README.md` on GitHub. Each one opens the page or
   section it names.
+- [ ] Open each link that `check-framework-docs.sh` lists as not verified in
+  a browser. Each one opens the page it names.
 - [ ] Download both workbooks from the "Download the toolkit" and "Sample
   assessment" links in `README.md`.
 
