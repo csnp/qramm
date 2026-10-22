@@ -7,7 +7,7 @@
 # Usage:
 #   scripts/test-check-profile-multiplier.sh
 #
-# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 60 copy the checker and the toolkit
+# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 63 copy the checker and the toolkit
 # workbook into a new temporary directory laid out like the repository
 # (scripts/ and toolkit/), edit the copy of the workbook, and run the
 # checker there. Cases 15, 17, 38 to 43, 47 and 48 make the same copies and
@@ -221,6 +221,26 @@
 #      numbers, no == line, so no document checked, and RESULT: FAIL as the
 #      last line. Decimal() reads that text, and an exact sum with it has
 #      10^17 decimal places or more.
+#  61. A workbook whose factor 0.10 is written as 1 followed by 1000000
+#      zeros, which is 10^1000000: exit 1, nothing on stderr, a FAIL line
+#      for each of RiskMatrix rows 27 to 30 that says its factor is too
+#      large to use, no == line, so no document checked, and RESULT: FAIL
+#      as the last line.
+#  62. A workbook whose factor 0.10 is written as 1 followed by 999999
+#      zeros and whose risk values of 1.5 are 15: exit 1, nothing on
+#      stderr, the lowest multiplier listed as 10^999999 + 0.9 and the
+#      highest as 15 * 10^999999 + 13.5, both with two places, and a FAIL
+#      line for the document that gives 1.00 to 1.50. In a decimal context
+#      whose largest exponent is 999999, the default, the highest raises
+#      Overflow.
+#  63. A workbook whose factor 0.10 and risk value 1.5 are each written as
+#      1 followed by 1000000 zeros: exit 1, nothing on stderr, ten FAIL
+#      lines, which say the risk value is too large to use for rows 3, 4,
+#      5, 15, 19 and 23, the factor and risk value for row 27 and the
+#      factor for rows 28 to 30, no == line, and RESULT: FAIL as the last
+#      line.
+#  Cases 61 to 63 build the text of a million zeros in Python rather than
+#  pass it to make_copy as an argument.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -268,6 +288,40 @@ import zipfile
 
 source, target = sys.argv[1:3]
 pairs = list(zip(sys.argv[3::2], sys.argv[4::2]))
+found = [0] * len(pairs)
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        data = book.read(info.filename)
+        if info.filename.startswith("xl/") and info.filename.endswith(".xml"):
+            text = data.decode("utf-8")
+            for number, (old, new) in enumerate(pairs):
+                found[number] += text.count(old)
+                text = text.replace(old, new)
+            data = text.encode("utf-8")
+        copy.writestr(info, data)
+sys.exit(0 if all(found) else 1)
+PY
+}
+
+# Lays out a copy of the checker at $1 as make_copy does, with every "$2" in
+# the workbook replaced by "$3", then "$4" zeros, then "$5", and so on for
+# each further four arguments. The zeros are added here, not passed as an
+# argument: a million of them is close to the 1048576 bytes that getconf
+# ARG_MAX gives on macOS for the arguments and environment of a command.
+make_zeros_copy() {
+  local dir="$1"
+  shift
+  copy_checker "$dir"
+  python3 -I - "$root/$toolkit" "$dir/$toolkit" "$@" <<'PY'
+import sys
+import zipfile
+
+source, target = sys.argv[1:3]
+edits = sys.argv[3:]
+pairs = [
+    (edits[i], edits[i + 1] + "0" * int(edits[i + 2]) + edits[i + 3])
+    for i in range(0, len(edits), 4)
+]
 found = [0] * len(pairs)
 with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
     for info in book.infolist():
@@ -1170,6 +1224,55 @@ expect "a FAIL line for each of rows 27 to 30, which carry that factor" \
   '[ "$(fail_count)" -eq 4 ] && [ "$(printf "%s\n" "$out" | grep -c " are not both numbers$")" -eq 4 ]'
 expect "FAIL line names row 27 and gives its factor and risk value as written" \
   'has_line "$expected"'
+expect "no == line, so no document is checked" '! printf "%s\n" "$out" | grep -q "^=="'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+make_zeros_copy "$work/largefactor" '> 0.10 <' '> 1' 1000000 ' <'
+start_case "case 61: a RiskMatrix factor of 1 followed by 1000000 zeros" \
+  "$work/largefactor/scripts/check-profile-multiplier.py" "$work/new.md"
+expected="  FAIL $toolkit: RiskMatrix row 27 (Fortune 500/Global Enterprise): factor is too large to use (10^1000000 or more)"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "a FAIL line for each of rows 27 to 30, which carry that factor" \
+  '[ "$(fail_count)" -eq 4 ] && [ "$(printf "%s\n" "$out" | grep -c -F ": factor is too large to use (10^1000000 or more)")" -eq 4 ]'
+expect "FAIL line names row 27 and says its factor is too large to use" \
+  'has_line "$expected"'
+expect "no == line, so no document is checked" '! printf "%s\n" "$out" | grep -q "^=="'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+make_zeros_copy "$work/largeproduct" '> 0.10 <' '> 1' 999999 ' <' '> 1.5 <' '> 15' 0 ' <'
+start_case "case 62: a factor of 1 followed by 999999 zeros and risk values of 15" \
+  "$work/largeproduct/scripts/check-profile-multiplier.py" "$work/new.md"
+zeros999997="$(printf '%0999997d' 0)"
+lowest="1${zeros999997}00.90"
+highest="15${zeros999997}13.50"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "workbook range is listed, 10^999999 + 0.9 to 15 * 10^999999 + 13.5" \
+  '[ "$(printf "%s\n" "$out" | grep "^  lowest ")" = "  lowest $lowest, highest $highest" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line for the document that gives 1.00 to 1.50" \
+  '[ "$(printf "%s\n" "$out" | grep "^  FAIL ")" = "  FAIL $work/new.md line 1: the multiplier range is 1.00 to 1.50 here, but $toolkit calculates $lowest to $highest" ]'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+make_zeros_copy "$work/largevalue" '> 0.10 <' '> 1' 1000000 ' <' '> 1.5 <' '> 1' 1000000 ' <'
+start_case "case 63: a factor 0.10 and a risk value 1.5 of 1 followed by 1000000 zeros" \
+  "$work/largevalue/scripts/check-profile-multiplier.py" "$work/new.md"
+too_large="too large to use (10^1000000 or more)"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "ten FAIL lines" '[ "$(fail_count)" -eq 10 ]'
+expect "a risk value FAIL line for each of rows 3, 4, 5, 15, 19 and 23" \
+  '[ "$(printf "%s\n" "$out" | grep -E "row (3|4|5|15|19|23) \(" | grep -c -F ": risk value is $too_large")" -eq 6 ]'
+expect "FAIL line names row 3 and says its risk value is too large to use" \
+  'has_line "  FAIL $toolkit: RiskMatrix row 3 (Financial Services): risk value is $too_large"'
+expect "FAIL line names row 27 and says its factor and risk value are too large to use" \
+  'has_line "  FAIL $toolkit: RiskMatrix row 27 (Fortune 500/Global Enterprise): factor and risk value are $too_large"'
+expect "a factor FAIL line for each of rows 28 to 30" \
+  '[ "$(printf "%s\n" "$out" | grep -E "row (28|29|30) \(" | grep -c -F ": factor is $too_large")" -eq 3 ]'
 expect "no == line, so no document is checked" '! printf "%s\n" "$out" | grep -q "^=="'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
