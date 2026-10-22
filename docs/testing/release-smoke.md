@@ -17,6 +17,7 @@ Run from the repository root.
   ```
   bash scripts/check-framework-docs.sh
   bash scripts/check-spec-passwords.sh
+  bash scripts/check-published-toolkit.sh
   for checker in scripts/check-*.py; do python3 -I "$checker"; done
   ```
 
@@ -24,6 +25,9 @@ Run from the repository root.
   access, add `--no-network` and follow the README links by hand in step 3.
   A LinkedIn link that answers 999 is listed under its document as not
   verified and does not fail the run; open those links in step 3.
+  `check-published-toolkit.sh` fetches the two workbooks from qramm.org;
+  without network access, skip it and compare the downloads by hand in
+  step 3.
 - [ ] Each test script ends with `RESULT: PASS` and exits 0:
 
   ```
@@ -70,6 +74,8 @@ Open both files in Excel or LibreOffice Calc.
   a browser. Each one opens the page it names.
 - [ ] Download both workbooks from the "Download the toolkit" and "Sample
   assessment" links in `README.md`.
+- [ ] The workbooks downloaded from qramm.org are the files in `toolkit/`:
+  `bash scripts/check-published-toolkit.sh` ends with `RESULT: PASS`.
 
 ## 4. Audience fit
 

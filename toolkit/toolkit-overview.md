@@ -121,7 +121,7 @@ QRAMM maps to 8 major frameworks and standards:
 - **Innovation Platform**: Foundation for quantum-safe business capabilities
 
 ## Getting Started
-1. **Download the QRAMM Toolkit**: Access the Excel-based assessment tool
+1. **Download the toolkit**: [QRAMM_Assessment_Toolkit.xlsx](QRAMM_Assessment_Toolkit.xlsx) in this repository is the source file. The copy at https://qramm.org/toolkit/QRAMM_Assessment_Toolkit.xlsx should be the same file; scripts/check-published-toolkit.sh compares them.
 2. **Complete Organization Profile**: Define your organizational context
 3. **Conduct Assessment**: Start with Quick Assessment or go directly to Comprehensive
 4. **Review Results**: Analyze scorecard and identify priorities
