@@ -194,6 +194,17 @@
 #  results listed for cases 28 to 36. int() and float() allow an underscore
 #  between two digits, so int() reads 0_3 as 3 and 7_14 as 714, and float()
 #  reads 0_1 as 1.
+#  43. A copy of the sample workbook whose row element for row 3 of the Data
+#      sheet has the r attribute " 3", a space followed by 3, in place of 3.
+#  44. A copy of the sample workbook whose cell AV3 of the Data sheet stores
+#      the shared string index 714 written as +714.
+#  45. A copy of the sample workbook whose cell BA3 of the Data sheet stores
+#      the number 1 written as " 1 ", with a space before and after it.
+#  46. The copy of case 45 with the number 1 written as +1.
+#  Cases 43 to 46 pass the copy and then the sample workbook, and give the
+#  results listed for cases 28 to 36. int() and float() strip whitespace
+#  from the start and end of text and read a leading sign, so they read
+#  " 3" as 3, +714 as 714, and " 1 " and +1 as 1.0.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -986,7 +997,7 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 28 to 36 and 39 to 42, which pass a copy and then the
+# Expectations for cases 28 to 36 and 39 to 46, which pass a copy and then the
 # sample workbook: $1 is the copy's file name, $2 what the FAIL line says
 # the copy has and $3 the reason the map cannot be read. $3 can hold a
 # single quote, so the expected line is passed to has_line in a variable.
@@ -1156,6 +1167,38 @@ start_case "case 42: a Weight written with an underscore" \
   "$checker" "$work/underscoreweight.xlsx" "$sample"
 expect_map_unreadable "$work/underscoreweight.xlsx" "a Weight holds an underscore" \
   "could not convert string to float: '0_1'"
+end_case
+
+edit_part "$root/$sample" "$work/spacerow.xlsx" xl/worksheets/sheet10.xml \
+  '<row r="3" ' '<row r=" 3" '
+start_case "case 43: a row element whose r attribute starts with a space" \
+  "$checker" "$work/spacerow.xlsx" "$sample"
+expect_map_unreadable "$work/spacerow.xlsx" "a row element's r attribute starts with a space" \
+  "invalid literal for int() with base 10: ' 3'"
+end_case
+
+edit_part "$root/$sample" "$work/signstring.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="AV3" s="2" t="s"><v>714</v>' '<c r="AV3" s="2" t="s"><v>+714</v>'
+start_case "case 44: a shared string index written with a plus sign" \
+  "$checker" "$work/signstring.xlsx" "$sample"
+expect_map_unreadable "$work/signstring.xlsx" "a shared string index has a sign" \
+  "invalid literal for int() with base 10: '+714'"
+end_case
+
+edit_part "$root/$sample" "$work/spaceweight.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="BA3" s="2"><v>1</v>' '<c r="BA3" s="2"><v> 1 </v>'
+start_case "case 45: a Weight written with a space before and after it" \
+  "$checker" "$work/spaceweight.xlsx" "$sample"
+expect_map_unreadable "$work/spaceweight.xlsx" "a Weight has surrounding whitespace" \
+  "could not convert string to float: ' 1 '"
+end_case
+
+edit_part "$work/spaceweight.xlsx" "$work/signweight.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="BA3" s="2"><v> 1 </v>' '<c r="BA3" s="2"><v>+1</v>'
+start_case "case 46: a Weight written with a plus sign" \
+  "$checker" "$work/signweight.xlsx" "$sample"
+expect_map_unreadable "$work/signweight.xlsx" "a Weight has a sign" \
+  "could not convert string to float: '+1'"
 end_case
 
 if [ "$failed" -eq 0 ]; then
