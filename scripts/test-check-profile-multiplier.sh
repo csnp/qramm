@@ -7,7 +7,7 @@
 # Usage:
 #   scripts/test-check-profile-multiplier.sh
 #
-# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 63 copy the checker and the toolkit
+# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 64 copy the checker and the toolkit
 # workbook into a new temporary directory laid out like the repository
 # (scripts/ and toolkit/), edit the copy of the workbook, and run the
 # checker there. Cases 15, 17, 38 to 43, 47 and 48 make the same copies and
@@ -241,6 +241,10 @@
 #      line.
 #  Cases 61 to 63 build the text of a million zeros in Python rather than
 #  pass it to make_copy as an argument.
+#  64. A workbook whose formula rounds to a number of places written as 1
+#      followed by 4300 zeros, which has 4301 digits: the results of case
+#      58. In Python 3.13.12 and 3.14.3, int() raises ValueError for text
+#      of more than 4300 digits.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -1275,6 +1279,20 @@ expect "a factor FAIL line for each of rows 28 to 30" \
   '[ "$(printf "%s\n" "$out" | grep -E "row (28|29|30) \(" | grep -c -F ": factor is $too_large")" -eq 3 ]'
 expect "no == line, so no document is checked" '! printf "%s\n" "$out" | grep -q "^=="'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# 1 followed by 4300 zeros.
+places4301="1$(printf '%04300d' 0)"
+make_copy "$work/round4301" "$round_end" "$(round_to "$places4301")"
+start_case "case 64: a formula that rounds to a number of places of 4301 digits" \
+  "$work/round4301/scripts/check-profile-multiplier.py" "$work/new.md"
+expect "the number of places has 4301 digits" '[ "${#places4301}" -eq 4301 ]'
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "workbook range is listed with 28 places" \
+  'has_line "  lowest 1.$zeros28, highest 1.5${zeros28#0}"'
+expect "PASS line for between 1.00 and 1.50" 'has_line "  PASS line 1: 1.00 to 1.50"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
