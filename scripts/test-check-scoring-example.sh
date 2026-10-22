@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Tests scripts/check-scoring-example.py against the repository document and
 # workbook and against copies of the sample workbook whose cached value for
-# CVI_Score is not a number.
+# CVI_Score is not a number or is written in another way.
 #
 # Usage:
 #   scripts/test-check-scoring-example.sh
 #
 # The checker reads framework/scoring-methodology.md and
 # toolkit/Sample_Assessment.xlsx from the directory above its own. Cases 2
-# and 3 copy the checker and the document into a new temporary directory
+# to 6 copy the checker and the document into a new temporary directory
 # laid out like the repository (scripts/, framework/ and toolkit/), write an
 # edited copy of the sample workbook there, and run the checker there.
 #
@@ -20,10 +20,21 @@
 #      number, as <v>x</v>.
 #   3. A copy of the sample workbook whose cell L5 of the Dimension 1 - CVI
 #      sheet has an empty v element, <v/>, in place of its number.
-#  Cases 2 and 3: exit 1, nothing on stderr, the == line first, a PASS line
+#   4. A copy of the sample workbook whose cell L5 of the Dimension 1 - CVI
+#      sheet stores 2.5_6, with an underscore between the 5 and the 6, in
+#      place of its number, as <v>2.5_6</v>.
+#   5. A copy of the sample workbook whose cell L5 of the Dimension 1 - CVI
+#      sheet stores 2.56 written with U+0662, a period, U+0665 and U+0666
+#      (ARABIC-INDIC DIGIT TWO, FIVE and SIX) in place of its number, as
+#      <v>&#x662;.&#x665;&#x666;</v>.
+#  Cases 2 to 5: exit 1, nothing on stderr, the == line first, a PASS line
 #  for each of the other four defined names, one FAIL line, which says
 #  "CVI_Score: Dimension 1 - CVI!L5 has no cached number", then
 #  RESULT: FAIL.
+#   6. A copy of the sample workbook whose cell L5 of the Dimension 1 - CVI
+#      sheet stores 2.560 in place of its number, as <v>2.560</v>: exit 0,
+#      nothing on stderr, a PASS line for CVI_Score = 2.56, no FAIL line,
+#      RESULT: PASS.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -137,7 +148,7 @@ end_case() {
   failed=$((failed | case_failed))
 }
 
-# The expect lines of cases 2 and 3.
+# The expect lines of cases 2 to 5.
 expect_no_cvi_number() {
   local defined
   expect "exit status is 1" '[ "$status" -eq 1 ]'
@@ -173,6 +184,29 @@ make_copy "$work/empty" '<v/>'
 start_case "case 3: CVI_Score cell has an empty v element" \
   "$work/empty/scripts/check-scoring-example.py"
 expect_no_cvi_number
+end_case
+
+make_copy "$work/underscore" '<v>2.5_6</v>'
+start_case "case 4: CVI_Score cell stores 2.5_6" \
+  "$work/underscore/scripts/check-scoring-example.py"
+expect_no_cvi_number
+end_case
+
+make_copy "$work/arabic-indic" '<v>&#x662;.&#x665;&#x666;</v>'
+start_case "case 5: CVI_Score cell stores 2.56 in Arabic-Indic digits" \
+  "$work/arabic-indic/scripts/check-scoring-example.py"
+expect_no_cvi_number
+end_case
+
+make_copy "$work/trailing-zero" '<v>2.560</v>'
+start_case "case 6: CVI_Score cell stores 2.560" \
+  "$work/trailing-zero/scripts/check-scoring-example.py"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "PASS line for CVI_Score = 2.56" \
+  "printf '%s\n' \"\$out\" | grep -q '^  PASS CVI_Score = 2\.56 (line [0-9]*)\$'"
+expect "no FAIL line" '[ "$(fail_count)" -eq 0 ]'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
