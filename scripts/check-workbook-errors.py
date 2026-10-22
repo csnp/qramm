@@ -34,7 +34,11 @@ the namespace the Transitional Open XML format uses for them,
 http://schemas.openxmlformats.org/spreadsheetml/2006/main, or in the one
 the Strict Open XML format uses, http://purl.oclc.org/ooxml/spreadsheetml/main.
 A workbook whose xl/workbook.xml has no sheet element in either namespace
-fails as not a workbook.
+fails as not a workbook. So does a workbook whose xl/workbook.xml,
+xl/_rels/workbook.xml.rels or part of a sheet that is not hidden has an
+XML declaration that names an encoding Python has no codec for, such as
+x-bogus, or a multi-byte encoding the XML parser does not read, such as
+shift_jis.
 
 The script uses the Python standard library only. Exit status: 0 when no
 workbook stores an error value in a visible cell, 1 when one does or a
@@ -308,7 +312,12 @@ def check_workbook(label, path, problems):
     except ENTRY_ERRORS:
         problems.append("{}: cannot read (not a workbook)".format(label))
         return
-    except (zipfile.BadZipFile, KeyError, ET.ParseError, ValueError) as error:
+    # LookupError: its subclass KeyError, for a part the archive does not
+    # hold or a sheet r:id no Relationship element gives, and LookupError
+    # itself, which ElementTree raises for an XML declaration that names an
+    # encoding Python does not know, such as x-bogus. A multi-byte encoding
+    # that Python knows, such as shift_jis, raises ValueError instead.
+    except (zipfile.BadZipFile, LookupError, ET.ParseError, ValueError) as error:
         problems.append("{}: not a workbook ({})".format(label, error))
         return
     if len(problems) == before:

@@ -199,6 +199,17 @@
 #  and 37) or max (case 36) attribute, quoted, is not one or more of the
 #  digits 0 to 9, a PASS line for the sample workbook, and RESULT: FAIL as
 #  the last line.
+#  38. A copy of the sample workbook whose xl/worksheets/sheet1.xml, the
+#      part of the Welcome sheet, has an XML declaration that names the
+#      encoding x-bogus, which Python has no codec for, in place of UTF-8.
+#      ElementTree raises LookupError("unknown encoding: x-bogus").
+#  39. The same copy with the multi-byte encoding shift_jis in place of
+#      x-bogus. ElementTree raises ValueError("multi-byte encodings are not
+#      supported").
+#  Cases 38 and 39 pass the copy and then the sample workbook: exit 1,
+#  nothing on stderr, one FAIL line, which says the copy is not a workbook
+#  and gives the error's text as the reason, a PASS line for the sample
+#  workbook, and RESULT: FAIL as the last line.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -1021,6 +1032,35 @@ edit_part "$work/m1error.xlsx" "$work/letterbound.xlsx" \
 start_case "case 37: a hidden col element whose min is a letter" \
   "$checker" "$work/letterbound.xlsx" toolkit/Sample_Assessment.xlsx
 expect_bad_column_bound "$work/letterbound.xlsx" min x
+end_case
+
+# Expectations for cases 38 and 39: $1 is the copy's file name and $2 the
+# reason its FAIL line gives.
+expect_bad_encoding() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says it is not a workbook ($2)" \
+    "has_fail '$1: not a workbook ($2)'"
+  expect "the sample workbook is checked" \
+    'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+  expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+}
+
+# The XML declaration of xl/worksheets/sheet1.xml in the sample workbook
+# names the encoding UTF-8.
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/unknownencoding.xlsx" \
+  xl/worksheets/sheet1.xml 'encoding="UTF-8"' 'encoding="x-bogus"'
+start_case "case 38: a sheet part whose XML declaration names an unknown encoding" \
+  "$checker" "$work/unknownencoding.xlsx" toolkit/Sample_Assessment.xlsx
+expect_bad_encoding "$work/unknownencoding.xlsx" "unknown encoding: x-bogus"
+end_case
+
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/multibyteencoding.xlsx" \
+  xl/worksheets/sheet1.xml 'encoding="UTF-8"' 'encoding="shift_jis"'
+start_case "case 39: a sheet part whose XML declaration names a multi-byte encoding" \
+  "$checker" "$work/multibyteencoding.xlsx" toolkit/Sample_Assessment.xlsx
+expect_bad_encoding "$work/multibyteencoding.xlsx" "multi-byte encodings are not supported"
 end_case
 
 if [ "$failed" -eq 0 ]; then
