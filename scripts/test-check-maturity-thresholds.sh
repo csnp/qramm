@@ -111,6 +111,19 @@
 #  between two digits and reads the other Unicode decimal digits, so it
 #  reads the index of cases 25 to 29 as 1820, and -1 as the index of the
 #  last shared string.
+#  31. A copy of the toolkit workbook whose Basic chart value, Scorecard!M21,
+#      has 8,152 spaces after its divisor, so that its formula is 8,192
+#      characters long, the most Excel allows: exit 0, a PASS line for
+#      Scorecard!M21, and RESULT: PASS.
+#  32. A copy whose Scorecard!M21 formula has 8,153 spaces after its
+#      divisor, so that it is 8,193 characters long: exit 1, one FAIL line,
+#      which names Scorecard!M21 and says the formula is longer than the
+#      8,192 characters Excel allows.
+#  33. The checker loaded as a module, count_criteria() called on COUNTIF(
+#      followed by 32,768 spaces and )/12, and criteria_band() called on one
+#      criterion of 32,768 spaces: exit 0, nothing on stderr, and each call
+#      returns None and uses less than one second of CPU time. A call still
+#      running after 10 seconds is stopped, and the case fails.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -735,6 +748,90 @@ make_copy "$toolkit" "$work/negativeindex.xlsx" "$h9" '<c r="H9" s="205" t="s"><
 start_case "case 30: a negative shared string index" \
   "$work/negativeindex.xlsx" "$work/ranges.md"
 expect_cannot_read negativeindex.xlsx "not a workbook"
+end_case
+
+# The Basic chart value of the toolkit workbook, Scorecard!M21. Parsed, its
+# formula is 40 characters long.
+basic='COUNTIF(PracticeScoreOutcomes,"&lt;1.5")/12'
+
+make_copy "$toolkit" "$work/longest/QRAMM_Assessment_Toolkit.xlsx" \
+  "$basic" "$basic$(printf '%8152s' '')"
+start_case "case 31: a chart value formula of 8,192 characters" \
+  "$work/longest/QRAMM_Assessment_Toolkit.xlsx"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "PASS line for Scorecard!M21" 'has_line "  PASS Scorecard!M21: Basic below 1.5"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+end_case
+
+make_copy "$toolkit" "$work/toolong/QRAMM_Assessment_Toolkit.xlsx" \
+  "$basic" "$basic$(printf '%8153s' '')"
+start_case "case 32: a chart value formula of 8,193 characters" \
+  "$work/toolong/QRAMM_Assessment_Toolkit.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line names Scorecard!M21 and says the formula is too long" \
+  'has_fail "toolong/QRAMM_Assessment_Toolkit.xlsx Scorecard!M21: the Maturity Distribution chart value is a formula of 8,193 characters, longer than the 8,192 Excel allows"'
+end_case
+
+# Loads the checker as a module and calls count_criteria() and
+# criteria_band() on a run of 32,768 spaces. For each call prints its name,
+# what it returned and the seconds of CPU time it used. SIGALRM stops a call
+# still running after 10 seconds, and its line then says "timed out" in
+# place of what it returned. -B keeps python3 from writing a bytecode cache
+# of the checker under scripts/. Sets out, err and status.
+run_calls() {
+  status=0
+  python3 -B -I - "$checker" > "$work/out" 2> "$work/err" <<'PY' || status=$?
+import importlib.util
+import signal
+import sys
+import time
+
+spec = importlib.util.spec_from_file_location("checker", sys.argv[1])
+checker = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(checker)
+
+
+def stop(signum, frame):
+    raise TimeoutError
+
+
+signal.signal(signal.SIGALRM, stop)
+spaces = " " * 32768
+calls = [
+    ("count_criteria", checker.count_criteria, "COUNTIF(" + spaces + ")/12"),
+    ("criteria_band", checker.criteria_band, [spaces]),
+]
+for name, function, argument in calls:
+    start = time.process_time()
+    signal.alarm(10)
+    try:
+        result = function(argument)
+    except TimeoutError:
+        result = "timed out"
+    signal.alarm(0)
+    print("{} {} {:.3f}".format(name, result, time.process_time() - start))
+PY
+  out="$(cat "$work/out")"
+  err="$(cat "$work/err")"
+}
+
+# True when out has a line for the call $1 that says it returned None and
+# used less than one second of CPU time.
+returned_none_quickly() {
+  printf '%s\n' "$out" | awk -v name="$1" '
+    $1 == name && $2 == "None" && $3 < 1 { found = 1 }
+    END { exit !found }'
+}
+
+echo "case 33: a run of 32,768 spaces in the arguments and in a criterion"
+case_failed="$failed"
+failed=0
+run_calls
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "count_criteria returns None in under a second" 'returned_none_quickly count_criteria'
+expect "criteria_band returns None in under a second" 'returned_none_quickly criteria_band'
 end_case
 
 if [ "$failed" -eq 0 ]; then

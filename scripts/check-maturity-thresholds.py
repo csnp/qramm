@@ -49,8 +49,10 @@ range. For each such chart:
     6. The chart has a category for each level the Scorecard assigns.
 
 A category whose formula counts only "-", the practices with no score, is
-not checked unless its label is a maturity level. The script uses the Python
-standard library only.
+not checked unless its label is a maturity level. A value whose formula is
+longer than 8,192 characters, the most Excel allows in a formula, fails with
+"longer than the 8,192 Excel allows", and its criteria are not read. The
+script uses the Python standard library only.
 
 Exit status: 0 when the documents agree with the Scorecard, 1 when they do
 not or a file cannot be read, 2 on a usage error. An empty file argument
@@ -124,10 +126,18 @@ SERIES_RANGE = re.compile(
     r"(?:'((?:[^']|'')+)'|([^'!]+))!\$?([A-Z]+)\$?(\d+)(?::\$?([A-Z]+)\$?(\d+))?"
 )
 # COUNTIF or COUNTIFS of one range against one or more criteria, divided by a
-# whole number, and one range-and-criterion pair of its arguments.
+# whole number, one range-and-criterion pair of its arguments, and a criterion
+# that compares with a number. In CRITERION and COMPARISON each quantifier is
+# followed by a character it cannot match or by the end of the text, so no two
+# quantifiers can match the same characters. In a pattern such as
+# \s*([^,"]+?)\s*, where three can match the same spaces, the time a failed
+# match on a run of spaces takes grows with the cube of the length of the run.
 COUNT = re.compile(r"\s*COUNTIFS?\((?P<arguments>.*)\)\s*/\s*\d+\s*", re.IGNORECASE)
-CRITERION = re.compile(r'\s*([^,"]+?)\s*,\s*"([^"]*)"\s*(?:,|$)')
-COMPARISON = re.compile(r"\s*(<=|>=|<|>|=)?\s*(\d+(?:\.\d+)?)\s*")
+CRITERION = re.compile(r'([^,"]+),\s*"([^"]*)"\s*(?:,|$)')
+COMPARISON = re.compile(r"\s*(?:(<=|>=|<|>|=)\s*)?(\d+(?:\.\d+)?)\s*")
+
+# Excel limits the contents of a formula to 8,192 characters.
+MAX_FORMULA_LENGTH = 8192
 
 USAGE = "usage: python3 -I scripts/check-maturity-thresholds.py [file ...]"
 
@@ -430,7 +440,8 @@ def is_zip_file(path):
 
 def count_criteria(formula):
     """Criteria of a COUNTIF or COUNTIFS formula over one range, divided by
-    a whole number, or None."""
+    a whole number, or None. A range is read without the white space at its
+    ends, or as its last character when it is all white space."""
     match = COUNT.fullmatch(formula or "")
     if match is None:
         return None
@@ -441,7 +452,7 @@ def count_criteria(formula):
         pair = CRITERION.match(arguments, position)
         if pair is None or pair.end() == position:
             return None
-        ranges.add(pair.group(1))
+        ranges.add(pair.group(1).strip() or pair.group(1)[-1])
         criteria.append(pair.group(2))
         position = pair.end()
     if len(ranges) != 1:
@@ -481,7 +492,10 @@ def check_chart(path, chart, bands, problems):
     counted = set()
     for label_place, label, value_place, formula in categories:
         level = (label or "").strip()
-        criteria = count_criteria(formula)
+        # A formula longer than Excel allows fails before any pattern is
+        # matched against it.
+        too_long = formula is not None and len(formula) > MAX_FORMULA_LENGTH
+        criteria = None if too_long else count_criteria(formula)
         if criteria == ["-"] and level not in LEVELS:
             # The practices with no score, such as Incomplete Assessment.
             continue
@@ -490,7 +504,15 @@ def check_chart(path, chart, bands, problems):
         band = None
         if criteria is not None and criteria != ["-"]:
             band = criteria_band(criteria)
-        if criteria == ["-"]:
+        if too_long:
+            problems.append(
+                "{} {}: the {} chart value is a formula of {:,} characters, "
+                "longer than the {:,} Excel allows".format(
+                    path, value_place, CHART_TITLE, len(formula),
+                    MAX_FORMULA_LENGTH,
+                )
+            )
+        elif criteria == ["-"]:
             problems.append(
                 "{} {}: the {} chart counts the practices with no score as "
                 "{}".format(path, value_place, CHART_TITLE, level)
