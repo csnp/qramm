@@ -121,6 +121,8 @@ Create a hidden "Data" tab containing all reference tables. Use structured table
 | 4 | Infrastructure & Technical Readiness | ITR | #FFC107 |
 
 ## Table 11: Industry Benchmarks (AB1:AE25)
+These values are illustrative placeholders with no source. The Scorecard shows them with a footnote that says so, and only after the Profile tab is filled in.
+
 | Industry_Size | Avg_Overall | Avg_CVI | Avg_SGRM | Avg_DPE | Avg_ITR |
 |---------------|-------------|---------|----------|---------|---------|
 | Financial Services_Fortune 500 | 3.2 | 3.4 | 3.5 | 3.1 | 2.9 |

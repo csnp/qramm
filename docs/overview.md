@@ -213,7 +213,7 @@ The Excel-based QRAMM Assessment Toolkit is available for download. This toolkit
 - **Organization Profile Multiplier**: Risk-adjusted scoring based on your industry and context
 - **Compliance Mapping**: Automatic mapping to 8 major frameworks (NIST, CMMC, ISO, etc.)
 - **120 Assessment Questions**: Complete coverage across 4 dimensions and 12 practices
-- **Executive Reporting**: Board-ready dashboards with benchmarking and recommendations
+- **Executive Reporting**: Board-ready dashboards with recommendations and illustrative benchmark values
 
 [**Download the Toolkit**](../toolkit/QRAMM_Assessment_Toolkit.xlsx) | [**View Sample Assessment**](../toolkit/Sample_Assessment.xlsx) | [**Read Toolkit Overview**](../toolkit/toolkit-overview.md) | [**See Toolkit Screenshots**](toolkit-visuals.md)
 
