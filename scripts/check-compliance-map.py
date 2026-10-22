@@ -269,11 +269,13 @@ def map_range(book):
 
 
 def ascii_int(text):
-    """int(text), except that text with a character outside ASCII raises
-    ValueError, as int() does for text such as "x". int() reads every
-    Unicode decimal digit, such as U+0663 (ARABIC-INDIC DIGIT THREE) as 3,
-    and the workbook writes its numbers with the digits 0 to 9."""
-    if not text.isascii():
+    """int(text), except that text with a character outside ASCII or with
+    an underscore raises ValueError, as int() does for text such as "x".
+    The workbook writes its numbers with the digits 0 to 9. int() also
+    reads every Unicode decimal digit, such as U+0663 (ARABIC-INDIC DIGIT
+    THREE) as 3, and allows an underscore between two digits, so it reads
+    0_3 as 3."""
+    if not text.isascii() or "_" in text:
         raise ValueError("invalid literal for int() with base 10: {!r}".format(text))
     return int(text)
 
@@ -293,9 +295,9 @@ def cell_value(node, strings, part):
     the part path of the sheet that holds the cell. Raises ValueError for a
     shared string index that is not one of the shared strings, as
     ascii_int() does for an index such as "x" or one that holds a digit
-    other than 0 to 9, and as ascii_float() does for the value of a cell
-    stored as a number, such as "x" or a value that holds a digit other
-    than 0 to 9."""
+    other than 0 to 9 or an underscore, and as ascii_float() does for the
+    value of a cell stored as a number, such as "x" or a value that holds a
+    digit other than 0 to 9."""
     value = node.find(ns(MAIN_NS, "v"))
     kind = node.get("t")
     if kind == "inlineStr":
@@ -319,7 +321,8 @@ def read_block(book, part, strings, first, width, top, bottom):
     """{row number: {offset: value}} for rows top to bottom and the width
     columns from column number first of the sheet part. Raises ValueError
     for a row element of the part with no r attribute, as ascii_int() does
-    for an r such as "x" or one that holds a digit other than 0 to 9, and for a c element of a row in that range whose r
+    for an r such as "x" or one that holds a digit other than 0 to 9 or an
+    underscore, and for a c element of a row in that range whose r
     attribute is missing or is not a cell reference."""
     root = ET.fromstring(book.read(part))
     rows = {number: {} for number in range(top, bottom + 1)}
