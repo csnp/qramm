@@ -13,7 +13,12 @@ absolute). For each workbook it reports every cell that stores an error
 value (#N/A, #VALUE!, #DIV/0!, #REF!, #NAME?, #NUM! or #NULL!) in a sheet,
 row and column that are not hidden, with the cell's formula. A cell in a
 hidden sheet, a hidden row or a hidden column is not reported, as the
-reader does not see it.
+reader does not see it. The script reads a cell's column from the r
+attribute of its c element, a cell reference such as A1. When a c element
+in a sheet and row that are not hidden has no r attribute, or an r
+attribute, such as 1A, that does not start with a cell reference, the
+script cannot tell whether the cell's column is hidden, and the workbook
+fails as not a workbook.
 
 The script uses the Python standard library only. Exit status: 0 when no
 workbook stores an error value in a visible cell, 1 when one does or a
@@ -135,6 +140,29 @@ def column_bound(col, name, part):
     return int(value)
 
 
+def cell_column(cell, row, part):
+    """The column number of the c element cell, read from its r attribute.
+    row is the row element that holds cell, and part the part path of the
+    sheet. Raises ValueError for a c element whose r attribute is missing or
+    does not start with a cell reference."""
+    # The file format makes the r attribute of a c element optional, but a
+    # c element without one does not give its column, so this script cannot
+    # tell whether the cell is in a hidden column.
+    reference = cell.get("r")
+    match = CELL_REF.match(reference) if reference is not None else None
+    if match:
+        return column_number(match.group(1))
+    # The r attribute of a row element is optional too; the message names
+    # the row by that attribute unless it is missing or empty.
+    where = " in row {}".format(row.get("r")) if row.get("r") else ""
+    if reference is None:
+        raise ValueError("{} has a c element with no r attribute{}".format(part, where))
+    raise ValueError(
+        "{} has a c element{} whose r attribute {} is not a cell "
+        "reference".format(part, where, reference)
+    )
+
+
 def formula_text(cell):
     """The cell's formula with whitespace runs collapsed, or "no formula"."""
     node = cell.find(ns(MAIN_NS, "f"))
@@ -145,17 +173,16 @@ def formula_text(cell):
 
 def check_sheet(name, part, root, label, problems):
     """Adds a problem per visible error cell. Returns the number of visible
-    cells with a formula."""
+    cells with a formula. Raises ValueError for a c element in a row that is
+    not hidden whose r attribute is missing or does not start with a cell
+    reference."""
     hidden = hidden_columns(root, part)
     formulas = 0
     for row in root.iter(ns(MAIN_NS, "row")):
         if row.get("hidden") in ("1", "true"):
             continue
         for cell in row.iter(ns(MAIN_NS, "c")):
-            match = CELL_REF.match(cell.get("r", ""))
-            if not match:
-                continue
-            column = column_number(match.group(1))
+            column = cell_column(cell, row, part)
             if any(first <= column <= last for first, last in hidden):
                 continue
             if cell.find(ns(MAIN_NS, "f")) is not None:
