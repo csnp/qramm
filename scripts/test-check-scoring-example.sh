@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Tests scripts/check-scoring-example.py against the repository document and
 # workbook and against copies of the sample workbook whose cached value for
-# CVI_Score is not a number or is written in another way.
+# CVI_Score is not a finite number or is written in another way.
 #
 # Usage:
 #   scripts/test-check-scoring-example.sh
 #
 # The checker reads framework/scoring-methodology.md and
 # toolkit/Sample_Assessment.xlsx from the directory above its own. Cases 2
-# to 6 copy the checker and the document into a new temporary directory
+# to 8 copy the checker and the document into a new temporary directory
 # laid out like the repository (scripts/, framework/ and toolkit/), write an
 # edited copy of the sample workbook there, and run the checker there.
 #
@@ -35,6 +35,13 @@
 #      sheet stores 2.560 in place of its number, as <v>2.560</v>: exit 0,
 #      nothing on stderr, a PASS line for CVI_Score = 2.56, no FAIL line,
 #      RESULT: PASS.
+#   7. A copy of the sample workbook whose cell L5 of the Dimension 1 - CVI
+#      sheet stores the text nan in place of its number, as <v>nan</v>,
+#      which float() reads as a NaN.
+#   8. A copy of the sample workbook whose cell L5 of the Dimension 1 - CVI
+#      sheet stores the text inf in place of its number, as <v>inf</v>,
+#      which float() reads as an infinity.
+#  Cases 7 and 8: the same expectations as cases 2 to 5.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -148,7 +155,7 @@ end_case() {
   failed=$((failed | case_failed))
 }
 
-# The expect lines of cases 2 to 5.
+# The expect lines of cases 2 to 5, 7 and 8.
 expect_no_cvi_number() {
   local defined
   expect "exit status is 1" '[ "$status" -eq 1 ]'
@@ -207,6 +214,18 @@ expect "PASS line for CVI_Score = 2.56" \
   "printf '%s\n' \"\$out\" | grep -q '^  PASS CVI_Score = 2\.56 (line [0-9]*)\$'"
 expect "no FAIL line" '[ "$(fail_count)" -eq 0 ]'
 expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+end_case
+
+make_copy "$work/nan" '<v>nan</v>'
+start_case "case 7: CVI_Score cell stores the text nan" \
+  "$work/nan/scripts/check-scoring-example.py"
+expect_no_cvi_number
+end_case
+
+make_copy "$work/inf" '<v>inf</v>'
+start_case "case 8: CVI_Score cell stores the text inf" \
+  "$work/inf/scripts/check-scoring-example.py"
+expect_no_cvi_number
 end_case
 
 if [ "$failed" -eq 0 ]; then
