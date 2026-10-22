@@ -24,16 +24,16 @@ A score formula is a fenced code block whose first line starts with
 "**<name> Score = ...**". Formula text is compared with runs of whitespace
 collapsed to one space. The script uses the Python standard library only.
 
-Exit status: 0 when the documents agree, 1 when they do not, 2 on a usage
-error. An empty file argument fails with "no file name given", and a document
-whose bytes are not UTF-8 fails with "not UTF-8 text". A file name is printed
-with each byte that the file system encoding cannot decode, and each
-character that the encoding of stdout cannot encode, as a backslash escape,
-such as \\xff for the byte 0xff and \\u65e5 for the character U+65E5. A FAIL
-line, such as one that quotes a formula, is printed with each character that
-the encoding of stdout cannot encode as a backslash escape too, such as
-\\u2192 for U+2192. --help (or -h) prints the usage line and this text on
-stderr and exits 2.
+Exit status: 0 when the documents agree, 1 when they do not or a file cannot
+be read, 2 on a usage error. An empty file argument fails with "no file name
+given", and a document whose bytes are not UTF-8 fails with "not UTF-8
+text". A file name is printed with each byte that the file system encoding
+cannot decode, and each character that the encoding of stdout cannot encode,
+as a backslash escape, such as \\xff for the byte 0xff and \\u65e5 for the
+character U+65E5. A FAIL line, such as one that quotes a formula, is printed
+with each character that the encoding of stdout cannot encode as a backslash
+escape too, such as \\u2192 for U+2192. --help (or -h) prints the usage line
+and this text on stderr and exits 2.
 """
 
 import os

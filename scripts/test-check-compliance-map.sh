@@ -20,8 +20,9 @@
 #      lines those cells give for each workbook.
 #   3. A spec with no row for Q120: exit 1, FAIL lines for the missing spec
 #      cells and for the workbook rows the spec does not give.
-#   4. A workbook argument that does not exist: exit 1, a FAIL line that
-#      says the map cannot be read.
+#   4. A workbook argument that does not exist: exit 1, the FAIL line
+#      "toolkit/missing.xlsx: cannot read (No such file or directory)", with
+#      no errno number and no absolute path.
 #   5. An option such as --help: exit 2, usage on stderr, then the checker's
 #      header text, whose example of a CIS v8 safeguard a number cannot
 #      keep apart from another is 3.10 and 3.1.
@@ -39,14 +40,14 @@
 #  10. Under the en_US.UTF-8 locale, a workbook argument that holds the byte
 #      0xff, which is not valid UTF-8, and names no file, then the sample
 #      workbook: exit 1, no traceback, the name printed with the byte as
-#      \xff on its == line and in a FAIL line that says the map cannot be
-#      read (No such file or directory), the map PASS line for the sample
+#      \xff on its == line and in a FAIL line that says it cannot be read
+#      (No such file or directory), the map PASS line for the sample
 #      workbook, then RESULT: FAIL.
 #  11. Under the en_US.ISO8859-1 locale, a workbook argument that is valid
 #      UTF-8 and holds the character U+65E5, which ISO-8859-1 cannot encode,
 #      and names no file, then the sample workbook: exit 1, nothing on
 #      stderr, the name printed with the character as \u65e5 on its == line
-#      and in a FAIL line that says the map cannot be read (No such file or
+#      and in a FAIL line that says it cannot be read (No such file or
 #      directory), the map PASS line for the sample workbook, then
 #      RESULT: FAIL. The case is skipped, with a line that says so, when
 #      python3 -I does not decode file names as UTF-8 and write stdout as
@@ -213,6 +214,14 @@
 #  48. A copy of the sample workbook whose cell BA3 of the Data sheet is
 #      stored as a logical value with the value 2, which is not 0 or 1:
 #      passed with the sample workbook, as cases 40 to 42.
+#  49. A workbook argument that is a directory, then the sample workbook:
+#      exit 1, nothing on stderr, one FAIL line, which says it cannot be
+#      read (Is a directory), the map PASS line for the sample workbook,
+#      then RESULT: FAIL.
+#  50. A text file given as a workbook, then the sample workbook: exit 1,
+#      nothing on stderr, one FAIL line, which says it is not a workbook
+#      (File is not a zip file), the map PASS line for the sample workbook,
+#      then RESULT: FAIL.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -438,8 +447,10 @@ end_case
 
 start_case "case 4: workbook that does not exist" "$checker" "toolkit/missing.xlsx"
 expect "exit status is 1" '[ "$status" -eq 1 ]'
-expect "FAIL line says the map cannot be read" \
-  "has_fail 'toolkit/missing.xlsx: cannot read the compliance map'"
+expect "FAIL line says it cannot be read (No such file or directory)" \
+  "has_line '  FAIL toolkit/missing.xlsx: cannot read (No such file or directory)'"
+expect "no errno number" '! printf "%s\n" "$out" | grep -qF "[Errno"'
+expect "no absolute path" '! printf "%s\n" "$out" | grep -qF "$root"'
 end_case
 
 start_case "case 5: option argument" "$checker" --help
@@ -515,8 +526,8 @@ expect "no traceback on stderr" '[ -z "$err" ]'
 expect "the name is printed with the byte as \\xff" \
   "has_line '== $work/bad\\xff.xlsx against $spec'"
 expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
-expect "FAIL line says the map cannot be read and gives the byte as \\xff" \
-  "has_line '  FAIL $work/bad\\xff.xlsx: cannot read the compliance map (No such file or directory)'"
+expect "FAIL line says it cannot be read and gives the byte as \\xff" \
+  "has_line '  FAIL $work/bad\\xff.xlsx: cannot read (No such file or directory)'"
 expect "the sample workbook is checked" \
   "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
@@ -537,8 +548,8 @@ if [ "$probe" = "utf-8 iso8859-1" ]; then
   expect "the name is printed with the character as \\u65e5" \
     "has_line '== $work/\\u65e5.xlsx against $spec'"
   expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
-  expect "FAIL line says the map cannot be read and gives the character as \\u65e5" \
-    "has_line '  FAIL $work/\\u65e5.xlsx: cannot read the compliance map (No such file or directory)'"
+  expect "FAIL line says it cannot be read and gives the character as \\u65e5" \
+    "has_line '  FAIL $work/\\u65e5.xlsx: cannot read (No such file or directory)'"
   expect "the sample workbook is checked" \
     "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
   expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
@@ -1227,6 +1238,32 @@ start_case "case 48: a logical value that is not 0 or 1" \
   "$checker" "$work/logicaltwo.xlsx" "$sample"
 expect_map_unreadable "$work/logicaltwo.xlsx" "a logical value is not 0 or 1" \
   "xl/worksheets/sheet10.xml cell BA3 gives logical value '2', which is not 0 or 1"
+end_case
+
+mkdir -p "$work/folder.xlsx"
+start_case "case 49: a workbook argument that is a directory" \
+  "$checker" "$work/folder.xlsx" "$sample"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it cannot be read (Is a directory)" \
+  "has_line '  FAIL $work/folder.xlsx: cannot read (Is a directory)'"
+expect "the sample workbook is checked" \
+  "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+printf 'Question_ID,Framework\nQ1,NIST CSF 2.0\n' > "$work/text.xlsx"
+start_case "case 50: a text file given as a workbook" \
+  "$checker" "$work/text.xlsx" "$sample"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not a workbook (File is not a zip file)" \
+  "has_line '  FAIL $work/text.xlsx: not a workbook (File is not a zip file)'"
+expect "the sample workbook is checked" \
+  "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then

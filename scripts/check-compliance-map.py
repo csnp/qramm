@@ -32,16 +32,16 @@ relative to the repository root, or absolute). For each workbook:
 The script reads stored cell values and the formula text of the Compliance
 sheet, and uses the Python standard library only.
 
-Exit status: 0 when the workbooks pass checks 1 to 4, 1 when they do not, 2
-on a usage error. An empty workbook argument fails with "no file name given".
-A file name is printed with each byte that the file system encoding cannot
-decode, and each character that the encoding of stdout cannot encode, as a
-backslash escape, such as \\xff for the byte 0xff and \\u65e5 for the
-character U+65E5. A FAIL line, such as one that quotes a Control_ID, and the
-PASS line that names the ranges the category names are looked up in are
-printed with each character that the encoding of stdout cannot encode as a
-backslash escape too, such as \\u2192 for U+2192. --help (or -h) prints the
-usage line and this text on stderr and exits 2.
+Exit status: 0 when the workbooks pass checks 1 to 4, 1 when they do not or
+a workbook cannot be read, 2 on a usage error. An empty workbook argument
+fails with "no file name given". A file name is printed with each byte that
+the file system encoding cannot decode, and each character that the encoding
+of stdout cannot encode, as a backslash escape, such as \\xff for the byte
+0xff and \\u65e5 for the character U+65E5. A FAIL line, such as one that
+quotes a Control_ID, and the PASS line that names the ranges the category
+names are looked up in are printed with each character that the encoding of
+stdout cannot encode as a backslash escape too, such as \\u2192 for U+2192.
+--help (or -h) prints the usage line and this text on stderr and exits 2.
 """
 
 import os
@@ -81,7 +81,7 @@ if zstd is not None:
     ENTRY_ERRORS += (zstd.ZstdError,)
 
 # The errors check_workbook() and check_category_names() report as a
-# workbook that cannot be read, each with the reason reason() gives for it.
+# workbook that cannot be read, each as the problem unreadable() gives.
 READ_ERRORS = (OSError, KeyError, ValueError, zipfile.BadZipFile, ET.ParseError) + ENTRY_ERRORS
 
 SPEC = "toolkit-specs/4_QRAMM_Compliance_Mapping_Details.md"
@@ -504,14 +504,28 @@ def reason(error, path):
     return str(error)
 
 
+def unreadable(label, error, path, part):
+    """The problem reported when reading part, such as "the compliance map",
+    of the workbook at path raised error; label is the workbook's file name
+    as printed. A file that is not a zip archive gives "cannot read" and the
+    description of an operating system error, such as "No such file or
+    directory" or "Is a directory", or "not a workbook" and the zipfile
+    error, such as "File is not a zip file". Any other error gives "cannot
+    read", the part and the reason reason() gives."""
+    if not is_zip_file(path):
+        if isinstance(error, OSError) and error.strerror:
+            return "{}: cannot read ({})".format(label, error.strerror)
+        if isinstance(error, zipfile.BadZipFile):
+            return "{}: not a workbook ({})".format(label, error)
+    return "{}: cannot read {} ({})".format(label, part, reason(error, path))
+
+
 def check_workbook(label, path, spec, problems):
     """label is the workbook's file name as printed; path is the file read."""
     try:
         sheet, first, rows = read_map(path)
     except READ_ERRORS as error:
-        problems.append(
-            "{}: cannot read the compliance map ({})".format(label, reason(error, path))
-        )
+        problems.append(unreadable(label, error, path, "the compliance map"))
         return
     control_letters = column_letters(first + CONTROL_COLUMN)
     weight_letters = column_letters(first + WEIGHT_COLUMN)
@@ -569,9 +583,7 @@ def check_category_names(label, path, sheet, first, rows, problems):
     try:
         lookups = read_name_lookups(path)
     except READ_ERRORS as error:
-        problems.append(
-            "{}: cannot read the category name lookup ({})".format(label, reason(error, path))
-        )
+        problems.append(unreadable(label, error, path, "the category name lookup"))
         return
     category_letters = column_letters(first + CATEGORY_COLUMN)
     named = 0
