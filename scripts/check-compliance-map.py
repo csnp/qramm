@@ -121,7 +121,10 @@ PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 
 SPEC_ROW = re.compile(r"^\|\s*(Q\d+):")
 SPEC_CELL = re.compile(r"^(.+?) \((\d+(?:\.\d+)?)\)$")
-CELL_REF = re.compile(r"([A-Z]+)(\d+)")
+# [0-9], not \d: in a str pattern \d also matches the other Unicode decimal
+# digits, such as U+0663 (ARABIC-INDIC DIGIT THREE), and an r attribute
+# such as A followed by U+0663 is not a cell reference.
+CELL_REF = re.compile(r"([A-Z]+)([0-9]+)")
 RANGE_REF = re.compile(r"'?(.+?)'?!\$?([A-Z]+)\$?(\d+):\$?([A-Z]+)\$?(\d+)")
 NAME_LOOKUP = re.compile(
     r"VLOOKUP\(_xlfn\.CONCAT\(\$M\$4,TRIM\(\$?[A-Z]+\$?\d+\)\),"

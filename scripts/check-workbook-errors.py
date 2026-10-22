@@ -14,11 +14,12 @@ value (#N/A, #VALUE!, #DIV/0!, #REF!, #NAME?, #NUM! or #NULL!) in a sheet,
 row and column that are not hidden, with the cell's formula. A cell in a
 hidden sheet, a hidden row or a hidden column is not reported, as the
 reader does not see it. The script reads a cell's column from the r
-attribute of its c element, a cell reference such as A1. When a c element
-in a sheet and row that are not hidden has no r attribute, or an r
-attribute, such as 1A or M1x, that is not a cell reference, the script
-cannot tell whether the cell's column is hidden, and the workbook fails as
-not a workbook.
+attribute of its c element, a cell reference such as A1: one or more of
+the letters A to Z, then one or more of the digits 0 to 9. When a c
+element in a sheet and row that are not hidden has no r attribute, or an
+r attribute, such as 1A, M1x or M followed by U+0661 (ARABIC-INDIC DIGIT
+ONE), that is not a cell reference, the script cannot tell whether the
+cell's column is hidden, and the workbook fails as not a workbook.
 
 The script reads the sheet, row, column and cell elements of a workbook in
 the namespace the Transitional Open XML format uses for them,
@@ -95,7 +96,10 @@ STRICT_NS = {
     "http://purl.oclc.org/ooxml/officeDocument/relationships": REL_NS,
 }
 
-CELL_REF = re.compile(r"([A-Z]+)(\d+)")
+# [0-9], not \d: in a str pattern \d also matches the other Unicode decimal
+# digits, such as U+0661 (ARABIC-INDIC DIGIT ONE), and an r attribute such
+# as M followed by U+0661 is not a cell reference.
+CELL_REF = re.compile(r"([A-Z]+)([0-9]+)")
 
 USAGE = "usage: python3 -I scripts/check-workbook-errors.py [workbook ...]"
 

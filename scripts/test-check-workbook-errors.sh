@@ -171,6 +171,12 @@
 #      the copy is not a workbook as xl/workbook.xml has no sheet element in
 #      a namespace the checker reads, a PASS line for the sample workbook,
 #      and RESULT: FAIL as the last line.
+#  31. Under the en_US.UTF-8 locale, the copy of case 24 with the r
+#      attribute M followed by U+0661 (ARABIC-INDIC DIGIT ONE) in place of
+#      1A. U+0661 is a Unicode decimal digit but not one of the digits 0 to
+#      9, and column M of the Welcome sheet is hidden. As case 27, with
+#      this r attribute, written as UTF-8, in place of M1x in the FAIL line.
+#  32. As case 31, with U+FF11 (FULLWIDTH DIGIT ONE) in place of U+0661.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -756,8 +762,8 @@ expect "the sample workbook is checked" \
 expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
 
-# Expectations for cases 23 to 25 and 27: $1 is the copy's file name and $2
-# what its FAIL line says xl/worksheets/sheet1.xml has.
+# Expectations for cases 23 to 25, 27, 31 and 32: $1 is the copy's file
+# name and $2 what its FAIL line says xl/worksheets/sheet1.xml has.
 expect_no_cell_reference() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "no traceback on stderr" '[ -z "$err" ]'
@@ -895,6 +901,26 @@ expect "FAIL line says it is not a workbook as xl/workbook.xml has no sheet elem
 expect "the sample workbook is checked" \
   'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
 expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+# The part gives the digit after M as a character reference: &#x661; for
+# U+0661 and &#xFF11; for U+FF11. Under en_US.UTF-8 the FAIL line quotes the
+# r attribute as UTF-8, in which \331\241 is U+0661 and \357\274\221 is
+# U+FF11.
+edit_part "$work/badcellref.xlsx" "$work/arabicdigit.xlsx" \
+  xl/worksheets/sheet1.xml '<c r="1A" ' '<c r="M&#x661;" '
+LC_ALL=en_US.UTF-8 start_case "case 31: a c element whose r attribute holds an Arabic-Indic digit" \
+  "$checker" "$work/arabicdigit.xlsx" toolkit/Sample_Assessment.xlsx
+expect_no_cell_reference "$work/arabicdigit.xlsx" \
+  "a c element in row 1 whose r attribute M$(printf '\331\241') is not a cell reference"
+end_case
+
+edit_part "$work/badcellref.xlsx" "$work/fullwidthdigit.xlsx" \
+  xl/worksheets/sheet1.xml '<c r="1A" ' '<c r="M&#xFF11;" '
+LC_ALL=en_US.UTF-8 start_case "case 32: a c element whose r attribute holds a fullwidth digit" \
+  "$checker" "$work/fullwidthdigit.xlsx" toolkit/Sample_Assessment.xlsx
+expect_no_cell_reference "$work/fullwidthdigit.xlsx" \
+  "a c element in row 1 whose r attribute M$(printf '\357\274\221') is not a cell reference"
 end_case
 
 if [ "$failed" -eq 0 ]; then
