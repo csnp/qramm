@@ -93,6 +93,8 @@ CSNP serves non-technical and vulnerable users.
 - [ ] No secrets or credential files in the committed files.
 - [ ] The toolkit specs record no password
   (`bash scripts/check-spec-passwords.sh` passes).
+- [ ] No workbook carries a protection password
+  (`python3 -I scripts/check-workbook-protection.py` passes).
 
 ## Result
 
