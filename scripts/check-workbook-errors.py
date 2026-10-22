@@ -16,9 +16,9 @@ hidden sheet, a hidden row or a hidden column is not reported, as the
 reader does not see it. The script reads a cell's column from the r
 attribute of its c element, a cell reference such as A1. When a c element
 in a sheet and row that are not hidden has no r attribute, or an r
-attribute, such as 1A, that does not start with a cell reference, the
-script cannot tell whether the cell's column is hidden, and the workbook
-fails as not a workbook.
+attribute, such as 1A or M1x, that is not a cell reference, the script
+cannot tell whether the cell's column is hidden, and the workbook fails as
+not a workbook.
 
 The script uses the Python standard library only. Exit status: 0 when no
 workbook stores an error value in a visible cell, 1 when one does or a
@@ -144,12 +144,14 @@ def cell_column(cell, row, part):
     """The column number of the c element cell, read from its r attribute.
     row is the row element that holds cell, and part the part path of the
     sheet. Raises ValueError for a c element whose r attribute is missing or
-    does not start with a cell reference."""
+    is not a cell reference, such as 1A or M1x."""
     # The file format makes the r attribute of a c element optional, but a
     # c element without one does not give its column, so this script cannot
     # tell whether the cell is in a hidden column.
     reference = cell.get("r")
-    match = CELL_REF.match(reference) if reference is not None else None
+    # fullmatch, as an r attribute such as M1x starts with the cell
+    # reference M1 but is not one.
+    match = CELL_REF.fullmatch(reference) if reference is not None else None
     if match:
         return column_number(match.group(1))
     # The r attribute of a row element is optional too; the message names
@@ -174,8 +176,7 @@ def formula_text(cell):
 def check_sheet(name, part, root, label, problems):
     """Adds a problem per visible error cell. Returns the number of visible
     cells with a formula. Raises ValueError for a c element in a row that is
-    not hidden whose r attribute is missing or does not start with a cell
-    reference."""
+    not hidden whose r attribute is missing or is not a cell reference."""
     hidden = hidden_columns(root, part)
     formulas = 0
     for row in root.iter(ns(MAIN_NS, "row")):
