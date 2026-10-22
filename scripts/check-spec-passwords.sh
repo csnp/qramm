@@ -34,7 +34,10 @@
 #
 # Exit status: 0 when every check passes, 1 when any check fails or a file
 # cannot be read, 2 on a usage error. --help (or -h) prints the usage line and
-# this text on stderr and exits 2.
+# this text on stderr and exits 2. Any other argument that starts with "-",
+# such as --verbose or --, is an unknown option: each one is named on stderr
+# on a line of its own, such as "unknown option: --verbose", before the usage
+# line, and the exit status is 2.
 set -euo pipefail
 
 usage="usage: bash scripts/check-spec-passwords.sh [file ...]"
@@ -150,7 +153,8 @@ def main(argv):
     args = argv[1:]
     unknown = [a for a in args if a.startswith("-")]
     if unknown:
-        print("unknown option: {}".format(" ".join(unknown)), file=sys.stderr)
+        for arg in unknown:
+            print("unknown option: {}".format(arg), file=sys.stderr)
         print("usage: bash scripts/check-spec-passwords.sh [file ...]", file=sys.stderr)
         return 2
     if args:

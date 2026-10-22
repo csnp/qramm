@@ -28,7 +28,12 @@
 #              not fail the check. On 2026-10-20 LinkedIn answered this
 #              checker 999 for the profile links in the framework documents
 #              and for a made-up profile address alike, so that answer does
-#              not show whether the page is there.
+#              not show whether the page is there. A relative link to a path
+#              outside the repository, such as a link in a file outside the
+#              repository to a file beside it, fails with "is outside the
+#              repository" whether or not that path exists. A relative link
+#              to a path in the repository that does not exist fails with
+#              "does not resolve".
 #
 # Extra checks for framework/pqcmm-comparison.md (any file with that name):
 #   pqcmm      The first table whose header names "PQCMM level" lists each
@@ -50,7 +55,10 @@
 #
 # Exit status: 0 when every check passes, 1 when any check fails or a file
 # cannot be read, 2 on a usage error. --help (or -h) prints the usage line and
-# this text on stderr and exits 2.
+# this text on stderr and exits 2. Any other argument that starts with "-",
+# such as --verbose or --, is an unknown option: each one is named on stderr
+# on a line of its own, such as "unknown option: --verbose", before the usage
+# line, and the exit status is 2.
 set -euo pipefail
 
 usage="usage: bash scripts/check-framework-docs.sh [--no-network] [file ...]"
@@ -291,7 +299,14 @@ def check_links(path, lines, root, network):
                 continue
             local = target.split("#", 1)[0]
             resolved = os.path.normpath(os.path.join(base, local))
-            if not resolved.startswith(root) or not os.path.exists(resolved):
+            # A path test, not a string prefix: /a/qramm-old is outside /a/qramm.
+            if os.path.commonpath([root, resolved]) != root:
+                problems.append(
+                    "line {}: relative link '{}' is outside the repository".format(
+                        number, target
+                    )
+                )
+            elif not os.path.exists(resolved):
                 problems.append(
                     "line {}: relative link '{}' does not resolve".format(number, target)
                 )
@@ -443,7 +458,8 @@ def main(argv):
         args = [a for a in args if a != "--no-network"]
     unknown = [a for a in args if a.startswith("-")]
     if unknown:
-        print("unknown option: {}".format(" ".join(unknown)), file=sys.stderr)
+        for arg in unknown:
+            print("unknown option: {}".format(arg), file=sys.stderr)
         print(
             "usage: bash scripts/check-framework-docs.sh [--no-network] [file ...]",
             file=sys.stderr,

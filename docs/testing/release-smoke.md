@@ -43,6 +43,8 @@ Run from the repository root.
   their fixtures under `.tmp-tests/` and remove them when they exit.
 - [ ] `--help` on each checker prints a usage line and the checker's header
   text on stderr.
+- [ ] `--bogus` on each checker prints `unknown option: --bogus` before the
+  usage line on stderr, and exits 2.
 
 ## 2. Workbooks
 

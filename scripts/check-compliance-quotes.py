@@ -35,7 +35,10 @@ with "not UTF-8 text". A file name is printed with each byte that the file
 system encoding cannot decode, and each character that the encoding of
 stdout cannot encode, as a backslash escape, such as \\xff for the byte 0xff
 and \\u65e5 for the character U+65E5. --help (or -h) prints the usage line
-and this text on stderr and exits 2.
+and this text on stderr and exits 2. Any other argument that starts with
+"-", such as --verbose or --, is an unknown option: each one is named on
+stderr on a line of its own, such as "unknown option: --verbose", before the
+usage line, and the exit status is 2.
 """
 
 import importlib.util
@@ -154,7 +157,10 @@ def main(argv):
             print(file=sys.stderr)
             print(__doc__.strip(), file=sys.stderr)
         return 2
-    if any(arg.startswith("-") for arg in argv):
+    unknown = [arg for arg in argv if arg.startswith("-")]
+    if unknown:
+        for arg in unknown:
+            print("unknown option: {}".format(arg), file=sys.stderr)
         print(USAGE, file=sys.stderr)
         return 2
     here = os.path.dirname(os.path.realpath(__file__))

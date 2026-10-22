@@ -17,7 +17,11 @@ of up to MAX_SHOWN non-blank lines from each side.
 
 The script uses the Python standard library only. Exit status: 0 when every
 copy matches its source, 1 when one does not, 2 on a usage error. --help
-(or -h) prints the usage line and this text on stderr and exits 2.
+(or -h) prints the usage line and this text on stderr and exits 2. The
+script takes no other argument: given one, it names each argument on stderr
+on a line of its own, "unknown option: --verbose" for one that starts with
+"-" and "unexpected argument: README.md" for any other, then prints "this
+checker takes no arguments" and the usage line, and exits 2.
 """
 
 import difflib
@@ -121,6 +125,12 @@ def main(argv):
             print(__doc__.strip(), file=sys.stderr)
         return 2
     if argv:
+        for arg in argv:
+            if arg.startswith("-"):
+                print("unknown option: {}".format(arg), file=sys.stderr)
+            else:
+                print("unexpected argument: {}".format(arg or "''"), file=sys.stderr)
+        print("this checker takes no arguments", file=sys.stderr)
         print(USAGE, file=sys.stderr)
         return 2
     root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

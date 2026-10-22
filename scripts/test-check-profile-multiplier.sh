@@ -46,7 +46,8 @@
 #  11. An option such as --help: exit 2, usage on stderr, then the checker's
 #      header text.
 #  12. -h: exit 2, usage on stderr, then the checker's header text.
-#  13. An unknown option, --verbose: exit 2, only the usage line on stderr.
+#  13. An unknown option, --verbose: exit 2, and on stderr only
+#      "unknown option: --verbose" and the usage line.
 #  14. Where the fixtures were written: the directory is under .tmp-tests/
 #      at the repository root and holds the fixture of case 2.
 #  15. A copy of the workbook whose Welcome!H9 text gives the earlier
@@ -411,8 +412,9 @@ end_case
 
 start_case "case 13: unknown option" "$checker" --verbose
 expect "exit status is 2" '[ "$status" -eq 2 ]'
-expect "only the usage line on stderr" \
-  '[ "$err" = "usage: python3 -I scripts/check-profile-multiplier.py [file ...]" ]'
+expected="$(printf '%s\n' "unknown option: --verbose" \
+  "usage: python3 -I scripts/check-profile-multiplier.py [file ...]")"
+expect "only the option and the usage line on stderr" '[ "$err" = "$expected" ]'
 end_case
 
 echo "case 14: where the fixtures were written"

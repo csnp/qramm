@@ -21,7 +21,9 @@
 #      nist line.
 #   5. The repository's framework/compliance-mapping.md: exit 0, PASS nist.
 #   6. --help: exit 2, a usage line and then the header text on stderr,
-#      nothing on stdout. An unknown option: exit 2, a usage line on stderr.
+#      nothing on stdout. Two unknown options, --bogus and --json: exit 2,
+#      and on stderr "unknown option: --bogus", "unknown option: --json"
+#      and the usage line.
 #   7. An empty file argument: exit 1, "== ''", FAIL file: no file name
 #      given, no "not found" line.
 #   8. A file whose bytes are not UTF-8: exit 1, the file's == line and then
@@ -166,9 +168,12 @@ expect "stderr has the header text" \
   'printf "%s\n" "$err" | grep -qx "Checks QRAMM framework documents before they are merged."'
 expect "stdout is empty" '[ -z "$out" ]'
 [ "$failed" -eq 0 ] || show_output
-run_checker --bogus
+run_checker --bogus --json
 expect "an unknown option exits 2" '[ "$status" -eq 2 ]'
-expect "stderr has a usage line" 'printf "%s\n" "$err" | grep -q "^usage: "'
+expected="$(printf '%s\n' "unknown option: --bogus" "unknown option: --json" \
+  "usage: bash scripts/check-framework-docs.sh [--no-network] [file ...]")"
+expect "stderr names each option on a line of its own, then the usage line" \
+  '[ "$err" = "$expected" ]'
 [ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
 
