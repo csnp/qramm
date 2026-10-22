@@ -25,8 +25,9 @@
 #      RESULT: FAIL, nothing on stderr.
 #   4. --help and -h: exit 2, the usage line and then the header text on
 #      stderr, nothing on stdout.
-#   5. An unknown option: exit 2, "unknown option: --bogus" and the usage
-#      line on stderr, nothing on stdout.
+#   5. Two unknown options, --bogus and --json: exit 2, and on stderr
+#      "unknown option: --bogus", "unknown option: --json" and then the
+#      usage line, each on a line of its own; nothing on stdout.
 #   6. An empty workbook argument: exit 1, "== ''", FAIL file: no file name
 #      given, no "not found" line, RESULT: FAIL.
 #   7. A workbook path in the repository that does not exist: exit 1, FAIL
@@ -225,14 +226,15 @@ for option in --help -h; do
 done
 failed=$((failed | case_failed))
 
-echo "case 5: an unknown option"
+echo "case 5: two unknown options"
 case_failed="$failed"
 failed=0
-run_checker "$work/site" --bogus
+run_checker "$work/site" --bogus --json
+expected="$(printf '%s\n' "unknown option: --bogus" "unknown option: --json" "$usage")"
 expect "exit status is 2" '[ "$status" -eq 2 ]'
-expect "stderr names the unknown option" \
-  'printf "%s\n" "$err" | grep -qx "unknown option: --bogus"'
-expect "stderr has the usage line" 'printf "%s\n" "$err" | grep -qxF "$usage"'
+expect "stderr names each option on a line of its own, then the usage line" \
+  '[ "$err" = "$expected" ]'
+expect "no joined line" '! printf "%s\n" "$err" | grep -q "unknown option: --bogus --json"'
 expect "stdout is empty" '[ -z "$out" ]'
 [ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
