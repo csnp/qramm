@@ -128,6 +128,7 @@ SPEC_ROW = re.compile(r"^\|\s*(Q\d+):")
 # and :$BA$962 is not a cell range.
 SPEC_CELL = re.compile(r"^(.+?) \(([0-9]+(?:\.[0-9]+)?)\)$")
 CELL_REF = re.compile(r"([A-Z]+)([0-9]+)")
+DIGITS = re.compile(r"[0-9]+")
 RANGE_REF = re.compile(r"'?(.+?)'?!\$?([A-Z]+)\$?([0-9]+):\$?([A-Z]+)\$?([0-9]+)")
 NAME_LOOKUP = re.compile(
     r"VLOOKUP\(_xlfn\.CONCAT\(\$M\$4,TRIM\(\$?[A-Z]+\$?[0-9]+\)\),"
@@ -269,25 +270,28 @@ def map_range(book):
 
 
 def ascii_int(text):
-    """int(text), except that text with a character outside ASCII or with
-    an underscore raises ValueError, as int() does for text such as "x".
-    The workbook writes its numbers with the digits 0 to 9. int() also
-    reads every Unicode decimal digit, such as U+0663 (ARABIC-INDIC DIGIT
-    THREE) as 3, and allows an underscore between two digits, so it reads
-    0_3 as 3."""
-    if not text.isascii() or "_" in text:
+    """int(text), except that text other than one or more of the digits 0
+    to 9 raises ValueError, as int() does for text such as "x". The
+    workbook writes its numbers with the digits 0 to 9. int() also reads
+    every Unicode decimal digit, such as U+0663 (ARABIC-INDIC DIGIT THREE)
+    as 3, allows an underscore between two digits, so it reads 0_3 as 3,
+    and strips whitespace from the start and end of text and reads a
+    leading sign, so it reads " 3" and +3 as 3."""
+    if not DIGITS.fullmatch(text):
         raise ValueError("invalid literal for int() with base 10: {!r}".format(text))
     return int(text)
 
 
 def ascii_float(text):
-    """float(text), except that text with a character outside ASCII or with
-    an underscore raises ValueError, as float() does for text such as "x".
-    The workbook writes its numbers with the digits 0 to 9. float() also
-    reads every Unicode decimal digit, such as U+0661 (ARABIC-INDIC DIGIT
-    ONE) as 1, and allows an underscore between two digits, so it reads 0_1
-    as 1."""
-    if not text.isascii() or "_" in text:
+    """float(text), except that text with a character outside ASCII, an
+    underscore, whitespace at its start or end, or a leading sign raises
+    ValueError, as float() does for text such as "x". The workbook writes
+    its numbers with the digits 0 to 9. float() also reads every Unicode
+    decimal digit, such as U+0661 (ARABIC-INDIC DIGIT ONE) as 1, allows an
+    underscore between two digits, so it reads 0_1 as 1, and strips
+    whitespace from the start and end of text and reads a leading sign, so
+    it reads " 1 " and +1 as 1.0."""
+    if not text.isascii() or "_" in text or text != text.strip() or text.startswith(("+", "-")):
         raise ValueError("could not convert string to float: {!r}".format(text))
     return float(text)
 
@@ -296,10 +300,11 @@ def cell_value(node, strings, part):
     """Stored value of a cell: str, float, or None when it is empty. part is
     the part path of the sheet that holds the cell. Raises ValueError for a
     shared string index that is not one of the shared strings, as
-    ascii_int() does for an index such as "x" or one that holds a digit
-    other than 0 to 9 or an underscore, and as ascii_float() does for the
-    value of a cell stored as a number, such as "x" or a value that holds a
-    digit other than 0 to 9 or an underscore."""
+    ascii_int() does for an index that is not one or more of the digits 0
+    to 9, such as "x", 7_14 or +714, and as ascii_float() does for the
+    value of a cell stored as a number, such as "x", a value that holds a
+    digit other than 0 to 9 or an underscore, one with whitespace at its
+    start or end, such as " 1 ", or one with a leading sign, such as +1."""
     value = node.find(ns(MAIN_NS, "v"))
     kind = node.get("t")
     if kind == "inlineStr":
@@ -323,9 +328,9 @@ def read_block(book, part, strings, first, width, top, bottom):
     """{row number: {offset: value}} for rows top to bottom and the width
     columns from column number first of the sheet part. Raises ValueError
     for a row element of the part with no r attribute, as ascii_int() does
-    for an r such as "x" or one that holds a digit other than 0 to 9 or an
-    underscore, and for a c element of a row in that range whose r
-    attribute is missing or is not a cell reference."""
+    for an r that is not one or more of the digits 0 to 9, such as "x", 0_3
+    or " 3", and for a c element of a row in that range whose r attribute
+    is missing or is not a cell reference."""
     root = ET.fromstring(book.read(part))
     rows = {number: {} for number in range(top, bottom + 1)}
     for row in root.iter(ns(MAIN_NS, "row")):
