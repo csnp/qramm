@@ -19,7 +19,15 @@ the letters A to Z, then one or more of the digits 0 to 9. When a c
 element in a sheet and row that are not hidden has no r attribute, or an
 r attribute, such as 1A, M1x or M followed by U+0661 (ARABIC-INDIC DIGIT
 ONE), that is not a cell reference, the script cannot tell whether the
-cell's column is hidden, and the workbook fails as not a workbook.
+cell's column is hidden, and the workbook fails as not a workbook. The
+script reads the hidden columns of a sheet from its col elements whose
+hidden attribute is 1 or true: the min and max attributes of each give the
+first and last column of a hidden range, as one or more of the digits 0
+to 9. When such a col element in a sheet that is not hidden has no min or
+max attribute, or one, such as x, 1_3 or 13 written with U+0661 and U+0663
+(ARABIC-INDIC DIGIT ONE and THREE), that is not one or more of the digits
+0 to 9, the script cannot tell which columns are hidden, and the workbook
+fails as not a workbook.
 
 The script reads the sheet, row, column and cell elements of a workbook in
 the namespace the Transitional Open XML format uses for them,
@@ -106,6 +114,9 @@ STRICT_NS = {
 # digits, such as U+0661 (ARABIC-INDIC DIGIT ONE), and an r attribute such
 # as M followed by U+0661 is not a cell reference.
 CELL_REF = re.compile(r"([A-Z]+)([0-9]+)")
+# The min or max attribute of a col element, a column number. column_bound()
+# says why it reads one with this pattern and not with int() alone.
+DIGITS = re.compile(r"[0-9]+")
 
 # The C0 and C1 control characters and DEL, which printable() writes as
 # backslash escapes, and the escapes it writes for three of them.
@@ -180,8 +191,9 @@ def sheets(book):
 def hidden_columns(root, part):
     """List of (first, last) column numbers of the hidden column ranges of
     root, the sheet read from the part path part. Raises ValueError for a
-    hidden col element with no min or no max attribute, as int() does for a
-    min or max such as "x"."""
+    hidden col element with no min or no max attribute, or with a min or
+    max that is not one or more of the digits 0 to 9, such as "x", as
+    column_bound() does."""
     ranges = []
     for col in root.iter(ns(MAIN_NS, "col")):
         if col.get("hidden") in ("1", "true"):
@@ -191,10 +203,20 @@ def hidden_columns(root, part):
 
 def column_bound(col, name, part):
     """The attribute name, min or max, of the hidden col element col, as a
-    number. part is the part path of the sheet that holds col."""
+    number. part is the part path of the sheet that holds col. Raises
+    ValueError for a col element with no such attribute, and for one whose
+    attribute is not one or more of the digits 0 to 9, such as x, 1_3 or 13
+    written with U+0661 and U+0663 (ARABIC-INDIC DIGIT ONE and THREE).
+    int() reads each of the last two as 13: it reads every Unicode decimal
+    digit, and allows an underscore between two digits."""
     value = col.get(name)
     if value is None:
         raise ValueError("{} has a hidden col element with no {} attribute".format(part, name))
+    if not DIGITS.fullmatch(value):
+        raise ValueError(
+            "{} has a hidden col element whose {} attribute {!r} is not one or "
+            "more of the digits 0 to 9".format(part, name, value)
+        )
     return int(value)
 
 
