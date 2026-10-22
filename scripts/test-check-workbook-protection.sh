@@ -164,6 +164,16 @@
 #      protectedRange, sheetProtection and workbookProtection, and none of
 #      the attribute names it gives contains "password", "hash", "salt",
 #      "spin" or "algorithm", in any case.
+#  39-40. A copy of the sample workbook whose xl/worksheets/sheet1.xml has
+#      an XML declaration that names the encoding x-bogus, which Python does
+#      not know, or shift_jis, a multi-byte encoding, with the rest of the
+#      part as it is, passed before the sample workbook: exit 1, nothing on
+#      stderr, one FAIL line, which says the XML declaration of that part
+#      names an encoding that the XML parser cannot use, the == line of the
+#      sample workbook followed by its PASS line, the summary line "2 files
+#      checked, 0 protection elements with on/off settings only, 0 with an
+#      attribute that is not an on/off setting", and RESULT: FAIL as the
+#      last line.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -942,6 +952,34 @@ if [ "$failed" -ne 0 ]; then
   printf '%s\n' "$names" | sed 's/^/  /'
 fi
 failed=$((failed | case_failed))
+
+# Cases 39 and 40 expect the PASS line of case 19 for the sample workbook.
+case_number=39
+for encoding in x-bogus shift_jis; do
+  case "$encoding" in
+    x-bogus) about="an encoding Python does not know" ;;
+    shift_jis) about="a multi-byte encoding" ;;
+  esac
+  edit_part "$sample" "$work/$encoding.xlsx" xl/worksheets/sheet1.xml \
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' \
+    "<?xml version=\"1.0\" encoding=\"$encoding\" standalone=\"yes\"?>"
+  start_case "case $case_number: a part whose XML declaration names $about, $encoding" \
+    "$checker" "$work/$encoding.xlsx" "$sample"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "nothing on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  wanted="$work/$encoding.xlsx: xl/worksheets/sheet1.xml: the XML declaration names an encoding that the XML parser cannot use"
+  expect "FAIL line says the part names an encoding the XML parser cannot use" \
+    'has_fail_line "$wanted"'
+  wanted="== $sample"
+  expect "the sample workbook after it is checked and gets its PASS line" \
+    '[ -n "$sample_pass" ] && [ "$(printf "%s\n" "$out" | grep -A 1 -x -F -- "$wanted" | tail -n 1)" = "$sample_pass" ]'
+  expect "the summary line counts 2 files" \
+    'has_line "2 files checked, 0 protection elements with on/off settings only, 0 with an attribute that is not an on/off setting"'
+  expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+  end_case
+  case_number=$((case_number + 1))
+done
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
