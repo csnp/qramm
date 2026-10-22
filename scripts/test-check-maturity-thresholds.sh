@@ -124,6 +124,20 @@
 #      criterion of 32,768 spaces: exit 0, nothing on stderr, and each call
 #      returns None and uses less than one second of CPU time. A call still
 #      running after 10 seconds is stopped, and the case fails.
+#  34. A document that gives the four Scorecard ranges, but writes Basic as
+#      "below" followed by U+0661, a period and U+0665 (ARABIC-INDIC DIGIT
+#      ONE and FIVE): exit 1, one FAIL line, which names line 1 and says the
+#      number has a digit other than 0 to 9, PASS lines for lines 2 to 4,
+#      and RESULT: FAIL.
+#  35. The same document with Basic written as "below 1.5" and Developing
+#      as "1.5 to below" followed by U+FF12, a period and U+FF15 (FULLWIDTH
+#      DIGIT TWO and FIVE): exit 1, one FAIL line, which names line 2.
+#  36. A copy of the toolkit workbook whose Scorecard!M21 formula compares
+#      with U+0661, a period and U+0665 in place of 1.5: exit 1, one FAIL
+#      line, which names Scorecard!M21 and says the number has a digit
+#      other than 0 to 9.
+#  float() reads every Unicode decimal digit, so the checker read the
+#  numbers of cases 34 to 36 as 1.5 and 2.5.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -832,6 +846,57 @@ expect "exit status is 0" '[ "$status" -eq 0 ]'
 expect "nothing on stderr" '[ -z "$err" ]'
 expect "count_criteria returns None in under a second" 'returned_none_quickly count_criteria'
 expect "criteria_band returns None in under a second" 'returned_none_quickly criteria_band'
+end_case
+
+# \331\241 and \331\245 are U+0661 and U+0665 (ARABIC-INDIC DIGIT ONE and
+# FIVE) encoded as UTF-8.
+printf '%s\n' \
+  "- Basic: below $(printf '\331\241.\331\245')" \
+  '- Developing: 1.5 to below 2.5' \
+  '- Established: 2.5 to below 3.5' \
+  '- Advanced: 3.5 to 4.0' \
+  > "$work/arabic.md"
+start_case "case 34: a score range written with ARABIC-INDIC digits" "$work/arabic.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line names line 1 and says the number has a digit other than 0 to 9" \
+  "has_fail \"arabic.md line 1: the score range for Basic: the number '\\u0661.\\u0665' has a digit other than 0 to 9\""
+expect "PASS lines for lines 2 to 4" \
+  'has_line "  PASS line 2: Developing 1.5 to below 2.5" &&
+   has_line "  PASS line 3: Established 2.5 to below 3.5" &&
+   has_line "  PASS line 4: Advanced 3.5 to 4.0"'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# \357\274\222 and \357\274\225 are U+FF12 and U+FF15 (FULLWIDTH DIGIT TWO
+# and FIVE) encoded as UTF-8.
+printf '%s\n' \
+  '- Basic: below 1.5' \
+  "- Developing: 1.5 to below $(printf '\357\274\222.\357\274\225')" \
+  '- Established: 2.5 to below 3.5' \
+  '- Advanced: 3.5 to 4.0' \
+  > "$work/fullwidth.md"
+start_case "case 35: the end of a score range written with FULLWIDTH digits" \
+  "$work/fullwidth.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line names line 2 and says the number has a digit other than 0 to 9" \
+  "has_fail \"fullwidth.md line 2: the score range for Developing: the number '\\uff12.\\uff15' has a digit other than 0 to 9\""
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+make_copy "$toolkit" "$work/arabiccount/QRAMM_Assessment_Toolkit.xlsx" \
+  "$basic" 'COUNTIF(PracticeScoreOutcomes,"&lt;&#x661;.&#x665;")/12'
+start_case "case 36: a chart value criterion written with ARABIC-INDIC digits" \
+  "$work/arabiccount/QRAMM_Assessment_Toolkit.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line names Scorecard!M21 and says the number has a digit other than 0 to 9" \
+  "has_fail \"arabiccount/QRAMM_Assessment_Toolkit.xlsx Scorecard!M21: the Maturity Distribution chart value: the number '\\u0661.\\u0665' has a digit other than 0 to 9\""
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
