@@ -27,10 +27,11 @@
 # out like the site instead; scripts/test-check-published-toolkit.sh uses one
 # so that it runs without network access.
 #
-# The check fails when a workbook does not exist, when it is outside the
-# repository, which leaves it no address on the site, and when the served
-# file cannot be fetched; the FAIL line gives the reason. An empty workbook
-# argument fails with "no file name given".
+# The check fails when a workbook does not exist or is a directory, when it
+# is outside the repository, which leaves it no address on the site, and when
+# the served file cannot be fetched; the FAIL line gives the reason. A
+# directory fails with "is a directory", in the repository or outside it. An
+# empty workbook argument fails with "no file name given".
 #
 # Exit status: 0 when every check passes, 1 when any check fails, 2 on a
 # usage error. --help (or -h) prints the usage line and this text on stderr
@@ -152,7 +153,9 @@ def main(argv):
         rel = os.path.relpath(path, root)
         if rel == os.pardir or rel.startswith(os.pardir + os.sep):
             print("== {}".format(path))
-            if os.path.isfile(path):
+            if os.path.isdir(path):
+                print("  FAIL file: is a directory")
+            elif os.path.isfile(path):
                 print("  FAIL file: not in the repository")
             else:
                 print("  FAIL file: not found")
@@ -160,6 +163,10 @@ def main(argv):
             continue
         url = base_url + "/" + urllib.parse.quote(os.fsencode(rel.replace(os.sep, "/")))
         print("== {} against {}".format(url, rel))
+        if os.path.isdir(path):
+            print("  FAIL file: is a directory")
+            failed = True
+            continue
         if not os.path.isfile(path):
             print("  FAIL file: not found")
             failed = True

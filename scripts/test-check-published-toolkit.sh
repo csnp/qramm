@@ -32,7 +32,12 @@
 #      given, no "not found" line, RESULT: FAIL.
 #   7. A workbook path in the repository that does not exist: exit 1, FAIL
 #      file: not found, no cannot fetch line, RESULT: FAIL.
-#   8. Where the fixtures were written: the directory is under .tmp-tests/
+#   8. Two workbook arguments that are directories, toolkit in the
+#      repository and the repository's parent directory outside it: exit 1,
+#      each directory's == line and then FAIL file: is a directory, two FAIL
+#      lines, no "not found" line, no cannot fetch line, RESULT: FAIL,
+#      nothing on stderr.
+#   9. Where the fixtures were written: the directory is under .tmp-tests/
 #      at the repository root and holds the site of case 1, and it is gone
 #      after the cleanup runs.
 #
@@ -263,7 +268,29 @@ expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "R
 [ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
 
-echo "case 8: where the fixtures were written"
+echo "case 8: workbook arguments that are directories"
+case_failed="$failed"
+failed=0
+parent="$(cd "$repo/.." && pwd -P)"
+run_checker "$work/site" toolkit "$parent"
+after_inside="$(printf '%s\n' "$out" \
+  | grep -A 1 -xF "== $site_url/toolkit against toolkit" | tail -n 1 \
+  || true)"
+after_outside="$(printf '%s\n' "$out" | grep -A 1 -xF "== $parent" | tail -n 1 || true)"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line follows the == line of toolkit and says it is a directory" \
+  '[ "$after_inside" = "  FAIL file: is a directory" ]'
+expect "FAIL line follows the == line of the parent directory and says it is a directory" \
+  '[ "$after_outside" = "  FAIL file: is a directory" ]'
+expect "two FAIL lines" '[ "$(printf "%s\n" "$out" | grep -c "^  FAIL ")" -eq 2 ]'
+expect "no not found line" '! printf "%s\n" "$out" | grep -q "not found"'
+expect "no cannot fetch line" '! printf "%s\n" "$out" | grep -q "cannot fetch"'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+expect "stderr is empty" '[ -z "$err" ]'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 9: where the fixtures were written"
 case_failed="$failed"
 failed=0
 expect "fixtures directory is under .tmp-tests/ at the repository root" \
