@@ -136,8 +136,24 @@
 #      with U+0661, a period and U+0665 in place of 1.5: exit 1, one FAIL
 #      line, which names Scorecard!M21 and says the number has a digit
 #      other than 0 to 9.
-#  float() reads every Unicode decimal digit, so the checker read the
-#  numbers of cases 34 to 36 as 1.5 and 2.5.
+#  37. A copy of the repository whose toolkit workbook gives the Advanced
+#      cut-off of each of the five Scorecard formulas, Scorecard!H9:H12 and
+#      H14, as U+0663, a period and U+0665 (ARABIC-INDIC DIGIT THREE and
+#      FIVE) in place of 3.5, then the text document of cases 18 to 20:
+#      exit 1, five FAIL lines, one for each formula, which say the number
+#      has a digit other than 0 to 9, no Scorecard ranges listed, no PASS
+#      line, and RESULT: FAIL.
+#  38. A copy of the toolkit workbook whose Maturity Distribution chart
+#      value range starts at the row U+0662 U+0661 (ARABIC-INDIC DIGIT TWO
+#      and ONE) in place of 21: exit 1, one FAIL line, which says the number
+#      of a row of the value range has a digit other than 0 to 9, and no
+#      PASS line for the chart.
+#  39. A copy whose chart category range ends at the row U+0662 U+0665 in
+#      place of 25: exit 1, one FAIL line, which says the same of a row of
+#      the category range, and no PASS line for the chart.
+#  float() and int() read every Unicode decimal digit, so the checker read
+#  the numbers of cases 34 to 36 as 1.5 and 2.5, the cut-off of case 37 as
+#  3.5, and the rows of cases 38 and 39 as 21 and 25.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -896,6 +912,71 @@ expect "no traceback on stderr" '[ -z "$err" ]'
 expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
 expect "FAIL line names Scorecard!M21 and says the number has a digit other than 0 to 9" \
   "has_fail \"arabiccount/QRAMM_Assessment_Toolkit.xlsx Scorecard!M21: the Maturity Distribution chart value: the number '\\u0661.\\u0665' has a digit other than 0 to 9\""
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# Lays out a copy of the repository at $1: a copy of the checker in scripts/
+# and, in toolkit/, a copy of the toolkit workbook made by make_copy with the
+# remaining arguments. The copy of the checker reads the Scorecard from that
+# copy of the workbook.
+copy_repository() {
+  mkdir -p "$1/scripts"
+  cp "$checker" "$1/scripts/check-maturity-thresholds.py"
+  make_copy "$toolkit" "$1/$toolkit" "${@:2}"
+}
+
+# True when out has the FAIL line for the Scorecard formula in $1 whose
+# Advanced cut-off is U+0663, a period and U+0665.
+has_cut_off_fail() {
+  has_fail "toolkit/QRAMM_Assessment_Toolkit.xlsx: Scorecard!$1: the cut-off for Advanced: the number '\\u0663.\\u0665' has a digit other than 0 to 9"
+}
+
+# &#x663; and &#x665; are U+0663 and U+0665 (ARABIC-INDIC DIGIT THREE and
+# FIVE) written as XML character references. The assignment in front of
+# start_case runs the copy of the checker for this case only.
+copy_repository "$work/arabiccut" \
+  '&gt;=3.5,"Advanced"' '&gt;=&#x663;.&#x665;,"Advanced"'
+checker="$work/arabiccut/scripts/check-maturity-thresholds.py" \
+  start_case "case 37: Scorecard cut-offs written with ARABIC-INDIC digits" \
+  "$work/ranges.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "five FAIL lines" '[ "$(fail_count)" -eq 5 ]'
+expect "a FAIL line for each formula says the number has a digit other than 0 to 9" \
+  'has_cut_off_fail H9 && has_cut_off_fail H10 && has_cut_off_fail H11 &&
+   has_cut_off_fail H12 && has_cut_off_fail H14'
+expect "no Scorecard ranges are listed" \
+  '! has_line "== $toolkit Scorecard!H9:H12 and H14" && ! has_line "  Advanced 3.5 to 4.0"'
+expect "no PASS line" '! printf "%s\n" "$out" | grep -q "^  PASS"'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# &#x662; and &#x661; are U+0662 and U+0661 (ARABIC-INDIC DIGIT TWO and ONE)
+# written as XML character references.
+make_copy "$toolkit" "$work/arabicrow/QRAMM_Assessment_Toolkit.xlsx" \
+  'Scorecard!$M$21:$M$25' 'Scorecard!$M$&#x662;&#x661;:$M$25'
+start_case "case 38: a chart value range that starts at a row written with ARABIC-INDIC digits" \
+  "$work/arabicrow/QRAMM_Assessment_Toolkit.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the number of a row of the value range has a digit other than 0 to 9" \
+  "has_fail \"arabicrow/QRAMM_Assessment_Toolkit.xlsx: Maturity Distribution chart: a row of the value range: the number '\\u0662\\u0661' has a digit other than 0 to 9\""
+expect "no PASS line for the chart" '! printf "%s\n" "$out" | grep -q "^  PASS Scorecard!"'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# &#x665; is U+0665 (ARABIC-INDIC DIGIT FIVE).
+make_copy "$toolkit" "$work/arabiclast/QRAMM_Assessment_Toolkit.xlsx" \
+  'Scorecard!$L$21:$L$25' 'Scorecard!$L$21:$L$&#x662;&#x665;'
+start_case "case 39: a chart category range that ends at a row written with ARABIC-INDIC digits" \
+  "$work/arabiclast/QRAMM_Assessment_Toolkit.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the number of a row of the category range has a digit other than 0 to 9" \
+  "has_fail \"arabiclast/QRAMM_Assessment_Toolkit.xlsx: Maturity Distribution chart: a row of the category range: the number '\\u0662\\u0665' has a digit other than 0 to 9\""
+expect "no PASS line for the chart" '! printf "%s\n" "$out" | grep -q "^  PASS Scorecard!"'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 

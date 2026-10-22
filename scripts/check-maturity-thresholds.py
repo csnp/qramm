@@ -52,10 +52,11 @@ A category whose formula counts only "-", the practices with no score, is
 not checked unless its label is a maturity level. A value whose formula is
 longer than 8,192 characters, the most Excel allows in a formula, fails with
 "longer than the 8,192 Excel allows", and its criteria are not read. A
-number of a score range or of a chart value criterion with a Unicode
-decimal digit other than 0 to 9, such as U+0661 (ARABIC-INDIC DIGIT ONE),
-fails with "has a digit other than 0 to 9". The script uses the Python
-standard library only.
+cut-off of a Scorecard formula, a number of a score range or of a chart
+value criterion, or a row of a chart category or value range, with a
+Unicode decimal digit other than 0 to 9, such as U+0661 (ARABIC-INDIC DIGIT
+ONE), fails with "has a digit other than 0 to 9". The script uses the
+Python standard library only.
 
 Exit status: 0 when the documents agree with the Scorecard, 1 when they do
 not or a file cannot be read, 2 on a usage error. An empty file argument
@@ -104,6 +105,9 @@ PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 CHART_NS = "http://schemas.openxmlformats.org/drawingml/2006/chart"
 DRAWING_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 
+# A cut-off of a Scorecard formula, such as E9>=3.5,"Advanced". \d, not
+# [0-9], for the cut-off, as in RANGE and COMPARISON: a cut-off written with
+# a digit other than 0 to 9 is matched whole, and odd_number() refuses it.
 CUT_OFF = re.compile(r"[A-Z]+\d+>=(\d+(?:\.\d+)?),\s*\"([A-Za-z ]+)\"")
 DEFAULT = re.compile(r"1=1,\s*\"([A-Za-z ]+)\"")
 
@@ -128,7 +132,9 @@ RANGE = re.compile(
 INDEX = re.compile(r"[0-9]+")
 
 CHART_PART = re.compile(r"xl/charts/chart\d+\.xml")
-# A chart series range, Sheet!$A$1:$A$9 or 'Sheet name'!$A$1:$A$9.
+# A chart series range, Sheet!$A$1:$A$9 or 'Sheet name'!$A$1:$A$9. \d, not
+# [0-9], for the rows: a row written with a digit other than 0 to 9 is
+# matched whole, and odd_number() refuses it.
 SERIES_RANGE = re.compile(
     r"(?:'((?:[^']|'')+)'|([^'!]+))!\$?([A-Z]+)\$?(\d+)(?::\$?([A-Z]+)\$?(\d+))?"
 )
@@ -192,16 +198,28 @@ def label_formulas(path, problems):
 
 
 def parse_labels(ref, formula, problems):
-    """(cut-offs as (score, label) pairs, default label), or None."""
-    cut_offs = tuple((float(score), label) for score, label in CUT_OFF.findall(formula))
+    """(cut-offs as (score, label) pairs, default label), or None. A cut-off
+    with a digit other than 0 to 9 adds a problem, and the result is then
+    None."""
+    found = CUT_OFF.findall(formula)
     default = DEFAULT.search(formula)
-    if not cut_offs or default is None:
+    if not found or default is None:
         problems.append(
             "{}: {}!{} is not an IFS of score cut-offs: {}".format(
                 WORKBOOK, SHEET, ref, formula
             )
         )
         return None
+    odd = [(score, label) for score, label in found if odd_number([score]) is not None]
+    for score, label in odd:
+        problems.append(
+            "{}: {}!{}: the cut-off for {}: {}".format(
+                WORKBOOK, SHEET, ref, label, number_problem(score)
+            )
+        )
+    if odd:
+        return None
+    cut_offs = tuple((float(score), label) for score, label in found)
     return cut_offs, default.group(1)
 
 
@@ -389,10 +407,17 @@ def cell_text(cell, strings):
 
 
 def range_cells(reference):
-    """(sheet name, cell references) of a range in one column, or None."""
+    """(sheet name, cell references) of a range in one column, None for
+    another range, or the reason a FAIL line gives, a str, when the number
+    of one of its rows has a digit other than 0 to 9. int() reads every
+    Unicode decimal digit, so it would read U+0662 U+0661 (ARABIC-INDIC
+    DIGIT TWO and ONE) as 21."""
     match = SERIES_RANGE.fullmatch(reference.strip())
     if match is None or match.group(5) not in (None, match.group(3)):
         return None
+    odd = odd_number([match.group(4), match.group(6)])
+    if odd is not None:
+        return number_problem(odd)
     sheet = (match.group(1) or "").replace("''", "'") or match.group(2)
     first_row = int(match.group(4))
     last_row = int(match.group(6) or match.group(4))
@@ -413,6 +438,10 @@ def series_categories(series, cells, strings):
     labels, values = range_cells(category_range), range_cells(value_range)
     if labels is None or values is None:
         problem = "a range is not one column of cells"
+    elif isinstance(labels, str):
+        problem = "a row of the category range: {}".format(labels)
+    elif isinstance(values, str):
+        problem = "a row of the value range: {}".format(values)
     elif labels[0] not in cells or values[0] not in cells:
         problem = "a range names a sheet the workbook does not have"
     elif len(labels[1]) != len(values[1]):
