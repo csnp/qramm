@@ -1,0 +1,352 @@
+#!/usr/bin/env python3
+"""Checks that the toolkit overview describes the Scorecard's Top Strengths
+as the Scorecard shows them.
+
+Usage:
+    python3 -I scripts/check-top-strengths.py
+
+The Scorecard of toolkit/QRAMM_Assessment_Toolkit.xlsx lists practices under
+the heading "Top Strengths" in Scorecard!C34, one in each entry that ENTRIES
+names. The first cell of an entry, B35, B39 or B43, shows a mark when a
+practice score is at least a threshold:
+
+    IF(AND(ISNUMBER(A36),A36>=3.6),"<mark>","")
+
+The second cell, C36, C40 or C44, is empty until the first shows the mark,
+and then gives that score out of a maximum:
+
+    IF(B35="","",<text>&FIXED(A36,2)&" out of 4.")
+
+In the toolkit workbook, <text> is the practice name followed by the words
+before the score. Whitespace outside the quoted text of a formula is
+ignored. This script reads the heading and those formulas, and fails unless
+C34 reads "Top Strengths", every formula has the form above, the second
+formula of an entry tests the entry's first cell and gives the score that
+the first formula tests, and every entry has the same threshold and the
+same maximum.
+
+Each line of toolkit/toolkit-overview.md, outside fenced code blocks, that
+contains "Top Strengths" describes them, and the overview must have such a
+line. Each one must, in upper or lower case:
+
+    1. say "up to" the number of entries, written as a word or in digits,
+       such as "up to three";
+    2. give the threshold as a number, such as 3.6 or 3.60, other than the
+       number after "out of";
+    3. say "out of" the maximum, such as "out of 4".
+
+The script uses the Python standard library only. Exit status: 0 when the
+overview agrees with the Scorecard, 1 when it does not, the workbook does
+not have the form above or a file cannot be read, 2 on a usage error.
+--help (or -h) prints the usage line and this text on stderr and exits 2.
+The script takes no other argument: given one, it names each argument on
+stderr on a line of its own, "unknown option: --verbose" for one that starts
+with "-" and "unexpected argument: README.md" for any other, then prints
+"this checker takes no arguments" and the usage line, and exits 2.
+"""
+
+import os
+import re
+import sys
+import xml.etree.ElementTree as ET
+import zipfile
+from decimal import Decimal
+
+WORKBOOK = "toolkit/QRAMM_Assessment_Toolkit.xlsx"
+OVERVIEW = "toolkit/toolkit-overview.md"
+SHEET = "Scorecard"
+HEADING_CELL = "C34"
+HEADING = "Top Strengths"
+
+# The mark cell and the sentence cell of each Top Strengths entry, from the
+# top of the Scorecard down.
+ENTRIES = [("B35", "C36"), ("B39", "C40"), ("B43", "C44")]
+
+NUMBER_WORDS = [
+    "zero", "one", "two", "three", "four", "five", "six",
+    "seven", "eight", "nine", "ten", "eleven", "twelve",
+]
+
+MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
+
+# [0-9], not \d: in a str pattern \d also matches the other Unicode decimal
+# digits, such as U+0661 (ARABIC-INDIC DIGIT ONE), and Decimal() reads them
+# too.
+CELL = r"[A-Z]+[0-9]+"
+NUMBER_TEXT = r"[0-9]+(?:\.[0-9]+)?"
+MARK = re.compile(
+    r'IF\(AND\(ISNUMBER\((?P<score>' + CELL + r')\),(?P=score)>='
+    r'(?P<threshold>' + NUMBER_TEXT + r')\),"[^"]+",""\)'
+)
+SENTENCE = re.compile(
+    r'IF\((?P<mark>' + CELL + r')="","",(?P<text>.+)&FIXED\((?P<score>'
+    + CELL + r'),[0-9]+\)&" out of (?P<maximum>' + NUMBER_TEXT + r')\.?"\)',
+    re.DOTALL,
+)
+# The quoted text of a formula, with "" for a quote inside it.
+QUOTED = re.compile(r'("(?:[^"]|"")*")')
+# A shared string index.
+INDEX = re.compile(r"[0-9]+")
+
+OUT_OF = re.compile(r"\bout of (" + NUMBER_TEXT + r")(?![0-9])", re.IGNORECASE)
+NUMBER = re.compile(r"(?<![\w.])(" + NUMBER_TEXT + r")(?![0-9])")
+
+USAGE = "usage: python3 -I scripts/check-top-strengths.py"
+
+
+def ns(namespace, tag):
+    return "{%s}%s" % (namespace, tag)
+
+
+def sheet_paths(book):
+    """Sheet name -> path of its XML part inside the workbook archive."""
+    workbook = ET.fromstring(book.read("xl/workbook.xml"))
+    rels = ET.fromstring(book.read("xl/_rels/workbook.xml.rels"))
+    targets = {
+        rel.get("Id"): rel.get("Target")
+        for rel in rels.iter(ns(PKG_REL_NS, "Relationship"))
+    }
+    paths = {}
+    for sheet in workbook.iter(ns(MAIN_NS, "sheet")):
+        target = targets[sheet.get(ns(REL_NS, "id"))]
+        if target.startswith("/"):
+            paths[sheet.get("name")] = target.lstrip("/")
+        else:
+            paths[sheet.get("name")] = "xl/" + target
+    return paths
+
+
+def string_text(item):
+    """The text of a shared or inline string: its t element and the t
+    elements of its runs."""
+    parts = [item.find(ns(MAIN_NS, "t"))]
+    parts += [run.find(ns(MAIN_NS, "t")) for run in item.findall(ns(MAIN_NS, "r"))]
+    return "".join(part.text or "" for part in parts if part is not None)
+
+
+def scorecard_cells(path, refs):
+    """Cell reference -> (formula text, cell text) for the cells in refs on
+    the Scorecard, or None when the workbook has no Scorecard. Either is None
+    when the cell has no formula or no text that can be read."""
+    with zipfile.ZipFile(path) as book:
+        part = sheet_paths(book).get(SHEET)
+        if part is None:
+            return None
+        sheet = ET.fromstring(book.read(part))
+        strings = []
+        if "xl/sharedStrings.xml" in book.namelist():
+            table = ET.fromstring(book.read("xl/sharedStrings.xml"))
+            strings = [string_text(item) for item in table.iter(ns(MAIN_NS, "si"))]
+    cells = {}
+    for cell in sheet.iter(ns(MAIN_NS, "c")):
+        if cell.get("r") not in refs:
+            continue
+        formula = cell.find(ns(MAIN_NS, "f"))
+        value = cell.find(ns(MAIN_NS, "v"))
+        text = value.text if value is not None else None
+        if cell.get("t") == "s":
+            index = text or ""
+            if INDEX.fullmatch(index) and int(index) < len(strings):
+                text = strings[int(index)]
+            else:
+                text = None
+        elif cell.get("t") == "inlineStr":
+            inline = cell.find(ns(MAIN_NS, "is"))
+            text = string_text(inline) if inline is not None else None
+        cells[cell.get("r")] = (formula.text if formula is not None else None, text)
+    return cells
+
+
+def compact(formula):
+    """formula with the whitespace outside its quoted text removed."""
+    parts = QUOTED.split(formula)
+    return "".join(
+        part if index % 2 else re.sub(r"\s+", "", part)
+        for index, part in enumerate(parts)
+    )
+
+
+def joined(items):
+    """items as "A", "A and B" or "A, B and C"."""
+    items = list(items)
+    if len(items) < 2:
+        return "".join(items)
+    return "{} and {}".format(", ".join(items[:-1]), items[-1])
+
+
+def read_entries(cells, problems):
+    """(threshold, maximum) as written in the Top Strengths formulas, or
+    None after adding a problem for each way the workbook does not have the
+    form the module docstring gives."""
+    where = "{}: {}!".format(WORKBOOK, SHEET)
+    before = len(problems)
+    if cells.get(HEADING_CELL, (None, None))[1] != HEADING:
+        problems.append('{}{} does not read "{}"'.format(where, HEADING_CELL, HEADING))
+    thresholds = {}
+    maximums = {}
+    for mark_ref, sentence_ref in ENTRIES:
+        mark = MARK.fullmatch(compact(cells.get(mark_ref, (None, None))[0] or ""))
+        sentence = SENTENCE.fullmatch(
+            compact(cells.get(sentence_ref, (None, None))[0] or "")
+        )
+        if mark is None:
+            problems.append(
+                "{}{} is not a Top Strengths mark formula (see --help)".format(
+                    where, mark_ref
+                )
+            )
+        if sentence is None:
+            problems.append(
+                "{}{} is not a Top Strengths sentence formula (see --help)".format(
+                    where, sentence_ref
+                )
+            )
+        if mark is None or sentence is None:
+            continue
+        if sentence.group("mark") != mark_ref:
+            problems.append(
+                "{}{} tests {}, not {}".format(
+                    where, sentence_ref, sentence.group("mark"), mark_ref
+                )
+            )
+        if sentence.group("score") != mark.group("score"):
+            problems.append(
+                "{}{} gives the score in {}, and {} tests the score in {}".format(
+                    where,
+                    sentence_ref,
+                    sentence.group("score"),
+                    mark_ref,
+                    mark.group("score"),
+                )
+            )
+        thresholds[mark_ref] = mark.group("threshold")
+        maximums[sentence_ref] = sentence.group("maximum")
+    for found, name in ((thresholds, "thresholds"), (maximums, "maximums")):
+        if len({Decimal(text) for text in found.values()}) > 1:
+            problems.append(
+                "{}{} give different {}: {}".format(
+                    where,
+                    joined(found),
+                    name,
+                    ", ".join("{} {}".format(ref, text) for ref, text in found.items()),
+                )
+            )
+    if len(problems) > before:
+        return None
+    return thresholds[ENTRIES[0][0]], maximums[ENTRIES[0][1]]
+
+
+def check_overview(lines, threshold, maximum, problems):
+    """Prints a PASS line for each rule that a Top Strengths line of the
+    overview meets, and adds a problem for each rule that one does not."""
+    count = len(ENTRIES)
+    word = NUMBER_WORDS[count]
+    up_to = re.compile(r"\bup to (?:{}|{})\b".format(word, count), re.IGNORECASE)
+    marks = joined(mark for mark, _ in ENTRIES)
+    sentences = joined(sentence for _, sentence in ENTRIES)
+    fenced = False
+    described = False
+    for number, line in enumerate(lines, 1):
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+            continue
+        if fenced or HEADING not in line:
+            continue
+        described = True
+        where = "{}:{}".format(OVERVIEW, number)
+        if up_to.search(line):
+            print("  PASS line {}: up to {}".format(number, word))
+        else:
+            problems.append(
+                '{}: does not say "up to {}"; the {} has {} {} entries ({})'.format(
+                    where, word, SHEET, word, HEADING, sentences
+                )
+            )
+        given = [Decimal(text) for text in NUMBER.findall(OUT_OF.sub(" ", line))]
+        if Decimal(threshold) in given:
+            print("  PASS line {}: threshold {}".format(number, threshold))
+        else:
+            problems.append(
+                "{}: does not give {}, the score from which the {} lists a "
+                "practice ({})".format(where, threshold, SHEET, marks)
+            )
+        if Decimal(maximum) in [Decimal(text) for text in OUT_OF.findall(line)]:
+            print("  PASS line {}: out of {}".format(number, maximum))
+        else:
+            problems.append(
+                '{}: does not say "out of {}"; the {} gives each score out of '
+                "{} ({})".format(where, maximum, SHEET, maximum, sentences)
+            )
+    if not described:
+        problems.append(
+            '{}: no line outside fenced code blocks contains "{}"'.format(
+                OVERVIEW, HEADING
+            )
+        )
+
+
+def main(argv):
+    if "--help" in argv or "-h" in argv:
+        print(USAGE, file=sys.stderr)
+        # __doc__ is None when python3 -OO removes docstrings.
+        if __doc__:
+            print(file=sys.stderr)
+            print(__doc__.strip(), file=sys.stderr)
+        return 2
+    if argv:
+        for arg in argv:
+            if arg.startswith("-"):
+                print("unknown option: {}".format(arg), file=sys.stderr)
+            else:
+                print("unexpected argument: {}".format(arg or "''"), file=sys.stderr)
+        print("this checker takes no arguments", file=sys.stderr)
+        print(USAGE, file=sys.stderr)
+        return 2
+    root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+    problems = []
+    refs = {HEADING_CELL} | {ref for entry in ENTRIES for ref in entry}
+    entries = None
+    try:
+        cells = scorecard_cells(os.path.join(root, WORKBOOK), refs)
+    except OSError as error:
+        problems.append(
+            "{}: cannot read ({})".format(WORKBOOK, error.strerror or "not a workbook")
+        )
+    except (KeyError, zipfile.BadZipFile, ET.ParseError):
+        # A file that is not a zip archive, or a zip archive with a missing
+        # part or relationship Target or XML that does not parse.
+        problems.append("{}: cannot read (not a workbook)".format(WORKBOOK))
+    else:
+        if cells is None:
+            problems.append("{}: no sheet named {}".format(WORKBOOK, SHEET))
+        else:
+            entries = read_entries(cells, problems)
+
+    if entries is not None:
+        threshold, maximum = entries
+        print("== {} {} {}".format(WORKBOOK, SHEET, HEADING))
+        print("  {} entries: {}".format(len(ENTRIES), joined(s for _, s in ENTRIES)))
+        print("  threshold {}".format(threshold))
+        print("  out of {}".format(maximum))
+        print("== {} against the {}".format(OVERVIEW, SHEET))
+        try:
+            with open(os.path.join(root, OVERVIEW), encoding="utf-8") as fh:
+                lines = fh.read().splitlines()
+        except OSError as error:
+            problems.append("{}: cannot read ({})".format(OVERVIEW, error.strerror))
+        except UnicodeDecodeError:
+            problems.append("{}: cannot read (not UTF-8 text)".format(OVERVIEW))
+        else:
+            check_overview(lines, threshold, maximum, problems)
+
+    for problem in problems:
+        print("  FAIL {}".format(problem))
+    print("RESULT: {}".format("FAIL" if problems else "PASS"))
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
