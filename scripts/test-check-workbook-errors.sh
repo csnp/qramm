@@ -182,6 +182,23 @@
 #      As case 25, with the line feed, carriage return, tab and U+0085
 #      written as \n, \r, \t and \x85 in the FAIL line, and no line that
 #      reads RESULT: PASS.
+#  35. Under the en_US.UTF-8 locale, a copy of the sample workbook whose
+#      first c element in xl/worksheets/sheet1.xml, the one for A1 of the
+#      Welcome sheet, is replaced by one for M1 that stores #DIV/0! from
+#      the formula 1/0, and whose hidden col element for column M gives 13
+#      as its min and max attributes written with U+0661 and U+0663
+#      (ARABIC-INDIC DIGIT ONE and THREE). int() reads that text as 13, the
+#      number of column M.
+#  36. The copy of case 35 with the min attribute 13 and the max attribute
+#      1_3 in that col element. int() reads 1_3 as 13 too.
+#  37. The copy of case 35 with the min attribute x and the max attribute
+#      13 in that col element.
+#  Cases 35 to 37 pass the copy and then the sample workbook: exit 1,
+#  nothing on stderr, one FAIL line, which says the copy is not a workbook
+#  as xl/worksheets/sheet1.xml has a hidden col element whose min (cases 35
+#  and 37) or max (case 36) attribute, quoted, is not one or more of the
+#  digits 0 to 9, a PASS line for the sample workbook, and RESULT: FAIL as
+#  the last line.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -962,6 +979,48 @@ start_case "case 34: a c element whose r attribute holds a line feed and other c
 expect_no_cell_reference "$work/controlcellref.xlsx" \
   'a c element in row 1 whose r attribute 1A\nRESULT: PASS\r\t\x85 is not a cell reference'
 expect "no line reads RESULT: PASS" '! printf "%s\n" "$out" | grep -q -x "RESULT: PASS"'
+end_case
+
+# Expectations for cases 35 to 37: $1 is the copy's file name, $2 the
+# attribute of its hidden col element that the FAIL line names and $3 the
+# value of that attribute, which the FAIL line quotes.
+expect_bad_column_bound() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says it is not a workbook as the $2 attribute of a hidden col element is not one or more of the digits 0 to 9" \
+    "has_fail \"$1: not a workbook (xl/worksheets/sheet1.xml has a hidden col element whose $2 attribute '$3' is not one or more of the digits 0 to 9)\""
+  expect "the sample workbook is checked" \
+    'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+  expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+}
+
+# M1 is in column M of the Welcome sheet, a hidden column.
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/m1error.xlsx" \
+  xl/worksheets/sheet1.xml '<c r="A1" s="28"/>' '<c r="M1" t="e"><f>1/0</f><v>#DIV/0!</v></c>'
+
+# The part gives the digits as character references: &#x661; for U+0661 and
+# &#x663; for U+0663. Under en_US.UTF-8 the FAIL line quotes the min
+# attribute as UTF-8, in which \331\241 is U+0661 and \331\243 is U+0663.
+edit_part "$work/m1error.xlsx" "$work/arabicbound.xlsx" \
+  xl/worksheets/sheet1.xml '<col min="13" max="13" ' '<col min="&#x661;&#x663;" max="&#x661;&#x663;" '
+LC_ALL=en_US.UTF-8 start_case "case 35: a hidden col element whose min and max hold Arabic-Indic digits" \
+  "$checker" "$work/arabicbound.xlsx" toolkit/Sample_Assessment.xlsx
+expect_bad_column_bound "$work/arabicbound.xlsx" min "$(printf '\331\241\331\243')"
+end_case
+
+edit_part "$work/m1error.xlsx" "$work/underscorebound.xlsx" \
+  xl/worksheets/sheet1.xml '<col min="13" max="13" ' '<col min="13" max="1_3" '
+start_case "case 36: a hidden col element whose max holds an underscore" \
+  "$checker" "$work/underscorebound.xlsx" toolkit/Sample_Assessment.xlsx
+expect_bad_column_bound "$work/underscorebound.xlsx" max 1_3
+end_case
+
+edit_part "$work/m1error.xlsx" "$work/letterbound.xlsx" \
+  xl/worksheets/sheet1.xml '<col min="13" max="13" ' '<col min="x" max="13" '
+start_case "case 37: a hidden col element whose min is a letter" \
+  "$checker" "$work/letterbound.xlsx" toolkit/Sample_Assessment.xlsx
+expect_bad_column_bound "$work/letterbound.xlsx" min x
 end_case
 
 if [ "$failed" -eq 0 ]; then
