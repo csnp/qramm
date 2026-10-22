@@ -205,6 +205,14 @@
 #  results listed for cases 28 to 36. int() and float() strip whitespace
 #  from the start and end of text and read a leading sign, so they read
 #  " 3" as 3, +714 as 714, and " 1 " and +1 as 1.0.
+#  47. A copy of the sample workbook whose cell BA3 of the Data sheet, the
+#      Weight of the first ComplianceMap row, stores the logical value TRUE
+#      (t="b" with the value 1) in place of the number 1: exit 1, nothing
+#      on stderr, one FAIL line, which says Data!BA3 of Q1 NIST CSF 2.0 is
+#      the logical value TRUE where the spec gives 1, then RESULT: FAIL.
+#  48. A copy of the sample workbook whose cell BA3 of the Data sheet is
+#      stored as a logical value with the value 2, which is not 0 or 1:
+#      passed with the sample workbook, as cases 40 to 42.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -997,7 +1005,7 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 28 to 36 and 39 to 46, which pass a copy and then the
+# Expectations for cases 28 to 36, 39 to 46 and 48, which pass a copy and then the
 # sample workbook: $1 is the copy's file name, $2 what the FAIL line says
 # the copy has and $3 the reason the map cannot be read. $3 can hold a
 # single quote, so the expected line is passed to has_line in a variable.
@@ -1199,6 +1207,26 @@ start_case "case 46: a Weight written with a plus sign" \
   "$checker" "$work/signweight.xlsx" "$sample"
 expect_map_unreadable "$work/signweight.xlsx" "a Weight has a sign" \
   "could not convert string to float: '+1'"
+end_case
+
+edit_part "$root/$sample" "$work/logicalweight.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="BA3" s="2"><v>1</v>' '<c r="BA3" s="2" t="b"><v>1</v>'
+start_case "case 47: a Weight stored as the logical value TRUE" \
+  "$checker" "$work/logicalweight.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says Data!BA3 is the logical value TRUE" \
+  "has_line '  FAIL $work/logicalweight.xlsx Q1 NIST CSF 2.0: Data!BA3 is the logical value TRUE, the spec gives 1 (line 33)'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+edit_part "$root/$sample" "$work/logicaltwo.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="BA3" s="2"><v>1</v>' '<c r="BA3" s="2" t="b"><v>2</v>'
+start_case "case 48: a logical value that is not 0 or 1" \
+  "$checker" "$work/logicaltwo.xlsx" "$sample"
+expect_map_unreadable "$work/logicaltwo.xlsx" "a logical value is not 0 or 1" \
+  "xl/worksheets/sheet10.xml cell BA3 gives logical value '2', which is not 0 or 1"
 end_case
 
 if [ "$failed" -eq 0 ]; then
