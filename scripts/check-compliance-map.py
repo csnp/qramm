@@ -220,7 +220,8 @@ def shared_strings(book):
 
 
 def sheet_parts(book, workbook):
-    """Sheet name -> sheet part path."""
+    """Sheet name -> sheet part path. Raises ValueError for a sheet whose
+    Relationship element has no Target attribute."""
     rels = ET.fromstring(book.read("xl/_rels/workbook.xml.rels"))
     targets = {
         rel.get("Id"): rel.get("Target")
@@ -228,7 +229,13 @@ def sheet_parts(book, workbook):
     }
     paths = {}
     for sheet in workbook.iter(ns(MAIN_NS, "sheet")):
-        target = targets[sheet.get(ns(REL_NS, "id"))]
+        rel_id = sheet.get(ns(REL_NS, "id"))
+        target = targets[rel_id]
+        if target is None:
+            raise ValueError(
+                "xl/_rels/workbook.xml.rels has a Relationship element with "
+                "Id {} and no Target attribute".format(rel_id)
+            )
         paths[sheet.get("name")] = target.lstrip("/") if target.startswith("/") else "xl/" + target
     return paths
 
@@ -255,8 +262,11 @@ def map_range(book):
     raise ValueError("the workbook has no defined name {}".format(MAP_NAME))
 
 
-def cell_value(node, strings):
-    """Stored value of a cell: str, float, or None when it is empty."""
+def cell_value(node, strings, part):
+    """Stored value of a cell: str, float, or None when it is empty. part is
+    the part path of the sheet that holds the cell. Raises ValueError for a
+    shared string index that is not one of the shared strings, as int()
+    does for an index such as "x"."""
     value = node.find(ns(MAIN_NS, "v"))
     kind = node.get("t")
     if kind == "inlineStr":
@@ -264,7 +274,13 @@ def cell_value(node, strings):
     if value is None or value.text is None:
         return None
     if kind == "s":
-        return strings[int(value.text)]
+        index = int(value.text)
+        if not 0 <= index < len(strings):
+            raise ValueError(
+                "{} cell {} gives shared string index {}, and the workbook has {} "
+                "shared strings".format(part, node.get("r"), index, len(strings))
+            )
+        return strings[index]
     if kind in ("str", "e"):
         return value.text
     return float(value.text)
@@ -274,7 +290,8 @@ def read_block(book, part, strings, first, width, top, bottom):
     """{row number: {offset: value}} for rows top to bottom and the width
     columns from column number first of the sheet part. Raises ValueError
     for a row element of the part with no r attribute, as int() does for an
-    r such as "x"."""
+    r such as "x", and for a c element of a row in that range whose r
+    attribute is missing or is not a cell reference."""
     root = ET.fromstring(book.read(part))
     rows = {number: {} for number in range(top, bottom + 1)}
     for row in root.iter(ns(MAIN_NS, "row")):
@@ -287,10 +304,20 @@ def read_block(book, part, strings, first, width, top, bottom):
         if number not in rows:
             continue
         for node in row.iter(ns(MAIN_NS, "c")):
-            letters = CELL_REF.fullmatch(node.get("r")).group(1)
-            offset = column_number(letters) - first
+            # A c element with no r attribute does not give its column, so
+            # this script cannot tell whether the cell is in the range.
+            cell = node.get("r")
+            if cell is None:
+                raise ValueError("{} has a c element with no r attribute in row {}".format(part, number))
+            match = CELL_REF.fullmatch(cell)
+            if not match:
+                raise ValueError(
+                    "{} has a c element in row {} whose r attribute {} is not "
+                    "a cell reference".format(part, number, cell)
+                )
+            offset = column_number(match.group(1)) - first
             if 0 <= offset < width:
-                rows[number][offset] = cell_value(node, strings)
+                rows[number][offset] = cell_value(node, strings, part)
     return rows
 
 

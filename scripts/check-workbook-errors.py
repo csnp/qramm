@@ -91,7 +91,8 @@ def column_number(letters):
 
 
 def sheets(book):
-    """List of (name, part path, hidden) in workbook order."""
+    """List of (name, part path, hidden) in workbook order. Raises ValueError
+    for a sheet whose Relationship element has no Target attribute."""
     workbook = ET.fromstring(book.read("xl/workbook.xml"))
     rels = ET.fromstring(book.read("xl/_rels/workbook.xml.rels"))
     targets = {
@@ -100,7 +101,13 @@ def sheets(book):
     }
     found = []
     for sheet in workbook.iter(ns(MAIN_NS, "sheet")):
-        target = targets[sheet.get(ns(REL_NS, "id"))]
+        rel_id = sheet.get(ns(REL_NS, "id"))
+        target = targets[rel_id]
+        if target is None:
+            raise ValueError(
+                "xl/_rels/workbook.xml.rels has a Relationship element with "
+                "Id {} and no Target attribute".format(rel_id)
+            )
         part = target.lstrip("/") if target.startswith("/") else "xl/" + target
         hidden = sheet.get("state") in ("hidden", "veryHidden")
         found.append((sheet.get("name"), part, hidden))
