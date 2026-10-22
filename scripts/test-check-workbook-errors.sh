@@ -146,6 +146,31 @@
 #      of the Welcome sheet is hidden. As cases 23 to 25, with a FAIL line
 #      that says the copy is not a workbook as xl/worksheets/sheet1.xml has
 #      a c element in row 1 whose r attribute M1x is not a cell reference.
+#  28. A copy of the sample workbook whose first c element in
+#      xl/worksheets/sheet1.xml, the one for A1 of the Welcome sheet, is
+#      replaced by one that stores #DIV/0! from the formula 1/0, and in which
+#      each of the namespace names
+#      http://schemas.openxmlformats.org/spreadsheetml/2006/main and
+#      http://schemas.openxmlformats.org/officeDocument/2006/relationships is
+#      replaced by the one the Strict Open XML format uses in its place,
+#      http://purl.oclc.org/ooxml/spreadsheetml/main and
+#      http://purl.oclc.org/ooxml/officeDocument/relationships, in every part
+#      under xl/ whose name ends in .xml, then the sample workbook: exit 1,
+#      nothing on stderr, one FAIL line, for Welcome!A1, which gives its
+#      formula, a PASS line for the sample workbook, and RESULT: FAIL as the
+#      last line.
+#  29. A copy of the sample workbook with the namespace names of case 28
+#      replaced in the same parts: exit 0, nothing on stderr, no FAIL line, a
+#      PASS line that gives as many visible formula cells as the checker
+#      gives for the sample workbook, and RESULT: PASS as the last line.
+#  30. A copy of the sample workbook whose xl/workbook.xml declares the
+#      namespace urn:example:spreadsheetml in place of
+#      http://schemas.openxmlformats.org/spreadsheetml/2006/main, so that it
+#      has no sheet element in a namespace the checker reads, then the
+#      sample workbook: exit 1, nothing on stderr, one FAIL line, which says
+#      the copy is not a workbook as xl/workbook.xml has no sheet element in
+#      a namespace the checker reads, a PASS line for the sample workbook,
+#      and RESULT: FAIL as the last line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -786,6 +811,90 @@ start_case "case 27: a c element whose r attribute only starts with a cell refer
   "$checker" "$work/prefixcellref.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_cell_reference "$work/prefixcellref.xlsx" \
   "a c element in row 1 whose r attribute M1x is not a cell reference"
+end_case
+
+# Writes to $2 a copy of the workbook $1 in which each of the namespace names
+# http://schemas.openxmlformats.org/spreadsheetml/2006/main and
+# http://schemas.openxmlformats.org/officeDocument/2006/relationships is
+# replaced by the one the Strict Open XML format uses in its place,
+# http://purl.oclc.org/ooxml/spreadsheetml/main and
+# http://purl.oclc.org/ooxml/officeDocument/relationships, in every part
+# under xl/ whose name ends in .xml. Fails when xl/workbook.xml does not hold
+# both names.
+make_strict() {
+  python3 -I - "$@" <<'PY'
+import sys
+import zipfile
+
+source, target = sys.argv[1:3]
+STRICT = {
+    "http://schemas.openxmlformats.org/spreadsheetml/2006/main":
+        "http://purl.oclc.org/ooxml/spreadsheetml/main",
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships":
+        "http://purl.oclc.org/ooxml/officeDocument/relationships",
+}
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        data = book.read(info.filename)
+        if info.filename.startswith("xl/") and info.filename.endswith(".xml"):
+            text = data.decode("utf-8")
+            for old, new in STRICT.items():
+                if info.filename == "xl/workbook.xml" and old not in text:
+                    sys.exit("make_strict: no %s in xl/workbook.xml" % old)
+                text = text.replace(old, new)
+            data = text.encode("utf-8")
+        copy.writestr(info, data)
+PY
+}
+
+# The PASS line of the output the checker last printed, or nothing.
+pass_line() {
+  printf '%s\n' "$out" | grep '^  PASS' || true
+}
+
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/a1error.xlsx" \
+  xl/worksheets/sheet1.xml '<c r="A1" s="28"/>' '<c r="A1" t="e"><f>1/0</f><v>#DIV/0!</v></c>'
+make_strict "$work/a1error.xlsx" "$work/strict-a1error.xlsx"
+start_case "case 28: an error value in a visible cell of a workbook in the Strict namespaces" \
+  "$checker" "$work/strict-a1error.xlsx" toolkit/Sample_Assessment.xlsx
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line for Welcome!A1 gives its formula" \
+  "has_fail '$work/strict-a1error.xlsx: Welcome!A1 stores #DIV/0!: 1/0'"
+expect "the sample workbook is checked" \
+  'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+# Case 29 expects the PASS line the checker prints for the sample workbook.
+run_checker "$checker" toolkit/Sample_Assessment.xlsx
+sample_pass="$(pass_line)"
+make_strict "$root/toolkit/Sample_Assessment.xlsx" "$work/strict.xlsx"
+start_case "case 29: the sample workbook in the Strict namespaces" "$checker" "$work/strict.xlsx"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "no FAIL line" '[ "$(fail_count)" -eq 0 ]'
+expect "the PASS line counts as many visible formula cells as for the sample workbook" \
+  '[ -n "$sample_pass" ] && [ "$(pass_line)" = "$sample_pass" ]'
+expect "last line is RESULT: PASS" 'last_line_is "RESULT: PASS"'
+end_case
+
+# xl/workbook.xml of the sample workbook declares the spreadsheetml
+# namespace once, as the default namespace of its root element.
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/othernamespace.xlsx" \
+  xl/workbook.xml 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"' \
+  'xmlns="urn:example:spreadsheetml"'
+start_case "case 30: sheet elements in a namespace the checker does not read" \
+  "$checker" "$work/othernamespace.xlsx" toolkit/Sample_Assessment.xlsx
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not a workbook as xl/workbook.xml has no sheet element the checker reads" \
+  "has_fail '$work/othernamespace.xlsx: not a workbook (xl/workbook.xml has no sheet element in a namespace the script reads)'"
+expect "the sample workbook is checked" \
+  'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
 
 if [ "$failed" -eq 0 ]; then
