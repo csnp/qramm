@@ -281,11 +281,13 @@ def ascii_int(text):
 
 
 def ascii_float(text):
-    """float(text), except that text with a character outside ASCII raises
-    ValueError, as float() does for text such as "x". float() reads every
-    Unicode decimal digit, such as U+0661 (ARABIC-INDIC DIGIT ONE) as 1,
-    and the workbook writes its numbers with the digits 0 to 9."""
-    if not text.isascii():
+    """float(text), except that text with a character outside ASCII or with
+    an underscore raises ValueError, as float() does for text such as "x".
+    The workbook writes its numbers with the digits 0 to 9. float() also
+    reads every Unicode decimal digit, such as U+0661 (ARABIC-INDIC DIGIT
+    ONE) as 1, and allows an underscore between two digits, so it reads 0_1
+    as 1."""
+    if not text.isascii() or "_" in text:
         raise ValueError("could not convert string to float: {!r}".format(text))
     return float(text)
 
@@ -297,7 +299,7 @@ def cell_value(node, strings, part):
     ascii_int() does for an index such as "x" or one that holds a digit
     other than 0 to 9 or an underscore, and as ascii_float() does for the
     value of a cell stored as a number, such as "x" or a value that holds a
-    digit other than 0 to 9."""
+    digit other than 0 to 9 or an underscore."""
     value = node.find(ns(MAIN_NS, "v"))
     kind = node.get("t")
     if kind == "inlineStr":
