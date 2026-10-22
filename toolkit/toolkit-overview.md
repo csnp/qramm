@@ -75,7 +75,7 @@ The Scorecard provides comprehensive visual insights including:
 - **Spider/Radar Chart**: Visual comparison of your weighted scores against the illustrative industry benchmark values
 
 ### Highlights and Recommendations
-- **Top Strengths**: Automatically identifies your highest-scoring practices with specific achievements
+- **Top Strengths**: Up to three of your highest-scoring practices, each named with its score out of 4. A practice is listed only when its score is 3.6 or more.
 - **Areas for Improvement**: Pinpoints lowest-scoring practices requiring immediate attention
 - **Dynamic Recommendations**: Context-specific guidance based on your scores and organizational profile
 - **Practice-Level Insights**: Detailed breakdown showing individual practice scores and maturity levels
