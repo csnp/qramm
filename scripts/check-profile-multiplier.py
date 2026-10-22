@@ -20,7 +20,10 @@ one profile question share that question's factor, so the script groups the
 RiskMatrix rows by factor and fails unless there is one group for each term.
 A RiskMatrix cell whose shared string index is not one or more of the
 digits 0 to 9, or is past the end of the shared string table, fails with a
-line that names the cell. The lowest multiplier adds each factor times the
+line that names the cell. An answer whose factor or risk value is not one
+or more of the digits 0 to 9, with or without a decimal point and one or
+more such digits after it, such as 1E-100000000000000000, fails with a
+line that names its row. The lowest multiplier adds each factor times the
 lowest risk value in its group, and the highest adds each factor times the
 highest. Both are rounded to the decimal places the formula's ROUND gives,
 with halves rounded up, and are calculated without a limit on the number of
@@ -72,7 +75,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
-from decimal import MAX_PREC, ROUND_HALF_UP, Decimal, InvalidOperation, localcontext
+from decimal import MAX_PREC, ROUND_HALF_UP, Decimal, localcontext
 
 WORKBOOK = "toolkit/QRAMM_Assessment_Toolkit.xlsx"
 MULTIPLIER = "ProfileMultiplier"
@@ -100,6 +103,13 @@ CELL = re.compile(r"([A-Z]+)(\d+)")
 # other Unicode decimal digits, such as U+0661 (ARABIC-INDIC DIGIT ONE), and
 # int() reads them too.
 INDEX = re.compile(r"[0-9]+")
+# A RiskMatrix factor or risk value: one or more of the digits 0 to 9, with
+# or without a decimal point and one or more such digits after it.
+# Decimal() also reads the other Unicode decimal digits, a sign, NaN,
+# Infinity and an exponent, and multiplier_range() sums exactly, so a factor
+# written as 1E-100000000 would give a sum of 100000000 decimal places or
+# more.
+NUMBER = re.compile(r"[0-9]+(?:\.[0-9]+)?")
 
 # Formula parts, matched after all whitespace is removed.
 IFERROR = re.compile(r'IFERROR\((.+),"[^"]*"\)')
@@ -284,9 +294,7 @@ def multiplier_range(path, problems):
         category, factor, value = texts
         if not (category or "").strip():
             continue
-        try:
-            factor, value = Decimal(factor.strip()), Decimal(value.strip())
-        except (AttributeError, InvalidOperation):
+        if not all(NUMBER.fullmatch((text or "").strip()) for text in (factor, value)):
             if row != top:
                 problems.append(
                     "{}: {} row {} ({}): factor {!r} and risk value {!r} are not "
@@ -295,7 +303,7 @@ def multiplier_range(path, problems):
                     )
                 )
             continue
-        groups.setdefault(factor, []).append(value)
+        groups.setdefault(Decimal(factor.strip()), []).append(Decimal(value.strip()))
     if len(problems) > before:
         return None
     if len(groups) != len(answers):
