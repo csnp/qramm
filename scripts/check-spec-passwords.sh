@@ -12,7 +12,8 @@
 #   passwords  A line that records a password must have the value None.
 #              Each line is first normalised: Unicode NFKC, then invisible
 #              format characters (Unicode category Cf) are removed, so a
-#              fullwidth spelling reads the same as the plain one.
+#              fullwidth spelling of a word or separator reads the same as
+#              the plain one.
 #              Words: "password", "passphrase" and "passcode" (any case, a
 #              trailing "s" allowed, with or without list markers, bold or
 #              code formatting), and "pwd" and "unlock with".
@@ -25,10 +26,15 @@
 #              with" count only with a separator after them, because the bare
 #              words have ordinary uses (the shell command, "unlock with the
 #              Review tab"). The value is the rest of the line, without the
-#              white space and formatting marks around it. If sheet or
-#              workbook protection is added to the toolkit, it is applied
-#              without a password, so any value other than None, including an
-#              empty one, fails.
+#              white space and formatting marks around it. It is read from
+#              the normalised line and from the line as written, and both
+#              readings must be None, so None in fullwidth letters fails, and
+#              so does a value with a format character in it, such as None
+#              followed by Unicode tag characters (U+E0000 to U+E007F), or
+#              None with a zero width space (U+200B) or a soft hyphen
+#              (U+00AD) inside it. If sheet or workbook protection is added
+#              to the toolkit, it is applied without a password, so any
+#              value other than None, including an empty one, fails.
 #              Any other mention of "password", "passphrase" or "passcode"
 #              (any case, also inside a longer word such as
 #              "password-protected") fails unless it reads "without a
@@ -120,12 +126,13 @@ _SENTENCE = r"\s+(?:" + words_pattern(SENTENCE_FORMS) + r")\b"
 
 # One of WORDS followed by a separator or a sentence form, or one of
 # GUARDED_WORDS followed by a separator, allowing Markdown emphasis or code
-# marks around the word and around the separator. The value is the rest of
-# the line.
+# marks around the word and around the separator. The group is the rest of
+# the line, from the end of the separator or sentence form; value_in reads
+# the value from it.
 PASSWORD_LINE = re.compile(
     r"(?:" + _WORD + r"[*_`]*(?:" + _SEPARATOR + r"|" + _SENTENCE + r")"
     r"|\b(?:" + words_pattern(GUARDED_WORDS) + r")\b[*_`]*" + _SEPARATOR + r")"
-    r"[*_`]*(.*)$",
+    r"(.*)$",
     re.I,
 )
 
@@ -152,6 +159,22 @@ def normalise(line):
     """The line under Unicode NFKC, without format characters (Cf)."""
     line = unicodedata.normalize("NFKC", line)
     return "".join(c for c in line if unicodedata.category(c) != "Cf")
+
+
+def value_in(rest):
+    """The value in rest, the text after a separator or sentence form,
+    without the white space and formatting marks around it."""
+    return rest.lstrip("*_`").strip().strip("*_`").strip()
+
+
+def written_rest(line, start):
+    """The text of line after its shortest beginning that normalises to start
+    characters or more, as written: for a start just after a separator, the
+    rest of the line with its format characters and fullwidth letters."""
+    end = 0
+    while len(normalise(line[:end])) < start:
+        end += 1
+    return line[end:]
 
 
 def unexplained_mentions(text):
@@ -216,8 +239,8 @@ def check_passwords(lines):
         "line {}: mentions a password in no recognised shape (text not "
         'shown); write "Password: None", or "without a password"'
     )
-    for number, line in enumerate(lines, 1):
-        line = normalise(line)
+    for number, written in enumerate(lines, 1):
+        line = normalise(written)
         m = PASSWORD_LINE.search(line)
         if not m:
             if unexplained_mentions(line):
@@ -226,8 +249,13 @@ def check_passwords(lines):
                 no_password += 1
             continue
         seen += 1
-        value = m.group(1).strip().strip("*_`").strip()
-        if value != ALLOWED_VALUE:
+        # The value must be None as written too: normalising reads None in
+        # fullwidth letters, or None with format characters inside or after
+        # it, as None.
+        if (
+            value_in(m.group(1)) != ALLOWED_VALUE
+            or value_in(written_rest(written, m.start(1))) != ALLOWED_VALUE
+        ):
             problems.append(
                 "line {}: Password line has a value other than {} "
                 "(value not shown)".format(number, ALLOWED_VALUE)
