@@ -49,11 +49,16 @@ name given", and a text document whose bytes are not UTF-8 fails with
 "not UTF-8 text". A file name is printed with each byte that the file
 system encoding cannot decode, and each character that the encoding of
 stdout cannot encode, as a backslash escape, such as \\xff for the byte
-0xff and \\u65e5 for the character U+65E5. --help (or -h) prints the usage
-line and this text on stderr and exits 2. Any other argument that starts
-with "-", such as --verbose or --, is an unknown option: each one is named
-on stderr on a line of its own, such as "unknown option: --verbose", before
-the usage line, and the exit status is 2.
+0xff and \\u65e5 for the character U+65E5. A PASS or FAIL line, such as
+one that names a sheet or a cell, the == line that names the cells of
+ProfileMultiplier and RiskMatrix, and the line that lists the answers are
+printed with each character that the encoding of stdout cannot encode as a
+backslash escape too, such as \\u65e5\\u672c for a sheet named U+65E5
+U+672C. --help (or -h) prints the usage line and this text on stderr and
+exits 2. Any other argument that starts with "-", such as --verbose or --,
+is an unknown option: each one is named on stderr on a line of its own,
+such as "unknown option: --verbose", before the usage line, and the exit
+status is 2.
 """
 
 import os
@@ -359,9 +364,26 @@ def check_document(name, parts, lowest, highest, problems):
                     )
                 )
             else:
-                print("  PASS {}line {}: {} to {}".format(where, number, low, high))
+                print(printable("  PASS {}line {}: {} to {}".format(
+                    where, number, low, high
+                )))
     if not stated:
         problems.append("{}: gives no multiplier range".format(name))
+
+
+def printable(text):
+    """text with each character the encoding of stdout cannot encode written
+    as a backslash escape, such as \\u65e5 for U+65E5. Under en_US.ISO8859-1
+    on macOS, the encoding of stdout is ISO-8859-1, so text quoted from a
+    workbook, such as a sheet name that holds U+65E5 or a cell reference
+    written with ARABIC-INDIC digits, can hold a character that print()
+    cannot encode."""
+    # sys.stdout is None when file descriptor 1 is closed, and print() then
+    # writes nothing.
+    encoding = getattr(sys.stdout, "encoding", None)
+    if encoding is None:
+        return text
+    return text.encode(encoding, "backslashreplace").decode(encoding)
 
 
 def shown(path):
@@ -376,12 +398,7 @@ def shown(path):
     so a file name that is valid UTF-8 can hold a character, such as U+65E5,
     that print() cannot encode."""
     name = os.fsencode(path).decode(sys.getfilesystemencoding(), "backslashreplace")
-    # sys.stdout is None when file descriptor 1 is closed, and print() then
-    # writes nothing.
-    encoding = getattr(sys.stdout, "encoding", None)
-    if encoding is None:
-        return name
-    return name.encode(encoding, "backslashreplace").decode(encoding)
+    return printable(name)
 
 
 def main(argv):
@@ -405,10 +422,10 @@ def main(argv):
     found = multiplier_range(os.path.join(root, WORKBOOK), problems)
     if found:
         where, answers, reference, groups, lowest, highest = found
-        print("== {} {} ({}), {} ({})".format(
+        print(printable("== {} {} ({}), {} ({})".format(
             WORKBOOK, MULTIPLIER, where, MATRIX, reference
-        ))
-        print("  answers: {}".format(", ".join(answers)))
+        )))
+        print(printable("  answers: {}".format(", ".join(answers))))
         for factor, values in groups.items():
             print("  factor {}: risk values {}".format(
                 factor, ", ".join(str(value) for value in sorted(set(values)))
@@ -476,7 +493,7 @@ def main(argv):
             check_document(name, parts, lowest, highest, problems)
 
     for problem in problems:
-        print("  FAIL {}".format(problem))
+        print(printable("  FAIL {}".format(problem)))
     print("RESULT: {}".format("FAIL" if problems else "PASS"))
     return 1 if problems else 0
 
