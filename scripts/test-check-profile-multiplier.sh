@@ -7,7 +7,7 @@
 # Usage:
 #   scripts/test-check-profile-multiplier.sh
 #
-# Cases 7 to 10, 44 to 46 and 49 to 52 copy the checker and the toolkit
+# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 59 copy the checker and the toolkit
 # workbook into a new temporary directory laid out like the repository
 # (scripts/ and toolkit/), edit the copy of the workbook, and run the
 # checker there. Cases 15, 17, 38 to 43, 47 and 48 make the same copies and
@@ -202,6 +202,18 @@
 #  gives the workbook's range: exit 1, nothing on stderr, one FAIL line,
 #  which names the toolkit workbook and gives the reason, no == line, so no
 #  document checked, and RESULT: FAIL as the last line.
+#  57. A workbook whose ProfileMultiplier formula rounds to 28 places, more
+#      digits than the 28 of the default decimal context once the integer
+#      digit is counted: exit 0, nothing on stderr, the lowest and highest
+#      multiplier listed with 28 places, a PASS line for a text document
+#      that gives 1.00 to 1.50, then RESULT: PASS.
+#  58. A workbook whose formula rounds to 1000000 places: the results of
+#      case 57, with zeros added to the multipliers up to 28 places only.
+#  59. A workbook whose formula rounds to 34 places and whose risk values
+#      of 1.0 are 1.0 followed by 33 zeros and a 5: exit 1, nothing on
+#      stderr, the lowest multiplier, 1 + 5 * 10^-35, listed rounded half
+#      up to 34 places, and a FAIL line for the document that gives 1.00 to
+#      1.50.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -1096,6 +1108,49 @@ replace_first "$work/crcbook/$toolkit" 'name="Notes"' 'name="Notez"'
 start_case "case 56: a toolkit workbook whose xl/workbook.xml does not match its CRC-32" \
   "$work/crcbook/scripts/check-profile-multiplier.py" "$work/new.md"
 expect_toolkit_unreadable "not a workbook"
+end_case
+
+# The end of the ProfileMultiplier formula, where ROUND gives its places.
+# The formula's lines end in CR LF.
+round_end=$'VLOOKUP(D17, RiskMatrix, 2, FALSE),\r\n    2),"-")'
+round_to() {
+  printf 'VLOOKUP(D17, RiskMatrix, 2, FALSE),\r\n    %s),"-")' "$1"
+}
+zeros28="0000000000000000000000000000"
+
+make_copy "$work/round28" "$round_end" "$(round_to 28)"
+start_case "case 57: a ProfileMultiplier formula that rounds to 28 places" \
+  "$work/round28/scripts/check-profile-multiplier.py" "$work/new.md"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "workbook range is listed with 28 places" \
+  'has_line "  lowest 1.$zeros28, highest 1.5${zeros28#0}"'
+expect "PASS line for between 1.00 and 1.50" 'has_line "  PASS line 1: 1.00 to 1.50"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+end_case
+
+make_copy "$work/roundmillion" "$round_end" "$(round_to 1000000)"
+start_case "case 58: a ProfileMultiplier formula that rounds to 1000000 places" \
+  "$work/roundmillion/scripts/check-profile-multiplier.py" "$work/new.md"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "workbook range is listed with 28 places" \
+  'has_line "  lowest 1.$zeros28, highest 1.5${zeros28#0}"'
+expect "PASS line for between 1.00 and 1.50" 'has_line "  PASS line 1: 1.00 to 1.50"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+end_case
+
+make_copy "$work/round34" "$round_end" "$(round_to 34)" \
+  '> 1.0 <' "> 1.0${zeros28}000005 <"
+start_case "case 59: a formula that rounds to 34 places, risk values 1 + 5 * 10^-35" \
+  "$work/round34/scripts/check-profile-multiplier.py" "$work/new.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "lowest multiplier is rounded half up to 34 places" \
+  'has_line "  lowest 1.${zeros28}000001, highest 1.5${zeros28#0}"'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line for between 1.00 and 1.50" \
+  "has_fail 'new.md line 1: the multiplier range is 1.00 to 1.50 here, but $toolkit calculates 1.${zeros28}000001 to 1.5${zeros28#0}'"
 end_case
 
 if [ "$failed" -eq 0 ]; then

@@ -23,7 +23,11 @@ digits 0 to 9, or is past the end of the shared string table, fails with a
 line that names the cell. The lowest multiplier adds each factor times the
 lowest risk value in its group, and the highest adds each factor times the
 highest. Both are rounded to the decimal places the formula's ROUND gives,
-with halves rounded up.
+with halves rounded up, and are calculated without a limit on the number of
+digits, so a ROUND to 28 places or more is checked too. A multiplier that
+has fewer decimal places than the ROUND gives is listed with zeros added up
+to those places, but to no more than 28 places, or the places it has if
+that is more.
 
 With no file arguments it checks the documents in DOCUMENTS; with file
 arguments it checks those files instead (paths relative to the repository
@@ -68,11 +72,14 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from decimal import MAX_PREC, ROUND_HALF_UP, Decimal, InvalidOperation, localcontext
 
 WORKBOOK = "toolkit/QRAMM_Assessment_Toolkit.xlsx"
 MULTIPLIER = "ProfileMultiplier"
 MATRIX = "RiskMatrix"
+# The most decimal places that zeros are added up to in a multiplier that
+# has fewer places than the formula's ROUND gives.
+PADDED_PLACES = 28
 
 DOCUMENTS = [
     "framework/scoring-methodology.md",
@@ -300,14 +307,26 @@ def multiplier_range(path, problems):
         )
         return None
 
-    places = Decimal(1).scaleb(-int(rounded.group(2)))
-    lowest = sum(f * min(v) for f, v in groups.items()).quantize(
-        places, rounding=ROUND_HALF_UP
-    )
-    highest = sum(f * max(v) for f, v in groups.items()).quantize(
-        places, rounding=ROUND_HALF_UP
-    )
+    places = int(rounded.group(2))
+    # The default context holds 28 digits, and quantize() raises
+    # InvalidOperation when its result needs more, as it does for a ROUND to
+    # 28 places or more. With MAX_PREC the sums and the rounding are exact.
+    with localcontext() as context:
+        context.prec = MAX_PREC
+        lowest = round_half_up(sum(f * min(v) for f, v in groups.items()), places)
+        highest = round_half_up(sum(f * max(v) for f, v in groups.items()), places)
     return where, answers, reference, groups, lowest, highest
+
+
+def round_half_up(value, places):
+    """value rounded half up to places decimal places. Rounding to more
+    places than value has only adds zeros, so they are added up to
+    PADDED_PLACES places at most, or the places value has if that is more:
+    a ROUND to a million places does not build a number of a million
+    digits."""
+    if value.is_finite():
+        places = min(places, max(-value.as_tuple().exponent, PADDED_PLACES))
+    return value.quantize(Decimal(1).scaleb(-places), rounding=ROUND_HALF_UP)
 
 
 def workbook_texts(path):
