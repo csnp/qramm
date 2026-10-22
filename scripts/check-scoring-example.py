@@ -89,6 +89,20 @@ def defined_names(workbook):
     return result
 
 
+def cached_number(node):
+    """Number the c element node stores, or None when node is None or the
+    cell stores no number: it has no v element or an empty one, its t
+    attribute is s, str, e or inlineStr, or float() cannot read the text of
+    its v element, such as "x"."""
+    value = None if node is None else node.find(ns(MAIN_NS, "v"))
+    if value is None or value.text is None or node.get("t") in ("s", "str", "e", "inlineStr"):
+        return None
+    try:
+        return float(value.text)
+    except ValueError:
+        return None
+
+
 def cached_values(path, names):
     """Defined name -> cached numeric value, or an error message string."""
     with zipfile.ZipFile(path) as book:
@@ -111,11 +125,11 @@ def cached_values(path, names):
                 if candidate.get("r") == cell:
                     node = candidate
                     break
-            value = None if node is None else node.find(ns(MAIN_NS, "v"))
-            if value is None or node.get("t") in ("s", "str", "e", "inlineStr"):
+            number = cached_number(node)
+            if number is None:
                 values[name] = "{}!{} has no cached number".format(sheet, cell)
                 continue
-            values[name] = float(value.text)
+            values[name] = number
     return values
 
 
