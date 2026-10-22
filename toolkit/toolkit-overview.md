@@ -64,7 +64,7 @@ For each dimension:
 - **Raw Score**: The dimension score calculated from assessment responses, the weighted sum of the dimension's three practice scores (see [Scoring Methodology](../framework/scoring-methodology.md#dimension-level-scoring))
 - **Weighted Score**: Profile multiplier-adjusted calculation based on organizational context
 - **Maturity Level**: Current dimension maturity level (Basic, Developing, Established or Advanced, from the raw score)
-- **Industry Benchmark**: Comparison against similar organizations in your industry
+- **Industry Benchmark**: Illustrative reference values for your industry and size, not survey data (see the footnote on the Scorecard). Shown once the Profile tab is filled in.
 - **Percentage**: Progress toward maximum possible score
 
 ### Visual Analytics
@@ -72,7 +72,7 @@ The Scorecard provides comprehensive visual insights including:
 
 - **Dimension Scoring Chart**: Bar chart comparing raw scores across all four dimensions
 - **Maturity Distribution**: Donut chart showing the percentage of practices at each maturity level
-- **Spider/Radar Chart**: Visual comparison of your weighted scores against industry benchmarks
+- **Spider/Radar Chart**: Visual comparison of your weighted scores against the illustrative industry benchmark values
 
 ### Highlights and Recommendations
 - **Top Strengths**: Automatically identifies your highest-scoring practices with specific achievements
