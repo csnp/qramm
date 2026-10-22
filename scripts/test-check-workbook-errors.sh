@@ -122,6 +122,25 @@
 #      one FAIL line, which says the copy is not a workbook as that
 #      Relationship element has no Target attribute, a PASS line for the
 #      sample workbook, and RESULT: FAIL as the last line.
+#  23. A copy of the sample workbook whose first c element in
+#      xl/worksheets/sheet1.xml, the one for A1 of the Welcome sheet, in row
+#      1, which is not hidden, is replaced by a c element with no r
+#      attribute that stores #DIV/0! from the formula 1/0.
+#  24. The same copy with the r attribute 1A, which is not a cell
+#      reference, in that c element.
+#  25. The copy of case 23 with no r attribute in the row element of row 1
+#      either.
+#  Cases 23 to 25 pass the copy and then the sample workbook: exit 1,
+#  nothing on stderr, one FAIL line, which says the copy is not a workbook
+#  as xl/worksheets/sheet1.xml has a c element with no r attribute in row 1
+#  (case 23), a c element in row 1 whose r attribute 1A is not a cell
+#  reference (case 24) or a c element with no r attribute (case 25), a PASS
+#  line for the sample workbook, and RESULT: FAIL as the last line.
+#  26. A copy of the sample workbook whose c element for E6 of the Welcome
+#      sheet, in row 6, which is hidden, is replaced by a c element with no
+#      r attribute that stores #DIV/0! from the formula 1/0: exit 0, nothing
+#      on stderr, no FAIL line, one PASS line, and RESULT: PASS as the last
+#      line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -705,6 +724,54 @@ expect "FAIL line says it is not a workbook as the Relationship element has no T
 expect "the sample workbook is checked" \
   'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
 expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+# Expectations for cases 23 to 25: $1 is the copy's file name and $2 what
+# its FAIL line says xl/worksheets/sheet1.xml has.
+expect_no_cell_reference() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says it is not a workbook as sheet1.xml has $2" \
+    "has_fail '$1: not a workbook (xl/worksheets/sheet1.xml has $2)'"
+  expect "the sample workbook is checked" \
+    'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+  expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+}
+
+# A1 is the first c element of the Welcome sheet, in row 1; row 6 is hidden.
+error_cell='<c t="e"><f>1/0</f><v>#DIV/0!</v></c>'
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/nocellref.xlsx" \
+  xl/worksheets/sheet1.xml '<c r="A1" s="28"/>' "$error_cell"
+start_case "case 23: a c element with no r attribute" \
+  "$checker" "$work/nocellref.xlsx" toolkit/Sample_Assessment.xlsx
+expect_no_cell_reference "$work/nocellref.xlsx" "a c element with no r attribute in row 1"
+end_case
+
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/badcellref.xlsx" \
+  xl/worksheets/sheet1.xml '<c r="A1" s="28"/>' '<c r="1A" t="e"><f>1/0</f><v>#DIV/0!</v></c>'
+start_case "case 24: a c element whose r attribute is not a cell reference" \
+  "$checker" "$work/badcellref.xlsx" toolkit/Sample_Assessment.xlsx
+expect_no_cell_reference "$work/badcellref.xlsx" \
+  "a c element in row 1 whose r attribute 1A is not a cell reference"
+end_case
+
+edit_part "$work/nocellref.xlsx" "$work/norowref.xlsx" \
+  xl/worksheets/sheet1.xml '<row r="1" ' '<row '
+start_case "case 25: a c element with no r attribute in a row element with no r attribute" \
+  "$checker" "$work/norowref.xlsx" toolkit/Sample_Assessment.xlsx
+expect_no_cell_reference "$work/norowref.xlsx" "a c element with no r attribute"
+end_case
+
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/hiddenrow.xlsx" \
+  xl/worksheets/sheet1.xml '<c r="E6" s="47"/>' "$error_cell"
+start_case "case 26: a c element with no r attribute in a hidden row" \
+  "$checker" "$work/hiddenrow.xlsx"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "no FAIL line" '[ "$(fail_count)" -eq 0 ]'
+expect "one PASS line" '[ "$(pass_count)" -eq 1 ]'
+expect "last line is RESULT: PASS" 'last_line_is "RESULT: PASS"'
 end_case
 
 if [ "$failed" -eq 0 ]; then
