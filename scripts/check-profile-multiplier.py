@@ -43,14 +43,14 @@ workbook, each line of a cell's text is a line. The script uses the Python
 standard library only.
 
 Exit status: 0 when the documents agree with the workbook, 1 when they do
-not or the workbook does not have the form described above, 2 on a usage
-error. An empty file argument fails with "no file name given", and a text
-document whose bytes are not UTF-8 fails with "not UTF-8 text". A file name
-is printed with each byte that the file system encoding cannot decode, and
-each character that the encoding of stdout cannot encode, as a backslash
-escape, such as \\xff for the byte 0xff and \\u65e5 for the character
-U+65E5. --help (or -h) prints the usage line and this text on stderr and
-exits 2.
+not, the workbook does not have the form described above or a file cannot
+be read, 2 on a usage error. An empty file argument fails with "no file
+name given", and a text document whose bytes are not UTF-8 fails with
+"not UTF-8 text". A file name is printed with each byte that the file
+system encoding cannot decode, and each character that the encoding of
+stdout cannot encode, as a backslash escape, such as \\xff for the byte
+0xff and \\u65e5 for the character U+65E5. --help (or -h) prints the usage
+line and this text on stderr and exits 2.
 """
 
 import os

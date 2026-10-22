@@ -23,18 +23,18 @@
 #              A line that contains "password" (any case) in no recognised
 #              shape is not judged, and the summary line counts it.
 #
-# The check fails when a given file does not exist, and when no tracked
-# Markdown file is found under toolkit-specs/, so it cannot pass by reading
-# nothing. With no file arguments it needs a git checkout to list the tracked
-# files; in a copy that is not one (for example a downloaded archive) it fails
-# with a one-line message that says so. Pass the files to check as arguments
-# there instead.
+# The check fails when a given file does not exist, is a directory or is not
+# UTF-8 text, and when no tracked Markdown file is found under toolkit-specs/,
+# so it cannot pass by reading nothing. With no file arguments it needs a git
+# checkout to list the tracked files; in a copy that is not one (for example a
+# downloaded archive) it fails with a one-line message that says so. Pass the
+# files to check as arguments there instead.
 #
 # An empty file argument fails with "no file name given".
 #
-# Exit status: 0 when every check passes, 1 when any check fails, 2 on a
-# usage error. --help (or -h) prints the usage line and this text on stderr
-# and exits 2.
+# Exit status: 0 when every check passes, 1 when any check fails or a file
+# cannot be read, 2 on a usage error. --help (or -h) prints the usage line and
+# this text on stderr and exits 2.
 set -euo pipefail
 
 usage="usage: bash scripts/check-spec-passwords.sh [file ...]"
@@ -183,13 +183,30 @@ def main(argv):
         path = os.path.realpath(given)
         rel = os.path.relpath(path, root)
         label = path if rel.startswith("..") else rel
+        if os.path.isdir(path):
+            print("== {}".format(label))
+            print("  FAIL file: is a directory")
+            failed = True
+            continue
         if not os.path.isfile(path):
             print("== {}".format(label))
             print("  FAIL file: not found")
             failed = True
             continue
-        with open(path, encoding="utf-8") as fh:
-            lines = fh.read().splitlines()
+        try:
+            with open(path, encoding="utf-8") as fh:
+                lines = fh.read().splitlines()
+        except OSError as error:
+            print("== {}".format(label))
+            print("  FAIL file: cannot read ({})".format(error.strerror))
+            failed = True
+            continue
+        except UnicodeDecodeError:
+            # A file whose bytes are not UTF-8.
+            print("== {}".format(label))
+            print("  FAIL file: cannot read (not UTF-8 text)")
+            failed = True
+            continue
         problems, seen, unjudged = check_passwords(lines)
         total_seen += seen
         total_unjudged += unjudged

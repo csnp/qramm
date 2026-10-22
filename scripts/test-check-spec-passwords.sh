@@ -44,6 +44,11 @@
 #      nothing on stdout. An unknown option: exit 2, a usage line on stderr.
 #   16. An empty file argument: exit 1, "== ''", FAIL file: no file name
 #      given, no "not found" line.
+#   17. A spec file whose bytes are not UTF-8: exit 1, the file's == line
+#      and then FAIL file: cannot read (not UTF-8 text), RESULT: FAIL,
+#      nothing on stderr, no Python traceback.
+#   18. A directory: exit 1, the directory's == line and then FAIL file: is
+#      a directory, no "not found" line, RESULT: FAIL, nothing on stderr.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -319,6 +324,35 @@ expect "the file is shown as ''" 'printf "%s\n" "$out" | grep -qx "== '"''"'"'
 expect "FAIL says no file name was given" \
   'printf "%s\n" "$out" | grep -qx "  FAIL file: no file name given"'
 expect "no not found line" '! printf "%s\n" "$out" | grep -q "not found"'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 17: a spec file that is not UTF-8"
+case_failed="$failed"
+failed=0
+make_copy "$work/case17"
+# \307\377 are the bytes 0xc7 and 0xff, which are not valid UTF-8.
+printf '# Spec\n\n\307\377\n' > "$work/case17/toolkit-specs/latin1.md"
+run_checker "$work/case17" toolkit-specs/latin1.md
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line follows the file's == line and says it is not UTF-8 text" \
+  '[ "$(printf "%s\n" "$out" | grep -A 1 -x "== toolkit-specs/latin1.md" | tail -n 1)" = "  FAIL file: cannot read (not UTF-8 text)" ]'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+expect "stderr is empty" '[ -z "$err" ]'
+expect "no traceback" '! printf "%s\n%s\n" "$out" "$err" | grep -q Traceback'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 18: a directory"
+case_failed="$failed"
+failed=0
+run_checker "$work/plain" toolkit-specs
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line follows the directory's == line and says it is a directory" \
+  '[ "$(printf "%s\n" "$out" | grep -A 1 -x "== toolkit-specs" | tail -n 1)" = "  FAIL file: is a directory" ]'
+expect "no not found line" '! printf "%s\n" "$out" | grep -q "not found"'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+expect "stderr is empty" '[ -z "$err" ]'
 [ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
 

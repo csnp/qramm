@@ -45,11 +45,12 @@
 #              SP n-n, NIST IR n or OMB M-nn-nn. A label such as "NIST
 #              Testing Guide" names no publication and fails.
 #
-# An empty file argument fails with "no file name given".
+# An empty file argument fails with "no file name given". The check fails
+# when a given file does not exist, is a directory or is not UTF-8 text.
 #
-# Exit status: 0 when every check passes, 1 when any check fails, 2 on a
-# usage error. --help (or -h) prints the usage line and this text on stderr
-# and exits 2.
+# Exit status: 0 when every check passes, 1 when any check fails or a file
+# cannot be read, 2 on a usage error. --help (or -h) prints the usage line and
+# this text on stderr and exits 2.
 set -euo pipefail
 
 usage="usage: bash scripts/check-framework-docs.sh [--no-network] [file ...]"
@@ -463,12 +464,26 @@ def main(argv):
         path = os.path.realpath(given)
         rel = os.path.relpath(path, root)
         print("== {}".format(path if rel.startswith("..") else rel))
+        if os.path.isdir(path):
+            print("  FAIL file: is a directory")
+            failed = True
+            continue
         if not os.path.isfile(path):
             print("  FAIL file: not found")
             failed = True
             continue
-        with open(path, encoding="utf-8") as fh:
-            lines = fh.read().splitlines()
+        try:
+            with open(path, encoding="utf-8") as fh:
+                lines = fh.read().splitlines()
+        except OSError as error:
+            print("  FAIL file: cannot read ({})".format(error.strerror))
+            failed = True
+            continue
+        except UnicodeDecodeError:
+            # A file whose bytes are not UTF-8.
+            print("  FAIL file: cannot read (not UTF-8 text)")
+            failed = True
+            continue
 
         # Each result: check name, problems, note, and lines listed after the
         # result whether it passes or fails.
