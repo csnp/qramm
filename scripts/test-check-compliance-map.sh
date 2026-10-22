@@ -151,10 +151,27 @@
 #      attribute A followed by U+0663 (ARABIC-INDIC DIGIT THREE) in place of
 #      1A. U+0663 is a Unicode decimal digit but not one of the digits 0 to
 #      9. The FAIL line quotes this r attribute as UTF-8.
-#  Cases 28 to 33 pass the copy and then the sample workbook: exit 1,
+#  34. Under the en_US.UTF-8 locale, a copy of the sample workbook whose row
+#      element for row 3 of the Data sheet has the r attribute U+0663 in
+#      place of 3.
+#  35. Under the en_US.UTF-8 locale, a copy of the sample workbook whose
+#      ComplianceMap defined name is Data!$AV$ followed by U+0663 and
+#      :$BA$962, in place of Data!$AV$3:$BA$962.
+#  36. Under the en_US.UTF-8 locale, a copy of the sample workbook whose
+#      cell AV3 of the Data sheet stores the shared string index 714
+#      written with U+0667, U+0661 and U+0664 (ARABIC-INDIC DIGIT SEVEN,
+#      ONE and FOUR) in place of 714.
+#  Cases 28 to 36 pass the copy and then the sample workbook: exit 1,
 #  nothing on stderr, one FAIL line, which says the map cannot be read and
 #  names what the copy has, the map PASS line for the sample workbook, then
-#  RESULT: FAIL.
+#  RESULT: FAIL. In cases 34 to 36 the FAIL line quotes the digits as
+#  UTF-8.
+#  37. A copy of the sample workbook whose Compliance sheet looks category
+#      names up in Data!$BG$ followed by U+0663 and :$BH$108, in place of
+#      Data!$BG$3:$BH$108, in each of its formulas: exit 1, nothing on
+#      stderr, the map PASS line, one FAIL line, which says the category
+#      name lookup cannot be read as the Compliance sheet has no category
+#      name lookup, then RESULT: FAIL.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -947,15 +964,16 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 28 to 33, which pass a copy and then the sample
-# workbook: $1 is the copy's file name, $2 what the FAIL line says the copy
-# has and $3 the reason the map cannot be read.
+# Expectations for cases 28 to 36, which pass a copy and then the sample
+# workbook: $1 is the copy's file name, $2 what the FAIL line says
+# the copy has and $3 the reason the map cannot be read. $3 can hold a
+# single quote, so the expected line is passed to has_line in a variable.
 expect_map_unreadable() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "no traceback on stderr" '[ -z "$err" ]'
   expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
-  expect "FAIL line says the map cannot be read as $2" \
-    "has_line '  FAIL $1: cannot read the compliance map ($3)'"
+  unreadable_line="  FAIL $1: cannot read the compliance map ($3)"
+  expect "FAIL line says the map cannot be read as $2" 'has_line "$unreadable_line"'
   expect "the sample workbook is checked" \
     "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
   expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
@@ -1020,6 +1038,46 @@ LC_ALL=en_US.UTF-8 start_case "case 33: a c element whose r attribute holds an A
   "$checker" "$work/arabicdigit.xlsx" "$sample"
 expect_map_unreadable "$work/arabicdigit.xlsx" "a c element's r attribute holds a digit that is not 0 to 9" \
   "xl/worksheets/sheet10.xml has a c element in row 3 whose r attribute A$(printf '\331\243') is not a cell reference"
+end_case
+
+# Cases 34 to 37 write each digit other than 0 to 9 as a character
+# reference. Under en_US.UTF-8 the FAIL line quotes U+0663 as \331\243 and
+# U+0667, U+0661 and U+0664 as \331\247, \331\241 and \331\244.
+edit_part "$root/$sample" "$work/arabicrow.xlsx" xl/worksheets/sheet10.xml \
+  '<row r="3" ' '<row r="&#x663;" '
+LC_ALL=en_US.UTF-8 start_case "case 34: a row element whose r attribute is an Arabic-Indic digit" \
+  "$checker" "$work/arabicrow.xlsx" "$sample"
+expect_map_unreadable "$work/arabicrow.xlsx" "a row element's r attribute holds a digit that is not 0 to 9" \
+  "invalid literal for int() with base 10: '$(printf '\331\243')'"
+end_case
+
+edit_part "$root/$sample" "$work/arabicmap.xlsx" xl/workbook.xml \
+  'Data!$AV$3:$BA$962' 'Data!$AV$&#x663;:$BA$962'
+LC_ALL=en_US.UTF-8 start_case "case 35: a ComplianceMap range whose first row is an Arabic-Indic digit" \
+  "$checker" "$work/arabicmap.xlsx" "$sample"
+expect_map_unreadable "$work/arabicmap.xlsx" "the ComplianceMap range holds a digit that is not 0 to 9" \
+  "ComplianceMap is not a cell range: Data!\$AV\$$(printf '\331\243'):\$BA\$962"
+end_case
+
+edit_part "$root/$sample" "$work/arabicstring.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="AV3" s="2" t="s"><v>714</v>' '<c r="AV3" s="2" t="s"><v>&#x667;&#x661;&#x664;</v>'
+LC_ALL=en_US.UTF-8 start_case "case 36: a shared string index written with Arabic-Indic digits" \
+  "$checker" "$work/arabicstring.xlsx" "$sample"
+expect_map_unreadable "$work/arabicstring.xlsx" "a shared string index holds digits that are not 0 to 9" \
+  "invalid literal for int() with base 10: '$(printf '\331\247\331\241\331\244')'"
+end_case
+
+replace_in_sheets "$root/$sample" "$work/arabiclookup.xlsx" \
+  'Data!$BG$3:$BH$108' 'Data!$BG$&#x663;:$BH$108'
+LC_ALL=en_US.UTF-8 start_case "case 37: a category name lookup range whose first row is an Arabic-Indic digit" \
+  "$checker" "$work/arabiclookup.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "the map is checked" "has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says the category name lookup cannot be read" \
+  "has_line '  FAIL $work/arabiclookup.xlsx: cannot read the category name lookup (the Compliance sheet has no category name lookup)'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then

@@ -123,12 +123,14 @@ SPEC_ROW = re.compile(r"^\|\s*(Q\d+):")
 SPEC_CELL = re.compile(r"^(.+?) \((\d+(?:\.\d+)?)\)$")
 # [0-9], not \d: in a str pattern \d also matches the other Unicode decimal
 # digits, such as U+0663 (ARABIC-INDIC DIGIT THREE), and an r attribute
-# such as A followed by U+0663 is not a cell reference.
+# such as A followed by U+0663 is not a cell reference. For the same reason
+# a range such as Data!$AV$ followed by U+0663 and :$BA$962 is not a cell
+# range.
 CELL_REF = re.compile(r"([A-Z]+)([0-9]+)")
-RANGE_REF = re.compile(r"'?(.+?)'?!\$?([A-Z]+)\$?(\d+):\$?([A-Z]+)\$?(\d+)")
+RANGE_REF = re.compile(r"'?(.+?)'?!\$?([A-Z]+)\$?([0-9]+):\$?([A-Z]+)\$?([0-9]+)")
 NAME_LOOKUP = re.compile(
-    r"VLOOKUP\(_xlfn\.CONCAT\(\$M\$4,TRIM\(\$?[A-Z]+\$?\d+\)\),"
-    r"('?)(.+?)\1!\$?([A-Z]+)\$?(\d+):\$?([A-Z]+)\$?(\d+),2,FALSE\)"
+    r"VLOOKUP\(_xlfn\.CONCAT\(\$M\$4,TRIM\(\$?[A-Z]+\$?[0-9]+\)\),"
+    r"('?)(.+?)\1!\$?([A-Z]+)\$?([0-9]+):\$?([A-Z]+)\$?([0-9]+),2,FALSE\)"
 )
 TOLERANCE = 1e-9
 
@@ -265,11 +267,22 @@ def map_range(book):
     raise ValueError("the workbook has no defined name {}".format(MAP_NAME))
 
 
+def ascii_int(text):
+    """int(text), except that text with a character outside ASCII raises
+    ValueError, as int() does for text such as "x". int() reads every
+    Unicode decimal digit, such as U+0663 (ARABIC-INDIC DIGIT THREE) as 3,
+    and the workbook writes its numbers with the digits 0 to 9."""
+    if not text.isascii():
+        raise ValueError("invalid literal for int() with base 10: {!r}".format(text))
+    return int(text)
+
+
 def cell_value(node, strings, part):
     """Stored value of a cell: str, float, or None when it is empty. part is
     the part path of the sheet that holds the cell. Raises ValueError for a
-    shared string index that is not one of the shared strings, as int()
-    does for an index such as "x"."""
+    shared string index that is not one of the shared strings, as
+    ascii_int() does for an index such as "x" or one that holds a digit
+    other than 0 to 9."""
     value = node.find(ns(MAIN_NS, "v"))
     kind = node.get("t")
     if kind == "inlineStr":
@@ -277,7 +290,7 @@ def cell_value(node, strings, part):
     if value is None or value.text is None:
         return None
     if kind == "s":
-        index = int(value.text)
+        index = ascii_int(value.text)
         if not 0 <= index < len(strings):
             raise ValueError(
                 "{} cell {} gives shared string index {}, and the workbook has {} "
@@ -292,8 +305,8 @@ def cell_value(node, strings, part):
 def read_block(book, part, strings, first, width, top, bottom):
     """{row number: {offset: value}} for rows top to bottom and the width
     columns from column number first of the sheet part. Raises ValueError
-    for a row element of the part with no r attribute, as int() does for an
-    r such as "x", and for a c element of a row in that range whose r
+    for a row element of the part with no r attribute, as ascii_int() does
+    for an r such as "x" or one that holds a digit other than 0 to 9, and for a c element of a row in that range whose r
     attribute is missing or is not a cell reference."""
     root = ET.fromstring(book.read(part))
     rows = {number: {} for number in range(top, bottom + 1)}
@@ -303,7 +316,7 @@ def read_block(book, part, strings, first, width, top, bottom):
         reference = row.get("r")
         if reference is None:
             raise ValueError("{} has a row element with no r attribute".format(part))
-        number = int(reference)
+        number = ascii_int(reference)
         if number not in rows:
             continue
         for node in row.iter(ns(MAIN_NS, "c")):
