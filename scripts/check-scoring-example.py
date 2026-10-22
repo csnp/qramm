@@ -18,9 +18,10 @@ start with the matching labels:
     ProfileMultiplier  "Profile multiplier"
 
 The value on a labelled line is the first number after its last "=". The
-workbook values are the cached results Excel stored when the file was last
-calculated; the script does not recompute any formula. It uses the Python
-standard library only.
+check fails for a number with a Unicode decimal digit other than 0 to 9,
+such as U+0662 (ARABIC-INDIC DIGIT TWO). The workbook values are the cached
+results Excel stored when the file was last calculated; the script does not
+recompute any formula. It uses the Python standard library only.
 
 Exit status: 0 when the example matches the workbook, 1 when it does not, 2 on
 a usage error. --help (or -h) prints the usage line and this text on stderr
@@ -54,6 +55,10 @@ MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 
+# \d, not [0-9]: in a str pattern \d matches every Unicode decimal digit,
+# such as U+0662 (ARABIC-INDIC DIGIT TWO), so NUMBER reads a number written
+# with one of them whole, and shown_value() refuses it. With [0-9], U+0662
+# followed by 2.56 would be read as 2.56.
 NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 TOLERANCE = 1e-9
 
@@ -199,6 +204,14 @@ def shown_value(block, label):
     found = NUMBER.search(line.rsplit("=", 1)[1])
     if not found:
         return number, "line {}: no number after the last '='".format(number)
+    # float() reads every Unicode decimal digit, so main() would read U+0662,
+    # a period, U+0665 and U+0666 (ARABIC-INDIC DIGIT TWO, FIVE and SIX) as
+    # 2.56. !a writes each such digit as a backslash escape, as ascii() does.
+    if not found.group(0).isascii():
+        return number, (
+            "line {}: the number after the last '=' is {!a}, which has a digit "
+            "other than 0 to 9".format(number, found.group(0))
+        )
     return number, found.group(0)
 
 
