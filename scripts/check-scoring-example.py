@@ -27,6 +27,7 @@ a usage error. --help (or -h) prints the usage line and this text on stderr
 and exits 2.
 """
 
+import math
 import os
 import re
 import sys
@@ -104,15 +105,22 @@ def ascii_float(text):
 def cached_number(node):
     """Number the c element node stores, or None when node is None or the
     cell stores no number: it has no v element or an empty one, its t
-    attribute is s, str, e or inlineStr, or ascii_float() cannot read the
-    text of its v element, such as "x" or "2.5_6"."""
+    attribute is s, str, e or inlineStr, ascii_float() cannot read the text
+    of its v element, such as "x" or "2.5_6", or ascii_float() reads that
+    text as a value that is not finite, as it reads nan as a NaN and inf as
+    an infinity."""
     value = None if node is None else node.find(ns(MAIN_NS, "v"))
     if value is None or value.text is None or node.get("t") in ("s", "str", "e", "inlineStr"):
         return None
     try:
-        return ascii_float(value.text)
+        number = ascii_float(value.text)
     except ValueError:
         return None
+    # main() passes a shown number unless abs(shown - value) > TOLERANCE,
+    # which is false when value is a NaN, or an infinity and float() reads
+    # the shown number, such as 1 followed by 400 zeros, as the same
+    # infinity.
+    return number if math.isfinite(number) else None
 
 
 def cached_values(path, names):
