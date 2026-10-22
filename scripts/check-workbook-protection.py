@@ -29,7 +29,9 @@ package fails, and an encrypted workbook is not one: it is stored in a
 compound file that holds the encrypted package. The script reads every part
 whose name starts with xl/ and ends in .xml, with the letters in either
 case, and a package with no such part fails as not a workbook. A part that
-is not well-formed XML fails.
+is not well-formed XML fails, and so does a part whose XML declaration
+names an encoding that the XML parser cannot use, such as x-bogus, which
+Python does not know, or shift_jis, a multi-byte encoding.
 
 In each part it reads every element whose local name is sheetProtection,
 workbookProtection, protectedRange or fileSharing, in any namespace or in
@@ -317,6 +319,16 @@ def check_workbook(name, path, counts):
             line, column = error.position
             problems.append(
                 "{}: not well-formed XML (line {}, column {})".format(where, line, column)
+            )
+            continue
+        except (LookupError, ValueError):
+            # ElementTree raises LookupError for an encoding name that Python
+            # does not know, such as x-bogus, or that is not a text encoding,
+            # such as base64, and ValueError for a multi-byte encoding, such
+            # as shift_jis, which pyexpat cannot use.
+            problems.append(
+                "{}: the XML declaration names an encoding that the XML parser "
+                "cannot use".format(where)
             )
             continue
         for element in root.iter():
