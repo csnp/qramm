@@ -155,8 +155,9 @@
 #  Cases 44 to 46 run a copy of the checker beside the workbook with a text
 #  document that gives the workbook's range: exit 1, nothing on stderr, one
 #  FAIL line, which names the workbook and Data!M3 and gives the index as
-#  written (with ١٦ for the digits of case 46), no document
-#  checked, and RESULT: FAIL as the last line.
+#  written, with each character outside ASCII as a backslash escape
+#  (\u0661\u0666 for the digits of case 46), no document checked, and
+#  RESULT: FAIL as the last line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
