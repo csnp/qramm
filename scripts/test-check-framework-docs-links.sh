@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Tests the links check of scripts/check-framework-docs.sh on URLs at the end
-# of italic and bold text, and on URLs that answer 999.
+# of italic and bold text, on URLs that answer 999, and on relative links to
+# paths outside the repository.
 #
 # Usage:
 #   scripts/test-check-framework-docs-links.sh [checker]
@@ -38,6 +39,12 @@
 #      999, expected 200" line for each of the first two, the not verified
 #      line for the third, RESULT: FAIL, and the server's log holds all
 #      three requests.
+#   7. Relative links to the directory that holds the repository, to a
+#      missing sibling of the repository whose name starts with the
+#      repository's name, to a missing file in the repository and to the
+#      repository's README.md: exit 1, FAIL links (0 external URLs), "is
+#      outside the repository" for the first two, "does not resolve" for the
+#      third, no line for the fourth, RESULT: FAIL, nothing on stderr.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -257,6 +264,36 @@ expect "the www.linkedin.com URL is listed as not verified" \
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 expect "the server answered all three requests" \
   'served "http://linkedin.com.invalid$profile" && served "http://notlinkedin.com$profile" && served "http://www.linkedin.com$profile"'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 7: relative links outside the repository and inside it"
+case_failed="$failed"
+failed=0
+# From $work/relative, ../../.. is the repository root and ../../../.. the
+# directory that holds it.
+sibling="$(basename "$repo")-old"
+write_doc "$work/relative/doc.md" \
+  "[the directory that holds the repository](../../../..)" \
+  "[a sibling whose name starts with the repository's](../../../../$sibling/README.md)" \
+  "[a missing file](missing.md)" \
+  "[the repository README](../../../README.md)"
+run_checker "$work/relative/doc.md"
+expect "the sibling directory does not exist" '[ ! -e "$(dirname "$repo")/$sibling" ]'
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "links check fails with 0 external URLs" \
+  'printf "%s\n" "$out" | grep -qxF "  FAIL links (0 external URLs)"'
+expect "the link to the directory that holds the repository is outside it" \
+  'printf "%s\n" "$out" | grep -qxF "    line 3: relative link '"'"'../../../..'"'"' is outside the repository"'
+expect "the link to the sibling is outside the repository" \
+  'printf "%s\n" "$out" | grep -qxF "    line 4: relative link '"'"'../../../../$sibling/README.md'"'"' is outside the repository"'
+expect "the missing file does not resolve" \
+  'printf "%s\n" "$out" | grep -qxF "    line 5: relative link '"'"'missing.md'"'"' does not resolve"'
+expect "the link to the repository README is not listed" \
+  '! printf "%s\n" "$out" | grep -q "^    line 6:"'
+expect "three problem lines" '[ "$(printf "%s\n" "$out" | grep -c "^    line ")" -eq 3 ]'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+expect "stderr is empty" '[ -z "$err" ]'
 [ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
 

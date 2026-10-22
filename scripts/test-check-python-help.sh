@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Tests --help and -h on each Python checker, scripts/check-*.py, run with
-# python3 -I and with python3 -OO -I. Each checker's header text is its
-# module docstring, and the -OO option removes docstrings.
+# Tests --help, -h and unknown options on each Python checker,
+# scripts/check-*.py. --help and -h are run with python3 -I and with
+# python3 -OO -I. Each checker's header text is its module docstring, and the
+# -OO option removes docstrings.
 #
 # Usage:
 #   scripts/test-check-python-help.sh
@@ -11,6 +12,18 @@
 #      names the checker, a blank line and the checker's header text.
 #   2. python3 -OO -I: exit 2, nothing on stdout, no traceback, and on stderr
 #      only the usage line from case 1.
+#
+# Cases, for each checker:
+#   3. --bogus --json --: exit 2, nothing on stdout, and on stderr
+#      "unknown option: --bogus", "unknown option: --json" and
+#      "unknown option: --", then, for a checker whose usage line names no
+#      argument, "this checker takes no arguments", then the usage line.
+#   4. README.md, an empty argument and --bogus: exit 2, nothing on stdout.
+#      For a checker that takes files, stderr is "unknown option: --bogus"
+#      and the usage line. For a checker whose usage line names no argument,
+#      stderr is "unexpected argument: README.md", "unexpected argument: ''",
+#      "unknown option: --bogus", "this checker takes no arguments" and the
+#      usage line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -116,6 +129,34 @@ for checker in "$here"/check-*.py; do
     expect "stderr is only the usage line" '[ "$err" = "$usage" ]'
     end_case
   done
+
+  # A checker whose usage line names no argument takes none.
+  if [ "$usage" = "usage: python3 -I $script" ]; then
+    takes_none="this checker takes no arguments"$'\n'
+  else
+    takes_none=""
+  fi
+
+  start_case "case 3: python3 -I $script --bogus --json --" -I "$checker" --bogus --json --
+  expected="$(printf 'unknown option: %s\n' --bogus --json --)"$'\n'"$takes_none$usage"
+  expect "exit status is 2" '[ "$status" -eq 2 ]'
+  expect "nothing on stdout" '[ -z "$out" ]'
+  expect "stderr names each option on a line of its own, then the usage line" \
+    '[ "$err" = "$expected" ]'
+  end_case
+
+  start_case "case 4: python3 -I $script README.md '' --bogus" -I "$checker" README.md "" --bogus
+  if [ -n "$takes_none" ]; then
+    expected="unexpected argument: README.md"$'\n'"unexpected argument: ''"
+    expected+=$'\n'"unknown option: --bogus"$'\n'"$takes_none$usage"
+  else
+    expected="unknown option: --bogus"$'\n'"$usage"
+  fi
+  expect "exit status is 2" '[ "$status" -eq 2 ]'
+  expect "nothing on stdout" '[ -z "$out" ]'
+  expect "stderr names the rejected arguments, then the usage line" \
+    '[ "$err" = "$expected" ]'
+  end_case
 done
 
 if [ "$failed" -eq 0 ]; then

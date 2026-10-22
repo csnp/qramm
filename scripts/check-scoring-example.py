@@ -24,7 +24,11 @@ standard library only.
 
 Exit status: 0 when the example matches the workbook, 1 when it does not, 2 on
 a usage error. --help (or -h) prints the usage line and this text on stderr
-and exits 2.
+and exits 2. The script takes no other argument: given one, it names each
+argument on stderr on a line of its own, "unknown option: --verbose" for one
+that starts with "-" and "unexpected argument: README.md" for any other,
+then prints "this checker takes no arguments" and the usage line, and exits
+2.
 """
 
 import math
@@ -52,6 +56,8 @@ PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 
 NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 TOLERANCE = 1e-9
+
+USAGE = "usage: python3 -I scripts/check-scoring-example.py"
 
 
 def ns(prefix, tag):
@@ -197,12 +203,21 @@ def shown_value(block, label):
 
 
 def main(argv):
-    if argv:
-        print("usage: python3 -I scripts/check-scoring-example.py", file=sys.stderr)
+    if "--help" in argv or "-h" in argv:
+        print(USAGE, file=sys.stderr)
         # __doc__ is None when python3 -OO removes docstrings.
-        if ("--help" in argv or "-h" in argv) and __doc__:
+        if __doc__:
             print(file=sys.stderr)
             print(__doc__.strip(), file=sys.stderr)
+        return 2
+    if argv:
+        for arg in argv:
+            if arg.startswith("-"):
+                print("unknown option: {}".format(arg), file=sys.stderr)
+            else:
+                print("unexpected argument: {}".format(arg or "''"), file=sys.stderr)
+        print("this checker takes no arguments", file=sys.stderr)
+        print(USAGE, file=sys.stderr)
         return 2
     root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     doc_path = os.path.join(root, DOC)
