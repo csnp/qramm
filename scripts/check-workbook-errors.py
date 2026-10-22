@@ -63,6 +63,7 @@ import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+import xml.parsers.expat
 import zipfile
 import zlib
 
@@ -130,6 +131,46 @@ CONTROL_ESCAPES = {"\n": "\\n", "\r": "\\r", "\t": "\\t"}
 USAGE = "usage: python3 -I scripts/check-workbook-errors.py [workbook ...]"
 
 
+class DoctypeError(ET.ParseError):
+    """The error parse_xml raises for a document type declaration."""
+
+
+class _RootElement(Exception):
+    """Ends parse_xml's scan at the root element's start tag."""
+
+
+def parse_xml(data):
+    """The root element of the XML document data, as ET.fromstring(data)
+    gives it, except that data with a document type declaration, such as
+    <!DOCTYPE r [<!ENTITY e "FAKE">]>, raises DoctypeError, a subclass of
+    ET.ParseError, before ElementTree reads it. A workbook part carries no
+    document type declaration. The entities one declares are expanded in
+    memory by an expat without a limit on entity expansion, such as expat
+    2.2.8 in the macOS system Python 3.9.6. A scan with expat that stops at
+    the root element's start tag looks for the declaration first; XML that
+    is not well-formed before that tag is left for ET.fromstring to report."""
+    scan = xml.parsers.expat.ParserCreate()
+
+    def doctype(*_):
+        position = (scan.CurrentLineNumber, scan.CurrentColumnNumber)
+        error = DoctypeError(
+            "document type declaration: line {}, column {}".format(*position)
+        )
+        error.position = position
+        raise error
+
+    def root(*_):
+        raise _RootElement
+
+    scan.StartDoctypeDeclHandler = doctype
+    scan.StartElementHandler = root
+    try:
+        scan.Parse(data, True)
+    except (_RootElement, xml.parsers.expat.ExpatError):
+        pass
+    return ET.fromstring(data)
+
+
 def ns(prefix, tag):
     return "{%s}%s" % (prefix, tag)
 
@@ -154,7 +195,7 @@ def transitional(name):
 def read_xml(book, part):
     """The root element of the part path part of book, with each element and
     attribute name replaced by what transitional() gives for it."""
-    root = ET.fromstring(book.read(part))
+    root = parse_xml(book.read(part))
     for node in root.iter():
         node.tag = transitional(node.tag)
         node.attrib = {transitional(name): value for name, value in node.attrib.items()}
@@ -166,7 +207,7 @@ def sheets(book):
     for a sheet whose Relationship element has no Target attribute, and when
     xl/workbook.xml has no sheet element that read_xml() reads in MAIN_NS."""
     workbook = read_xml(book, "xl/workbook.xml")
-    rels = ET.fromstring(book.read("xl/_rels/workbook.xml.rels"))
+    rels = parse_xml(book.read("xl/_rels/workbook.xml.rels"))
     targets = {
         rel.get("Id"): rel.get("Target")
         for rel in rels.iter(ns(PKG_REL_NS, "Relationship"))

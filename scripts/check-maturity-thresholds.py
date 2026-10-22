@@ -76,6 +76,7 @@ import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+import xml.parsers.expat
 import zipfile
 
 WORKBOOK = "toolkit/QRAMM_Assessment_Toolkit.xlsx"
@@ -155,14 +156,54 @@ MAX_FORMULA_LENGTH = 8192
 USAGE = "usage: python3 -I scripts/check-maturity-thresholds.py [file ...]"
 
 
+class DoctypeError(ET.ParseError):
+    """The error parse_xml raises for a document type declaration."""
+
+
+class _RootElement(Exception):
+    """Ends parse_xml's scan at the root element's start tag."""
+
+
+def parse_xml(data):
+    """The root element of the XML document data, as ET.fromstring(data)
+    gives it, except that data with a document type declaration, such as
+    <!DOCTYPE r [<!ENTITY e "FAKE">]>, raises DoctypeError, a subclass of
+    ET.ParseError, before ElementTree reads it. A workbook part carries no
+    document type declaration. The entities one declares are expanded in
+    memory by an expat without a limit on entity expansion, such as expat
+    2.2.8 in the macOS system Python 3.9.6. A scan with expat that stops at
+    the root element's start tag looks for the declaration first; XML that
+    is not well-formed before that tag is left for ET.fromstring to report."""
+    scan = xml.parsers.expat.ParserCreate()
+
+    def doctype(*_):
+        position = (scan.CurrentLineNumber, scan.CurrentColumnNumber)
+        error = DoctypeError(
+            "document type declaration: line {}, column {}".format(*position)
+        )
+        error.position = position
+        raise error
+
+    def root(*_):
+        raise _RootElement
+
+    scan.StartDoctypeDeclHandler = doctype
+    scan.StartElementHandler = root
+    try:
+        scan.Parse(data, True)
+    except (_RootElement, xml.parsers.expat.ExpatError):
+        pass
+    return ET.fromstring(data)
+
+
 def ns(prefix, tag):
     return "{%s}%s" % (prefix, tag)
 
 
 def sheet_paths(book):
     """Sheet name -> path of its XML part inside the workbook archive."""
-    workbook = ET.fromstring(book.read("xl/workbook.xml"))
-    rels = ET.fromstring(book.read("xl/_rels/workbook.xml.rels"))
+    workbook = parse_xml(book.read("xl/workbook.xml"))
+    rels = parse_xml(book.read("xl/_rels/workbook.xml.rels"))
     targets = {
         rel.get("Id"): rel.get("Target")
         for rel in rels.iter(ns(PKG_REL_NS, "Relationship"))
@@ -184,7 +225,7 @@ def label_formulas(path, problems):
         if part is None:
             problems.append("{}: no sheet named {}".format(WORKBOOK, SHEET))
             return {}
-        sheet = ET.fromstring(book.read(part))
+        sheet = parse_xml(book.read(part))
     found = {}
     for cell in sheet.iter(ns(MAIN_NS, "c")):
         if cell.get("r") in LABEL_CELLS:
@@ -371,7 +412,7 @@ def shared_strings(book):
     """The workbook's shared string table, as a list of strings."""
     if "xl/sharedStrings.xml" not in book.namelist():
         return []
-    table = ET.fromstring(book.read("xl/sharedStrings.xml"))
+    table = parse_xml(book.read("xl/sharedStrings.xml"))
     strings = []
     for item in table.iter(ns(MAIN_NS, "si")):
         runs = item.findall(ns(MAIN_NS, "t"))
@@ -477,7 +518,7 @@ def read_workbook(path):
         parts = []
         for sheet, part in sheet_paths(book).items():
             cells[sheet] = {}
-            for cell in ET.fromstring(book.read(part)).iter(ns(MAIN_NS, "c")):
+            for cell in parse_xml(book.read(part)).iter(ns(MAIN_NS, "c")):
                 cells[sheet][cell.get("r")] = cell
                 if cell.get("t") in ("s", "inlineStr"):
                     text = cell_text(cell, strings) or ""
@@ -487,7 +528,7 @@ def read_workbook(path):
         for name in book.namelist():
             if not CHART_PART.fullmatch(name):
                 continue
-            chart = ET.fromstring(book.read(name))
+            chart = parse_xml(book.read(name))
             title = chart.find("c:chart/c:title", {"c": CHART_NS})
             if title is None:
                 continue
