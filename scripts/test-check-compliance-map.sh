@@ -147,7 +147,11 @@
 #  30. A copy of the sample workbook whose cell AV3 of the Data sheet, the
 #      first cell of the ComplianceMap range and a shared string cell, stores
 #      the shared string index 999999, past the end of the shared strings.
-#  Cases 26 to 30 pass the copy and then the sample workbook: exit 1,
+#  31. Under the en_US.UTF-8 locale, the copy of case 28 with the r
+#      attribute A followed by U+0663 (ARABIC-INDIC DIGIT THREE) in place of
+#      1A. U+0663 is a Unicode decimal digit but not one of the digits 0 to
+#      9. The FAIL line quotes this r attribute as UTF-8.
+#  Cases 26 to 31 pass the copy and then the sample workbook: exit 1,
 #  nothing on stderr, one FAIL line, which says the map cannot be read and
 #  names what the copy has, the map PASS line for the sample workbook, then
 #  RESULT: FAIL.
@@ -919,7 +923,7 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 26 to 30, which pass a copy and then the sample
+# Expectations for cases 26 to 31, which pass a copy and then the sample
 # workbook: $1 is the copy's file name, $2 what the FAIL line says the copy
 # has and $3 the reason the map cannot be read.
 expect_map_unreadable() {
@@ -981,6 +985,17 @@ start_case "case 30: a shared string index past the end of the shared strings" \
   "$checker" "$work/nostring.xlsx" "$sample"
 expect_map_unreadable "$work/nostring.xlsx" "a shared string index is past the end" \
   "xl/worksheets/sheet10.xml cell AV3 gives shared string index 999999, and the workbook has $strings_count shared strings"
+end_case
+
+# The part gives the digit after A as the character reference &#x663;. Under
+# en_US.UTF-8 the FAIL line quotes the r attribute as UTF-8, in which
+# \331\243 is U+0663.
+edit_part "$work/badcellref.xlsx" "$work/arabicdigit.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="1A" ' '<c r="A&#x663;" '
+LC_ALL=en_US.UTF-8 start_case "case 31: a c element whose r attribute holds an Arabic-Indic digit" \
+  "$checker" "$work/arabicdigit.xlsx" "$sample"
+expect_map_unreadable "$work/arabicdigit.xlsx" "a c element's r attribute holds a digit that is not 0 to 9" \
+  "xl/worksheets/sheet10.xml has a c element in row 3 whose r attribute A$(printf '\331\243') is not a cell reference"
 end_case
 
 if [ "$failed" -eq 0 ]; then
