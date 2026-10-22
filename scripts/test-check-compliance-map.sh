@@ -222,6 +222,15 @@
 #      nothing on stderr, one FAIL line, which says it is not a workbook
 #      (File is not a zip file), the map PASS line for the sample workbook,
 #      then RESULT: FAIL.
+#  51. A copy of the sample workbook whose ComplianceMap defined name has
+#      the text X, a line feed, RESULT: PASS and a line feed in place of
+#      Data!$AV$3:$BA$962.
+#  52. A copy of the sample workbook whose c element for A3 of the Data
+#      sheet has the r attribute 1A, a line feed and RESULT: PASS in place
+#      of A3.
+#  Cases 51 and 52 pass the copy and then the sample workbook, and give the
+#  results listed for cases 28 to 36, with each line feed written as \n in
+#  the FAIL line, and no line that reads RESULT: PASS.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -1016,7 +1025,7 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 28 to 36, 39 to 46 and 48, which pass a copy and then the
+# Expectations for cases 28 to 36, 39 to 46 and 48 to 50, which pass a copy and then the
 # sample workbook: $1 is the copy's file name, $2 what the FAIL line says
 # the copy has and $3 the reason the map cannot be read. $3 can hold a
 # single quote, so the expected line is passed to has_line in a variable.
@@ -1264,6 +1273,26 @@ expect "FAIL line says it is not a workbook (File is not a zip file)" \
 expect "the sample workbook is checked" \
   "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# Cases 51 and 52 give each line feed as the character reference &#10;. The
+# FAIL line is expected to hold \n in its place.
+edit_part "$root/$sample" "$work/linefeedmap.xlsx" xl/workbook.xml \
+  'Data!$AV$3:$BA$962' 'X&#10;RESULT: PASS&#10;'
+start_case "case 51: a ComplianceMap defined name whose text holds line feeds" \
+  "$checker" "$work/linefeedmap.xlsx" "$sample"
+expect_map_unreadable "$work/linefeedmap.xlsx" "the ComplianceMap text holds line feeds" \
+  'ComplianceMap is not a cell range: X\nRESULT: PASS\n'
+expect "no line reads RESULT: PASS" '! printf "%s\n" "$out" | grep -q -x "RESULT: PASS"'
+end_case
+
+edit_part "$root/$sample" "$work/linefeedcellref.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="A3" s="2" t="s">' '<c r="1A&#10;RESULT: PASS" s="2" t="s">'
+start_case "case 52: a c element whose r attribute holds a line feed" \
+  "$checker" "$work/linefeedcellref.xlsx" "$sample"
+expect_map_unreadable "$work/linefeedcellref.xlsx" "a c element's r attribute holds a line feed" \
+  'xl/worksheets/sheet10.xml has a c element in row 3 whose r attribute 1A\nRESULT: PASS is not a cell reference'
+expect "no line reads RESULT: PASS" '! printf "%s\n" "$out" | grep -q -x "RESULT: PASS"'
 end_case
 
 if [ "$failed" -eq 0 ]; then

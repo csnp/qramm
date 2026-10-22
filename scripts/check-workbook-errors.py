@@ -37,11 +37,14 @@ of stdout cannot encode, as a backslash escape, such as \\xff for the byte
 0xff and \\u65e5 for the character U+65E5. A FAIL line, such as one that
 quotes a sheet name or a formula, is printed with each character that the
 encoding of stdout cannot encode as a backslash escape too, such as \\u2192
-for U+2192. --help (or -h) prints the usage line and this text on stderr
-and exits 2. Any other argument that starts with "-", such as --verbose or
---, is an unknown option: each one is named on stderr on a line of its own,
-such as "unknown option: --verbose", before the usage line, and the exit
-status is 2.
+for U+2192. A file name and a FAIL line are printed with each control
+character, U+0000 to U+001F and U+007F to U+009F, as a backslash escape
+as well, such as \\n for a line feed in the r attribute of a c element, so
+that each problem is printed on one line. --help (or -h) prints the usage
+line and this text on stderr and exits 2. Any other argument that starts
+with "-", such as --verbose or --, is an unknown option: each one is named
+on stderr on a line of its own, such as "unknown option: --verbose", before
+the usage line, and the exit status is 2.
 """
 
 import os
@@ -103,6 +106,11 @@ STRICT_NS = {
 # digits, such as U+0661 (ARABIC-INDIC DIGIT ONE), and an r attribute such
 # as M followed by U+0661 is not a cell reference.
 CELL_REF = re.compile(r"([A-Z]+)([0-9]+)")
+
+# The C0 and C1 control characters and DEL, which printable() writes as
+# backslash escapes, and the escapes it writes for three of them.
+CONTROL = re.compile("[\x00-\x1f\x7f-\x9f]")
+CONTROL_ESCAPES = {"\n": "\\n", "\r": "\\r", "\t": "\\t"}
 
 USAGE = "usage: python3 -I scripts/check-workbook-errors.py [workbook ...]"
 
@@ -294,12 +302,25 @@ def is_zip_file(path):
         return False
 
 
+def control_escape(match):
+    """The backslash escape for the control character match matched: \\n,
+    \\r or \\t, or \\x and two hex digits, such as \\x1b for U+001B."""
+    char = match.group()
+    return CONTROL_ESCAPES.get(char, "\\x{:02x}".format(ord(char)))
+
+
 def printable(text):
-    """text with each character the encoding of stdout cannot encode written
-    as a backslash escape, such as \\u2192 for U+2192. Under en_US.ISO8859-1
-    on macOS, the encoding of stdout is ISO-8859-1, so text quoted from a
-    workbook, such as a sheet name or a formula that holds U+2192, can hold a
-    character that print() cannot encode."""
+    """text with each control character, U+0000 to U+001F and U+007F to
+    U+009F, written as a backslash escape, such as \\n for a line feed, and
+    each character the encoding of stdout cannot encode written as a
+    backslash escape, such as \\u2192 for U+2192. Text quoted from a
+    workbook, such as the r attribute of a c element, can hold a line feed,
+    which would otherwise end the FAIL line and start one of the workbook's
+    choosing. Under en_US.ISO8859-1 on macOS, the encoding of stdout is
+    ISO-8859-1, so text quoted from a workbook, such as a sheet name or a
+    formula that holds U+2192, can hold a character that print() cannot
+    encode."""
+    text = CONTROL.sub(control_escape, text)
     # sys.stdout is None when file descriptor 1 is closed, and print() then
     # writes nothing.
     encoding = getattr(sys.stdout, "encoding", None)
