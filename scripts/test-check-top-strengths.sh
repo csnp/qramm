@@ -5,7 +5,7 @@
 # Usage:
 #   scripts/test-check-top-strengths.sh
 #
-# Cases 2 to 24 copy the checker into a new temporary directory laid out
+# Cases 2 to 27 copy the checker into a new temporary directory laid out
 # like the repository (scripts/ and toolkit/), so that the checker treats
 # that directory as the repository root. The workbook there is the toolkit
 # workbook, or a copy of it with text replaced in its XML parts. The
@@ -58,10 +58,24 @@
 #      line for up to three, a PASS line for the threshold and for the
 #      maximum, and RESULT: FAIL.
 #  23. The text of case 3 with "Up to 3", a period and U+0666 (ARABIC-INDIC
-#      DIGIT SIX) in place of "Up to three": exit 1, one FAIL line, which
-#      says that line 4 does not say "up to three", and RESULT: FAIL.
+#      DIGIT SIX) in place of "Up to three": exit 1, a FAIL line that says
+#      that line 4 does not say "up to three", a FAIL line that says the
+#      number has a digit other than 0 to 9, two FAIL lines in all, and
+#      RESULT: FAIL.
 #  24. A text with "up to 3." at the end of a sentence: exit 0, a PASS line
 #      for up to three, and RESULT: PASS.
+#  25. The text of case 3 with U+0661 (ARABIC-INDIC DIGIT ONE) right after
+#      "out of 4" and right after 3.6: exit 1, nothing on stderr, a FAIL
+#      line for each of the two numbers that says it has a digit other than
+#      0 to 9, FAIL lines for the threshold and the maximum, four FAIL lines
+#      in all, and RESULT: FAIL.
+#  26. The text of case 3 followed by a sentence that gives 3.9 followed by
+#      U+0661: exit 1, one FAIL line, which says the number has a digit
+#      other than 0 to 9, and PASS lines for the threshold and the maximum.
+#  27. The text of case 3 with U+FF14 (FULLWIDTH DIGIT FOUR) in place of the
+#      4 of "out of 4": exit 1, a FAIL line that says the number has a digit
+#      other than 0 to 9, a FAIL line for the maximum, two FAIL lines in all,
+#      and a PASS line for the threshold.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -422,7 +436,9 @@ start_case "case 23: up to 3, a period and U+0666" "$layout"
 expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "FAIL line for up to three" \
   'has_fail "$overview_path:4: does not say \"up to three\"; the Scorecard has three Top Strengths entries (C36, C40 and C44)"'
-expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line for 3, a period and U+0666" \
+  "has_fail \"\$overview_path:4: the number '3.\\u0666' has a digit other than 0 to 9\""
+expect "two FAIL lines" '[ "$(fail_count)" -eq 2 ]'
 expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
 
@@ -432,6 +448,51 @@ start_case "case 24: up to 3 at the end of a sentence" "$layout"
 expect "exit status is 0" '[ "$status" -eq 0 ]'
 expect "PASS line for up to three" 'has_line "  PASS line 4: up to three"'
 expect "last line is RESULT: PASS" 'last_line_is "RESULT: PASS"'
+end_case
+
+# \331\241 is U+0661 (ARABIC-INDIC DIGIT ONE) and \357\274\224 is U+FF14
+# (FULLWIDTH DIGIT FOUR), encoded as UTF-8.
+arabic_one="$(printf '\331\241')"
+fullwidth_four="$(printf '\357\274\224')"
+
+odd_text="${now/out of 4/out of 4$arabic_one}"
+make_layout arabic "$root/$toolkit" "${odd_text/3.6/3.6$arabic_one}"
+start_case "case 25: U+0661 right after out of 4 and right after 3.6" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "FAIL line for 3.6 followed by U+0661" \
+  "has_fail \"\$overview_path:4: the number '3.6\\u0661' has a digit other than 0 to 9\""
+expect "FAIL line for 4 followed by U+0661" \
+  "has_fail \"\$overview_path:4: the number '4\\u0661' has a digit other than 0 to 9\""
+expect "FAIL line for the threshold" \
+  'has_fail "$overview_path:4: does not give 3.6, the score from which the Scorecard lists a practice (B35, B39 and B43)"'
+expect "FAIL line for the maximum" \
+  'has_fail "$overview_path:4: does not say \"out of 4\"; the Scorecard gives each score out of 4 (C36, C40 and C44)"'
+expect "four FAIL lines" '[ "$(fail_count)" -eq 4 ]'
+expect "PASS line for up to three" 'has_line "  PASS line 4: up to three"'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+make_layout arabic-other "$root/$toolkit" \
+  "$now Practices that score 3.9$arabic_one are listed too."
+start_case "case 26: another number followed by U+0661" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line for 3.9 followed by U+0661" \
+  "has_fail \"\$overview_path:4: the number '3.9\\u0661' has a digit other than 0 to 9\""
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "PASS line for the threshold" 'has_line "  PASS line 4: threshold 3.6"'
+expect "PASS line for the maximum" 'has_line "  PASS line 4: out of 4"'
+end_case
+
+make_layout fullwidth "$root/$toolkit" "${now/out of 4/out of $fullwidth_four}"
+start_case "case 27: U+FF14 in place of the 4 of out of 4" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line for U+FF14" \
+  "has_fail \"\$overview_path:4: the number '\\uff14' has a digit other than 0 to 9\""
+expect "FAIL line for the maximum" \
+  'has_fail "$overview_path:4: does not say \"out of 4\"; the Scorecard gives each score out of 4 (C36, C40 and C44)"'
+expect "two FAIL lines" '[ "$(fail_count)" -eq 2 ]'
+expect "PASS line for the threshold" 'has_line "  PASS line 4: threshold 3.6"'
 end_case
 
 if [ "$failed" -eq 0 ]; then

@@ -36,6 +36,10 @@ line. Each one must, in upper or lower case:
        number after "out of";
     3. say "out of" the maximum, such as "out of 4".
 
+A number on such a line with a Unicode decimal digit other than 0 to 9,
+such as U+0661 (ARABIC-INDIC DIGIT ONE), fails with "has a digit other
+than 0 to 9", and it is not read as the threshold or the maximum.
+
 The script uses the Python standard library only. Exit status: 0 when the
 overview agrees with the Scorecard, 1 when it does not, the workbook does
 not have the form above or a file cannot be read, 2 on a usage error.
@@ -92,8 +96,13 @@ QUOTED = re.compile(r'("(?:[^"]|"")*")')
 # A shared string index.
 INDEX = re.compile(r"[0-9]+")
 
-OUT_OF = re.compile(r"\bout of (" + NUMBER_TEXT + r")(?![0-9])", re.IGNORECASE)
-NUMBER = re.compile(r"(?<![\w.])(" + NUMBER_TEXT + r")(?![0-9])")
+# \d, not [0-9], in OUT_OF and NUMBER, which read the overview: in a str
+# pattern \d matches every Unicode decimal digit, so a number written with
+# one other than 0 to 9 is matched whole, and read_numbers() refuses it.
+# With [0-9], 3.6 followed by U+0661 would be read as 3.6.
+OVERVIEW_NUMBER = r"\d+(?:\.\d+)?"
+OUT_OF = re.compile(r"\bout of (" + OVERVIEW_NUMBER + r")", re.IGNORECASE)
+NUMBER = re.compile(r"(?<![\w.])(" + OVERVIEW_NUMBER + r")")
 
 USAGE = "usage: python3 -I scripts/check-top-strengths.py"
 
@@ -280,6 +289,24 @@ def read_entries(cells, problems):
     return thresholds[ENTRIES[0][0]], maximums[ENTRIES[0][1]]
 
 
+def read_numbers(texts, where, problems):
+    """The Decimal values of texts, the number texts that OUT_OF or NUMBER
+    matched on the overview line at where. A text with a digit other than 0
+    to 9 is left out, and adds a problem. Decimal() reads every Unicode
+    decimal digit, so it would read 3.6 followed by U+0661 (ARABIC-INDIC
+    DIGIT ONE) as 3.61. !a writes each digit other than 0 to 9 as a
+    backslash escape, as ascii() does."""
+    values = []
+    for text in texts:
+        if text.isascii():
+            values.append(Decimal(text))
+        else:
+            problems.append(
+                "{}: the number {!a} has a digit other than 0 to 9".format(where, text)
+            )
+    return values
+
+
 def check_overview(lines, threshold, maximum, problems):
     """Prints a PASS line for each rule that a Top Strengths line of the
     overview meets, and adds a problem for each rule that one does not."""
@@ -313,7 +340,7 @@ def check_overview(lines, threshold, maximum, problems):
                     where, word, SHEET, word, HEADING, sentences
                 )
             )
-        given = [Decimal(text) for text in NUMBER.findall(OUT_OF.sub(" ", line))]
+        given = read_numbers(NUMBER.findall(OUT_OF.sub(" ", line)), where, problems)
         if Decimal(threshold) in given:
             print("  PASS line {}: threshold {}".format(number, threshold))
         else:
@@ -321,7 +348,7 @@ def check_overview(lines, threshold, maximum, problems):
                 "{}: does not give {}, the score from which the {} lists a "
                 "practice ({})".format(where, threshold, SHEET, marks)
             )
-        if Decimal(maximum) in [Decimal(text) for text in OUT_OF.findall(line)]:
+        if Decimal(maximum) in read_numbers(OUT_OF.findall(line), where, problems):
             print("  PASS line {}: out of {}".format(number, maximum))
         else:
             problems.append(
