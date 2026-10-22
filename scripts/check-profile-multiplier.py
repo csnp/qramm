@@ -23,7 +23,9 @@ digits 0 to 9, or is past the end of the shared string table, fails with a
 line that names the cell. An answer whose factor or risk value is not one
 or more of the digits 0 to 9, with or without a decimal point and one or
 more such digits after it, such as 1E-100000000000000000, fails with a
-line that names its row. The lowest multiplier adds each factor times the
+line that names its row. So does an answer whose factor or risk value is
+10^1000000 (1 followed by 1000000 zeros) or more, with a line that says it
+is too large to use. The lowest multiplier adds each factor times the
 lowest risk value in its group, and the highest adds each factor times the
 highest. Both are rounded to the decimal places the formula's ROUND gives,
 with halves rounded up, and are calculated without a limit on the number of
@@ -76,7 +78,7 @@ import sys
 import xml.etree.ElementTree as ET
 import xml.parsers.expat
 import zipfile
-from decimal import MAX_PREC, ROUND_HALF_UP, Decimal, localcontext
+from decimal import MAX_EMAX, MAX_PREC, ROUND_HALF_UP, Decimal, localcontext
 
 WORKBOOK = "toolkit/QRAMM_Assessment_Toolkit.xlsx"
 MULTIPLIER = "ProfileMultiplier"
@@ -111,6 +113,10 @@ INDEX = re.compile(r"[0-9]+")
 # written as 1E-100000000 would give a sum of 100000000 decimal places or
 # more.
 NUMBER = re.compile(r"[0-9]+(?:\.[0-9]+)?")
+# A RiskMatrix factor or risk value of 10^TOO_LARGE or more is too large to
+# use. 10^1000000 is the least power of ten that Python's default decimal
+# context, whose largest exponent is 999999, cannot hold.
+TOO_LARGE = 1000000
 
 # Formula parts, matched after all whitespace is removed.
 IFERROR = re.compile(r'IFERROR\((.+),"[^"]*"\)')
@@ -344,7 +350,26 @@ def multiplier_range(path, problems):
                     )
                 )
             continue
-        groups.setdefault(Decimal(factor.strip()), []).append(Decimal(value.strip()))
+        factor, value = Decimal(factor.strip()), Decimal(value.strip())
+        large = [
+            name
+            for name, number in (("factor", factor), ("risk value", value))
+            if number.adjusted() >= TOO_LARGE
+        ]
+        if large:
+            problems.append(
+                "{}: {} row {} ({}): {} {} too large to use (10^{} or more)".format(
+                    WORKBOOK,
+                    MATRIX,
+                    row,
+                    category.strip(),
+                    " and ".join(large),
+                    "is" if len(large) == 1 else "are",
+                    TOO_LARGE,
+                )
+            )
+            continue
+        groups.setdefault(factor, []).append(value)
     if len(problems) > before:
         return None
     if len(groups) != len(answers):
@@ -360,8 +385,14 @@ def multiplier_range(path, problems):
     # The default context holds 28 digits, and quantize() raises
     # InvalidOperation when its result needs more, as it does for a ROUND to
     # 28 places or more. With MAX_PREC the sums and the rounding are exact.
+    # Its largest exponent is 999999, so it raises Overflow for a product of
+    # 10^1000000 or more, such as a factor of 10^999999 times a risk value of
+    # 15. A factor and a risk value are each less than 10^TOO_LARGE here, so
+    # each product is less than 10^(2 * TOO_LARGE), and with MAX_EMAX as the
+    # largest exponent the products and their sums do not overflow.
     with localcontext() as context:
         context.prec = MAX_PREC
+        context.Emax = MAX_EMAX
         lowest = round_half_up(sum(f * min(v) for f, v in groups.items()), places)
         highest = round_half_up(sum(f * max(v) for f, v in groups.items()), places)
     return where, answers, reference, groups, lowest, highest
