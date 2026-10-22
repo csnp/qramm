@@ -45,20 +45,22 @@ standard library only.
 Exit status: 0 when the documents agree with the workbook, 1 when they do
 not, the workbook does not have the form described above or a file cannot
 be read, 2 on a usage error. An empty file argument fails with "no file
-name given", and a text document whose bytes are not UTF-8 fails with
-"not UTF-8 text". A file name is printed with each byte that the file
-system encoding cannot decode, and each character that the encoding of
-stdout cannot encode, as a backslash escape, such as \\xff for the byte
-0xff and \\u65e5 for the character U+65E5. A PASS or FAIL line, such as
-one that names a sheet or a cell, the == line that names the cells of
-ProfileMultiplier and RiskMatrix, and the line that lists the answers are
-printed with each character that the encoding of stdout cannot encode as a
-backslash escape too, such as \\u65e5\\u672c for a sheet named U+65E5
-U+672C. --help (or -h) prints the usage line and this text on stderr and
-exits 2. Any other argument that starts with "-", such as --verbose or --,
-is an unknown option: each one is named on stderr on a line of its own,
-such as "unknown option: --verbose", before the usage line, and the exit
-status is 2.
+name given", a workbook that cannot be read fails with "cannot read", and
+a text document whose bytes are not UTF-8 fails with "not UTF-8 text".
+When the toolkit workbook cannot be read, no document is checked. A file
+name is printed with each byte that the file system encoding cannot
+decode, and each character that the encoding of stdout cannot encode, as
+a backslash escape, such as \\xff for the byte 0xff and \\u65e5 for the
+character U+65E5. A PASS or FAIL line, such as one that names a sheet or
+a cell, the == line that names the cells of ProfileMultiplier and
+RiskMatrix, and the line that lists the answers are printed with each
+character that the encoding of stdout cannot encode as a backslash escape
+too, such as \\u65e5\\u672c for a sheet named U+65E5 U+672C. --help (or
+-h) prints the usage line and this text on stderr and exits 2. Any other
+argument that starts with "-", such as --verbose or --, is an unknown
+option: each one is named on stderr on a line of its own, such as
+"unknown option: --verbose", before the usage line, and the exit status
+is 2.
 """
 
 import os
@@ -222,12 +224,16 @@ def named_cells(book, paths, names, name, problems):
 def multiplier_range(path, problems):
     """(formula cell, answers, matrix reference, factor -> risk values,
     lowest, highest) from the workbook, or None after adding a problem."""
-    with zipfile.ZipFile(path) as book:
-        workbook, paths = sheet_paths(book)
-        names = defined_names(workbook)
-        strings = shared_strings(book)
-        target = named_cells(book, paths, names, MULTIPLIER, problems)
-        matrix = named_cells(book, paths, names, MATRIX, problems)
+    try:
+        with zipfile.ZipFile(path) as book:
+            workbook, paths = sheet_paths(book)
+            names = defined_names(workbook)
+            strings = shared_strings(book)
+            target = named_cells(book, paths, names, MULTIPLIER, problems)
+            matrix = named_cells(book, paths, names, MATRIX, problems)
+    except Exception as error:
+        problems.append(cannot_read(WORKBOOK, path, error))
+        return None
     if target is None or matrix is None:
         return None
 
@@ -327,6 +333,40 @@ def is_zip_file(path):
         return zipfile.is_zipfile(path)
     except zipfile.BadZipFile:
         return False
+
+
+def cannot_read(name, path, error):
+    """The problem for a workbook whose reading raised error: name is the
+    workbook's file name as printed, and path the file that was read."""
+    if isinstance(error, OSError):
+        if error.errno is None or is_zip_file(path):
+            # bzip2 data that does not decompress. bz2 raises
+            # OSError("Invalid data stream"), which has no errno and so no
+            # strerror to give as the reason. Or a zip archive that
+            # zipfile.is_zipfile() accepts, which it does only for a file it
+            # can open, so the error was raised while reading the archive:
+            # zipfile raises OSError(22, "Invalid argument") when it seeks to
+            # an entry at the negative offset it works out from an end of
+            # central directory record that gives a central directory offset
+            # past the end of the file.
+            return "{}: cannot read (not a workbook)".format(name)
+        return "{}: cannot read ({})".format(name, error.strerror)
+    if isinstance(error, zipfile.BadZipFile):
+        # zipfile raises BadZipFile for a file that is not a zip archive, and
+        # also when it reads an entry of a zip archive whose data does not
+        # match its CRC-32 or whose local file header gives another file name
+        # than the central directory.
+        if is_zip_file(path):
+            return "{}: cannot read (not a workbook)".format(name)
+        return "{}: cannot read (not a zip file)".format(name)
+    # A zip archive that is not a readable workbook. A missing part or
+    # relationship Target, an encrypted entry, a compression method zipfile
+    # does not support, deflate, LZMA or Zstandard data that does not
+    # decompress, XML that does not parse or declares an unknown encoding,
+    # and a shared-string index past the end of the table each raise a
+    # different error type. cell_text() raises ValueError for a
+    # shared-string index that is not one or more of the digits 0 to 9.
+    return "{}: cannot read (not a workbook)".format(name)
 
 
 def stated_ranges(lines):
@@ -445,50 +485,16 @@ def main(argv):
                 else:
                     with open(os.path.join(root, path), encoding="utf-8") as fh:
                         parts = [("", fh.read().splitlines())]
-            except OSError as error:
-                if is_workbook and (
-                    error.errno is None or is_zip_file(os.path.join(root, path))
-                ):
-                    # bzip2 data that does not decompress. bz2 raises
-                    # OSError("Invalid data stream"), which has no errno and
-                    # so no strerror to give as the reason. Or a zip archive
-                    # that zipfile.is_zipfile() accepts, which it does only
-                    # for a file it can open, so the error was raised while
-                    # reading the archive: zipfile raises OSError(22,
-                    # "Invalid argument") when it seeks to an entry at the
-                    # negative offset it works out from an end of central
-                    # directory record that gives a central directory offset
-                    # past the end of the file.
-                    problems.append("{}: cannot read (not a workbook)".format(name))
-                    continue
-                problems.append("{}: cannot read ({})".format(name, error.strerror))
-                continue
-            except zipfile.BadZipFile:
-                # zipfile raises BadZipFile for a file that is not a zip
-                # archive, and also when it reads an entry of a zip archive
-                # whose data does not match its CRC-32 or whose local file
-                # header gives another file name than the central directory.
-                if is_zip_file(os.path.join(root, path)):
-                    problems.append("{}: cannot read (not a workbook)".format(name))
-                else:
-                    problems.append("{}: cannot read (not a zip file)".format(name))
-                continue
             except Exception as error:
-                if not is_workbook:
+                if is_workbook:
+                    problems.append(cannot_read(name, os.path.join(root, path), error))
+                elif isinstance(error, OSError):
+                    problems.append("{}: cannot read ({})".format(name, error.strerror))
+                elif isinstance(error, UnicodeDecodeError):
                     # A text document whose bytes are not UTF-8.
-                    if isinstance(error, UnicodeDecodeError):
-                        problems.append("{}: cannot read (not UTF-8 text)".format(name))
-                        continue
+                    problems.append("{}: cannot read (not UTF-8 text)".format(name))
+                else:
                     raise
-                # A zip archive that is not a readable workbook. A missing part
-                # or relationship Target, an encrypted entry, a compression
-                # method zipfile does not support, deflate, LZMA or Zstandard
-                # data that does not decompress, XML that does not parse or
-                # declares an unknown encoding, and a shared-string index past
-                # the end of the table each raise a different error type.
-                # cell_text() raises ValueError for a shared-string index that
-                # is not one or more of the digits 0 to 9.
-                problems.append("{}: cannot read (not a workbook)".format(name))
                 continue
             check_document(name, parts, lowest, highest, problems)
 

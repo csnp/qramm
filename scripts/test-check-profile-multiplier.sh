@@ -12,6 +12,9 @@
 # (scripts/ and toolkit/), edit the copy of the workbook, and run the
 # checker there. Cases 15, 17, 38 to 43, 47 and 48 make the same copies and
 # pass the copy of the workbook to the repository's checker as a document.
+# Cases 53 to 56 copy only the checker into such a directory, put a file
+# that cannot be read as a workbook, or no file, in place of the toolkit
+# workbook, and run the checker there.
 #
 # Cases:
 #   1. No file arguments (the documents in DOCUMENTS): exit 0, RESULT: PASS,
@@ -186,6 +189,19 @@
 #      followed by U+0667, with a text document that gives the workbook's
 #      range: exit 0, the answers line "answers: D9, D11, D13, D15,
 #      D1\u0667", a PASS line for the document, then RESULT: PASS.
+#  53. A toolkit workbook that is a text file, the line "not a workbook": a
+#      FAIL line that says it is not a zip file.
+#  54. No toolkit workbook: a FAIL line that gives the reason "No such file
+#      or directory".
+#  55. A toolkit workbook that is a zip archive that holds only a text file:
+#      a FAIL line that says it is not a workbook.
+#  56. A toolkit workbook that is a zip archive whose xl/workbook.xml entry
+#      holds bytes that do not match the CRC-32 its headers give: a FAIL
+#      line that says it is not a workbook.
+#  Cases 53 to 56 run the copy of the checker with a text document that
+#  gives the workbook's range: exit 1, nothing on stderr, one FAIL line,
+#  which names the toolkit workbook and gives the reason, no == line, so no
+#  document checked, and RESULT: FAIL as the last line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -212,6 +228,13 @@ trap cleanup EXIT
 
 failed=0
 
+# Lays out a copy of the checker at $1, in $1/scripts/, beside an empty
+# toolkit/ directory.
+copy_checker() {
+  mkdir -p "$1/scripts" "$1/toolkit"
+  cp "$checker" "$1/scripts/check-profile-multiplier.py"
+}
+
 # Lays out a copy of the checker at $1, with a copy of the toolkit workbook
 # in which every "$2" in its XML parts under xl/ is replaced by "$3", then
 # every "$4" by "$5", and so on for each further pair of arguments. Fails
@@ -219,8 +242,7 @@ failed=0
 make_copy() {
   local dir="$1"
   shift
-  mkdir -p "$dir/scripts" "$dir/toolkit"
-  cp "$checker" "$dir/scripts/check-profile-multiplier.py"
+  copy_checker "$dir"
   python3 -I - "$root/$toolkit" "$dir/$toolkit" "$@" <<'PY'
 import sys
 import zipfile
@@ -1033,6 +1055,48 @@ if start_latin1_case "case 52: an answer whose reference stdout's encoding canno
   expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
   end_case
 fi
+
+# Expects the results of cases 53 to 56, where $1 is the reason the FAIL line
+# gives.
+expect_toolkit_unreadable() {
+  expected="  FAIL $toolkit: cannot read ($1)"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "nothing on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line names the toolkit workbook and gives the reason" 'has_line "$expected"'
+  expect "no == line, so no document is checked" '! printf "%s\n" "$out" | grep -q "^=="'
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
+copy_checker "$work/textbook"
+printf '%s\n' 'not a workbook' > "$work/textbook/$toolkit"
+start_case "case 53: a toolkit workbook that is a text file" \
+  "$work/textbook/scripts/check-profile-multiplier.py" "$work/new.md"
+expect_toolkit_unreadable "not a zip file"
+end_case
+
+copy_checker "$work/nobook"
+start_case "case 54: no toolkit workbook" \
+  "$work/nobook/scripts/check-profile-multiplier.py" "$work/new.md"
+expect_toolkit_unreadable "No such file or directory"
+end_case
+
+copy_checker "$work/zipbook"
+make_zip "$work/zipbook/$toolkit" 'note.txt=note'
+start_case "case 55: a toolkit workbook that is a zip archive of a text file" \
+  "$work/zipbook/scripts/check-profile-multiplier.py" "$work/new.md"
+expect_toolkit_unreadable "not a workbook"
+end_case
+
+# The sheet name is changed in the stored data of xl/workbook.xml, the first
+# entry the checker reads, so only the CRC-32 check fails.
+copy_checker "$work/crcbook"
+make_zip "$work/crcbook/$toolkit" "$book_xml" "$rels_xml" "$strings_xml" "$sheet_xml"
+replace_first "$work/crcbook/$toolkit" 'name="Notes"' 'name="Notez"'
+start_case "case 56: a toolkit workbook whose xl/workbook.xml does not match its CRC-32" \
+  "$work/crcbook/scripts/check-profile-multiplier.py" "$work/new.md"
+expect_toolkit_unreadable "not a workbook"
+end_case
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
