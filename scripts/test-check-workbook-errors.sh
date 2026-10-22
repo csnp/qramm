@@ -177,6 +177,11 @@
 #      9, and column M of the Welcome sheet is hidden. As case 28, with
 #      this r attribute, written as UTF-8, in place of M1x in the FAIL line.
 #  33. As case 32, with U+FF11 (FULLWIDTH DIGIT ONE) in place of U+0661.
+#  34. The copy of case 25 with the r attribute 1A, a line feed, RESULT:
+#      PASS, a carriage return, a tab and U+0085 (NEXT LINE) in place of 1A.
+#      As case 25, with the line feed, carriage return, tab and U+0085
+#      written as \n, \r, \t and \x85 in the FAIL line, and no line that
+#      reads RESULT: PASS.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -786,7 +791,7 @@ expect "the sample workbook is checked" \
 expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
 
-# Expectations for cases 24 to 26, 28, 32 and 33: $1 is the copy's file
+# Expectations for cases 24 to 26, 28 and 32 to 34: $1 is the copy's file
 # name and $2 what its FAIL line says xl/worksheets/sheet1.xml has.
 expect_no_cell_reference() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
@@ -945,6 +950,18 @@ LC_ALL=en_US.UTF-8 start_case "case 33: a c element whose r attribute holds a fu
   "$checker" "$work/fullwidthdigit.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_cell_reference "$work/fullwidthdigit.xlsx" \
   "a c element in row 1 whose r attribute M$(printf '\357\274\221') is not a cell reference"
+end_case
+
+# The part gives the control characters as character references: &#10; for
+# the line feed, &#13; for the carriage return, &#9; for the tab and &#x85;
+# for U+0085. The FAIL line is expected to hold each one's backslash escape.
+edit_part "$work/badcellref.xlsx" "$work/controlcellref.xlsx" \
+  xl/worksheets/sheet1.xml '<c r="1A" ' '<c r="1A&#10;RESULT: PASS&#13;&#9;&#x85;" '
+start_case "case 34: a c element whose r attribute holds a line feed and other control characters" \
+  "$checker" "$work/controlcellref.xlsx" toolkit/Sample_Assessment.xlsx
+expect_no_cell_reference "$work/controlcellref.xlsx" \
+  'a c element in row 1 whose r attribute 1A\nRESULT: PASS\r\t\x85 is not a cell reference'
+expect "no line reads RESULT: PASS" '! printf "%s\n" "$out" | grep -q -x "RESULT: PASS"'
 end_case
 
 if [ "$failed" -eq 0 ]; then
