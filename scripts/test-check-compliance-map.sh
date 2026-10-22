@@ -172,6 +172,13 @@
 #      stderr, the map PASS line, one FAIL line, which says the category
 #      name lookup cannot be read as the Compliance sheet has no category
 #      name lookup, then RESULT: FAIL.
+#  38. Under the en_US.UTF-8 locale, a spec whose Q1 NIST CSF cell gives
+#      the weight of ID.AM-1 as U+0661, a period and U+0660 (ARABIC-INDIC
+#      DIGIT ONE and ZERO) in place of 1.0: exit 1, nothing on stderr, a
+#      FAIL line that quotes the cell as UTF-8 and says it is expected to be
+#      "<control> (<weight>)" or "-", a FAIL line for the missing Q1
+#      NIST CSF cell, a FAIL line for Data row 3 of each workbook, then
+#      RESULT: FAIL.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -1077,6 +1084,26 @@ expect "the map is checked" "has_line '  PASS 120 questions x 8 frameworks, 960 
 expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
 expect "FAIL line says the category name lookup cannot be read" \
   "has_line '  FAIL $work/arabiclookup.xlsx: cannot read the category name lookup (the Compliance sheet has no category name lookup)'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# In UTF-8, \331\241 is U+0661 and \331\240 is U+0660.
+arabic_weight="$(printf '\331\241.\331\240')"
+make_copy "$work/arabicweight" \
+  "/^| Q1: /s/| ID\\.AM-1 (1\\.0) |/| ID.AM-1 ($arabic_weight) |/"
+LC_ALL=en_US.UTF-8 start_case "case 38: a spec weight written with Arabic-Indic digits" \
+  "$work/arabicweight/scripts/check-compliance-map.py"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "4 FAIL lines" '[ "$(fail_count)" -eq 4 ]'
+expect "FAIL line says the cell is not a control and a weight" \
+  "has_line '  FAIL $spec line 33: Q1 NIST CSF is \"ID.AM-1 ($arabic_weight)\", expected \"<control> (<weight>)\" or \"-\"'"
+expect "FAIL line for the missing Q1 NIST CSF cell" \
+  "has_line '  FAIL $spec: no NIST CSF cell for Q1'"
+for book in "$toolkit" "$sample"; do
+  expect "$book: FAIL line for Data row 3" \
+    "has_line '  FAIL $book Data row 3: not a question and framework in $spec'"
+done
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 

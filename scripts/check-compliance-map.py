@@ -120,12 +120,13 @@ REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 
 SPEC_ROW = re.compile(r"^\|\s*(Q\d+):")
-SPEC_CELL = re.compile(r"^(.+?) \((\d+(?:\.\d+)?)\)$")
 # [0-9], not \d: in a str pattern \d also matches the other Unicode decimal
-# digits, such as U+0663 (ARABIC-INDIC DIGIT THREE), and an r attribute
-# such as A followed by U+0663 is not a cell reference. For the same reason
-# a range such as Data!$AV$ followed by U+0663 and :$BA$962 is not a cell
-# range.
+# digits, such as U+0663 (ARABIC-INDIC DIGIT THREE), and float() reads them
+# too, so a spec weight written with U+0661, a period and U+0660 is not a
+# weight. For the same reason an r attribute such as A followed by U+0663
+# is not a cell reference, and a range such as Data!$AV$ followed by U+0663
+# and :$BA$962 is not a cell range.
+SPEC_CELL = re.compile(r"^(.+?) \(([0-9]+(?:\.[0-9]+)?)\)$")
 CELL_REF = re.compile(r"([A-Z]+)([0-9]+)")
 RANGE_REF = re.compile(r"'?(.+?)'?!\$?([A-Z]+)\$?([0-9]+):\$?([A-Z]+)\$?([0-9]+)")
 NAME_LOOKUP = re.compile(
