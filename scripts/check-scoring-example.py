@@ -116,12 +116,15 @@ def ascii_float(text):
 def cached_number(node):
     """Number the c element node stores, or None when node is None or the
     cell stores no number: it has no v element or an empty one, its t
-    attribute is s, str, e or inlineStr, ascii_float() cannot read the text
-    of its v element, such as "x" or "2.5_6", or ascii_float() reads that
-    text as a value that is not finite, as it reads nan as a NaN and inf as
-    an infinity."""
+    attribute is s, str, e, inlineStr or b, ascii_float() cannot read the
+    text of its v element, such as "x" or "2.5_6", or ascii_float() reads
+    that text as a value that is not finite, as it reads nan as a NaN and
+    inf as an infinity. A t attribute of b marks a logical value, which the
+    cell stores as 1 for TRUE and 0 for FALSE."""
     value = None if node is None else node.find(ns(MAIN_NS, "v"))
-    if value is None or value.text is None or node.get("t") in ("s", "str", "e", "inlineStr"):
+    if value is None or value.text is None:
+        return None
+    if node.get("t") in ("s", "str", "e", "inlineStr", "b"):
         return None
     try:
         number = ascii_float(value.text)

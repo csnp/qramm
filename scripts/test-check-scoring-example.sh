@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
 # Tests scripts/check-scoring-example.py against the repository document and
 # workbook, against copies of the sample workbook whose cached value for
-# CVI_Score is not a finite number or is written in another way, and against
-# copies of the document whose CVI score line shows a number with a digit
-# other than 0 to 9.
+# CVI_Score is not a finite number, is written in another way or is a
+# logical value, and against copies of the document whose CVI score line
+# shows a number with a digit other than 0 to 9.
 #
 # Usage:
 #   scripts/test-check-scoring-example.sh
 #
 # The checker reads framework/scoring-methodology.md and
 # toolkit/Sample_Assessment.xlsx from the directory above its own. Cases 2
-# to 8 copy the checker and the document into a new temporary directory
-# laid out like the repository (scripts/, framework/ and toolkit/), write an
-# edited copy of the sample workbook there, and run the checker there. Cases
-# 9 to 12 copy the checker and the sample workbook into such a directory,
-# write there a copy of the document whose line that starts with "CVI score"
-# ends with "= " and the text the case names in place of its own text after
-# the last "=", and run the checker there.
+# to 8, 13 and 14 copy the checker and the document into a new temporary
+# directory laid out like the repository (scripts/, framework/ and toolkit/),
+# write an edited copy of the sample workbook there, and run the checker
+# there. Cases 13 and 14 also edit the copy of the document, so that its CVI
+# score line shows the value the cell stores. Cases 9 to 12 copy the checker
+# and the sample workbook into such a directory, write there a copy of the
+# document whose line that starts with "CVI score" ends with "= " and the
+# text the case names in place of its own text after the last "=", and run
+# the checker there.
 #
 # Cases:
 #   1. The repository document and workbook: exit 0, nothing on stderr, a
@@ -63,6 +65,15 @@
 #  line and <text> is the text the case writes, with each digit other than
 #  0 to 9 written as \u and four hex digits, such as \u0662, then
 #  RESULT: FAIL.
+#  13. A copy of the sample workbook whose cell L5 of the Dimension 1 - CVI
+#      sheet stores the logical value TRUE in place of its number, as
+#      t="b" on the c element and <v>1</v>, checked against a copy of the
+#      document whose CVI score line shows 1 in place of 2.56.
+#  14. A copy of the sample workbook whose cell L5 of the Dimension 1 - CVI
+#      sheet stores the logical value FALSE in place of its number, as
+#      t="b" on the c element and <v>0</v>, checked against a copy of the
+#      document whose CVI score line shows 0 in place of 2.56.
+#  Cases 13 and 14: the same expectations as cases 2 to 5.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -93,8 +104,9 @@ trap cleanup EXIT
 failed=0
 
 # Writes to $2 a copy of the workbook $1 whose cell $4 in the worksheet part
-# $3 has the v element $5 in place of its own. Fails when the part does not
-# have exactly one cell $4 with a v element.
+# $3 has the v element $5 in place of its own and, when $6 is given, the t
+# attribute $6 in place of any t attribute it has. Fails when the part does
+# not have exactly one cell $4 with a v element.
 set_cached_value() {
   python3 -I - "$@" <<'PY'
 import re
@@ -102,14 +114,24 @@ import sys
 import zipfile
 
 source, target, part, ref, new = sys.argv[1:6]
+kind = sys.argv[6] if len(sys.argv) > 6 else ""
+
+
+def replace(match):
+    start = match.group(1)
+    if kind:
+        start = re.sub(r'\st="[^"]*"', "", start) + ' t="%s"' % kind
+    return start + match.group(2) + new
+
+
 found = 0
 with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
     for info in book.infolist():
         data = book.read(info.filename)
         if info.filename == part:
             text, found = re.subn(
-                r'(<c r="%s"[^>]*>(?:<f[^>]*>[^<]*</f>)?)<v>[^<]*</v>' % ref,
-                lambda match: match.group(1) + new,
+                r'(<c r="%s"[^>]*)(>(?:<f[^>]*>[^<]*</f>)?)<v>[^<]*</v>' % ref,
+                replace,
                 data.decode("utf-8"),
             )
             data = text.encode("utf-8")
@@ -121,12 +143,33 @@ PY
 
 # Lays out a copy of the repository at $1 with the checker, the document and
 # a copy of the sample workbook whose cell L5 of the Dimension 1 - CVI sheet
-# has the v element $2.
+# has the v element $2 and, when $3 is given, the t attribute $3.
 make_copy() {
   mkdir -p "$1/scripts" "$1/framework" "$1/toolkit"
   cp "$checker" "$1/scripts/check-scoring-example.py"
   cp "$root/$methodology" "$1/$methodology"
-  set_cached_value "$root/$sample" "$1/$sample" "$cvi_part" L5 "$2"
+  set_cached_value "$root/$sample" "$1/$sample" "$cvi_part" L5 "$2" ${3+"$3"}
+}
+
+# Edits the copy of the document in the copy of the repository at $1 so that
+# its CVI score line shows $2 in place of 2.56 after its last "=". Fails when
+# the copy does not have exactly one CVI score line that ends with = 2.56.
+show_cvi_score() {
+  python3 -I - "$1/$methodology" "$2" <<'PY'
+import re
+import sys
+
+path, shown = sys.argv[1:3]
+with open(path, encoding="utf-8") as fh:
+    text = fh.read()
+text, found = re.subn(
+    r"^(CVI score .*= )2\.56$", lambda match: match.group(1) + shown, text, flags=re.M
+)
+if found != 1:
+    sys.exit("%s has %d CVI score lines that end with = 2.56, expected 1" % (path, found))
+with open(path, "w", encoding="utf-8") as fh:
+    fh.write(text)
+PY
 }
 
 # Writes to $2 a copy of the document $1 whose line that starts with
@@ -230,7 +273,7 @@ expect_cvi_fail() {
   expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 }
 
-# The expect lines of cases 2 to 5, 7 and 8.
+# The expect lines of cases 2 to 5, 7, 8, 13 and 14.
 expect_no_cvi_number() {
   expect_cvi_fail "CVI_Score has no cached number" \
     "  FAIL CVI_Score: Dimension 1 - CVI!L5 has no cached number"
@@ -323,6 +366,20 @@ make_doc_copy "$work/doc-trailing" '2.56\u0666'
 start_case "case 12: CVI score line shows 2.56 followed by U+0666" \
   "$work/doc-trailing/scripts/check-scoring-example.py"
 expect_cvi_digit_not_ascii '2.56\u0666'
+end_case
+
+make_copy "$work/true" '<v>1</v>' b
+show_cvi_score "$work/true" 1
+start_case "case 13: CVI_Score cell stores the logical value TRUE, the document shows 1" \
+  "$work/true/scripts/check-scoring-example.py"
+expect_no_cvi_number
+end_case
+
+make_copy "$work/false" '<v>0</v>' b
+show_cvi_score "$work/false" 0
+start_case "case 14: CVI_Score cell stores the logical value FALSE, the document shows 0" \
+  "$work/false/scripts/check-scoring-example.py"
+expect_no_cvi_number
 end_case
 
 if [ "$failed" -eq 0 ]; then
