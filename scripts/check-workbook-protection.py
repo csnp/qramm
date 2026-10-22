@@ -31,7 +31,9 @@ whose name starts with xl/ and ends in .xml, with the letters in either
 case, and a package with no such part fails as not a workbook. A part that
 is not well-formed XML fails, and so does a part whose XML declaration
 names an encoding that the XML parser cannot use, such as x-bogus, which
-Python does not know, or shift_jis, a multi-byte encoding.
+Python does not know, or shift_jis, a multi-byte encoding. So does a part
+with a document type declaration (<!DOCTYPE), which is not read further,
+so the entities it declares are not expanded.
 
 In each part it reads every element whose local name is sheetProtection,
 workbookProtection, protectedRange or fileSharing, in any namespace or in
@@ -75,6 +77,7 @@ import re
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+import xml.parsers.expat
 import zipfile
 import zlib
 
@@ -167,6 +170,46 @@ XML_SPACE = " \t\r\n"
 PART = re.compile(r"xl/.*\.xml", re.ASCII | re.IGNORECASE | re.DOTALL)
 
 USAGE = "usage: python3 -I scripts/check-workbook-protection.py [workbook ...]"
+
+
+class DoctypeError(ET.ParseError):
+    """The error parse_xml raises for a document type declaration."""
+
+
+class _RootElement(Exception):
+    """Ends parse_xml's scan at the root element's start tag."""
+
+
+def parse_xml(data):
+    """The root element of the XML document data, as ET.fromstring(data)
+    gives it, except that data with a document type declaration, such as
+    <!DOCTYPE r [<!ENTITY e "FAKE">]>, raises DoctypeError, a subclass of
+    ET.ParseError, before ElementTree reads it. A workbook part carries no
+    document type declaration. The entities one declares are expanded in
+    memory by an expat without a limit on entity expansion, such as expat
+    2.2.8 in the macOS system Python 3.9.6. A scan with expat that stops at
+    the root element's start tag looks for the declaration first; XML that
+    is not well-formed before that tag is left for ET.fromstring to report."""
+    scan = xml.parsers.expat.ParserCreate()
+
+    def doctype(*_):
+        position = (scan.CurrentLineNumber, scan.CurrentColumnNumber)
+        error = DoctypeError(
+            "document type declaration: line {}, column {}".format(*position)
+        )
+        error.position = position
+        raise error
+
+    def root(*_):
+        raise _RootElement
+
+    scan.StartDoctypeDeclHandler = doctype
+    scan.StartElementHandler = root
+    try:
+        scan.Parse(data, True)
+    except (_RootElement, xml.parsers.expat.ExpatError):
+        pass
+    return ET.fromstring(data)
 
 
 class GitListError(Exception):
@@ -314,7 +357,14 @@ def check_workbook(name, path, counts):
     for part, data in parts:
         where = "{}: {}".format(name, printable(part))
         try:
-            root = ET.fromstring(data)
+            root = parse_xml(data)
+        except DoctypeError as error:
+            line, column = error.position
+            problems.append(
+                "{}: has a document type declaration (line {}, column {}), "
+                "which a workbook part does not carry".format(where, line, column)
+            )
+            continue
         except ET.ParseError as error:
             line, column = error.position
             problems.append(

@@ -55,6 +55,7 @@ import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+import xml.parsers.expat
 import zipfile
 import zlib
 
@@ -152,6 +153,46 @@ CONTROL_ESCAPES = {"\n": "\\n", "\r": "\\r", "\t": "\\t"}
 USAGE = "usage: python3 -I scripts/check-compliance-map.py [workbook ...]"
 
 
+class DoctypeError(ET.ParseError):
+    """The error parse_xml raises for a document type declaration."""
+
+
+class _RootElement(Exception):
+    """Ends parse_xml's scan at the root element's start tag."""
+
+
+def parse_xml(data):
+    """The root element of the XML document data, as ET.fromstring(data)
+    gives it, except that data with a document type declaration, such as
+    <!DOCTYPE r [<!ENTITY e "FAKE">]>, raises DoctypeError, a subclass of
+    ET.ParseError, before ElementTree reads it. A workbook part carries no
+    document type declaration. The entities one declares are expanded in
+    memory by an expat without a limit on entity expansion, such as expat
+    2.2.8 in the macOS system Python 3.9.6. A scan with expat that stops at
+    the root element's start tag looks for the declaration first; XML that
+    is not well-formed before that tag is left for ET.fromstring to report."""
+    scan = xml.parsers.expat.ParserCreate()
+
+    def doctype(*_):
+        position = (scan.CurrentLineNumber, scan.CurrentColumnNumber)
+        error = DoctypeError(
+            "document type declaration: line {}, column {}".format(*position)
+        )
+        error.position = position
+        raise error
+
+    def root(*_):
+        raise _RootElement
+
+    scan.StartDoctypeDeclHandler = doctype
+    scan.StartElementHandler = root
+    try:
+        scan.Parse(data, True)
+    except (_RootElement, xml.parsers.expat.ExpatError):
+        pass
+    return ET.fromstring(data)
+
+
 def ns(prefix, tag):
     return "{%s}%s" % (prefix, tag)
 
@@ -230,7 +271,7 @@ def read_spec(path, problems):
 
 def shared_strings(book):
     try:
-        root = ET.fromstring(book.read("xl/sharedStrings.xml"))
+        root = parse_xml(book.read("xl/sharedStrings.xml"))
     except KeyError:
         return []
     return [
@@ -242,7 +283,7 @@ def shared_strings(book):
 def sheet_parts(book, workbook):
     """Sheet name -> sheet part path. Raises ValueError for a sheet whose
     Relationship element has no Target attribute."""
-    rels = ET.fromstring(book.read("xl/_rels/workbook.xml.rels"))
+    rels = parse_xml(book.read("xl/_rels/workbook.xml.rels"))
     targets = {
         rel.get("Id"): rel.get("Target")
         for rel in rels.iter(ns(PKG_REL_NS, "Relationship"))
@@ -262,7 +303,7 @@ def sheet_parts(book, workbook):
 
 def map_range(book):
     """(sheet part path, sheet name, first column, first row, last row)."""
-    workbook = ET.fromstring(book.read("xl/workbook.xml"))
+    workbook = parse_xml(book.read("xl/workbook.xml"))
     paths = sheet_parts(book, workbook)
     for node in workbook.iter(ns(MAIN_NS, "definedName")):
         if node.get("name") != MAP_NAME or node.get("localSheetId") is not None:
@@ -374,7 +415,7 @@ def read_block(book, part, strings, first, width, top, bottom):
     for an r that is not one or more of the digits 0 to 9, such as "x", 0_3
     or " 3", and for a c element of a row in that range whose r attribute
     is missing or is not a cell reference."""
-    root = ET.fromstring(book.read(part))
+    root = parse_xml(book.read(part))
     rows = {number: {} for number in range(top, bottom + 1)}
     for row in root.iter(ns(MAIN_NS, "row")):
         # A row element with no r attribute does not give its row number,
@@ -434,11 +475,11 @@ def read_name_lookups(path):
     VLOOKUP returns the first match."""
     with zipfile.ZipFile(path) as book:
         strings = shared_strings(book)
-        workbook = ET.fromstring(book.read("xl/workbook.xml"))
+        workbook = parse_xml(book.read("xl/workbook.xml"))
         paths = sheet_parts(book, workbook)
         if COMPLIANCE_SHEET not in paths:
             raise ValueError("the workbook has no sheet {}".format(COMPLIANCE_SHEET))
-        root = ET.fromstring(book.read(paths[COMPLIANCE_SHEET]))
+        root = parse_xml(book.read(paths[COMPLIANCE_SHEET]))
         ranges = []
         for node in root.iter(ns(MAIN_NS, "f")):
             for match in NAME_LOOKUP.finditer(node.text or ""):
