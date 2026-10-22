@@ -74,6 +74,17 @@
 #      on stderr.
 #   35. The checker header names every word, separator, sentence form and
 #      "no password" form that its patterns are built from.
+#   36-40. Line 3 records, after "- Password:", None followed by FAKE-1234
+#      spelt in Unicode tag characters (U+E0000 to U+E007F), None with a
+#      zero width space (U+200B) or a soft hyphen (U+00AD) inside it, None
+#      in fullwidth letters, and a zero width space right after the colon,
+#      then a space and None: the same results as cases 8 to 13.
+#   41. A spec file with None after "- Pass" and "word:" with a zero width
+#      space between them, after "- Password", a zero width space and a
+#      colon, after "Password" in fullwidth letters and a fullwidth colon,
+#      and in "**Password:** `None`": exit 0, the summary line "1 files
+#      checked, 4 Password lines found, 0 other lines say there is no
+#      password", RESULT: PASS, nothing on stderr.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -167,6 +178,15 @@ em_dash="$(printf '\342\200\224')"
 zero_width_space="$(printf '\342\200\213')"
 fullwidth_password="$(python3 -I -c \
   'print("".join(chr(ord(c) + 0xFEE0) for c in "Password"))')"
+# U+00AD SOFT HYPHEN (a format character), "None" in fullwidth letters, and
+# FAKE-1234 spelt in Unicode tag characters (U+E0000 to U+E007F, format
+# characters that are not drawn).
+soft_hyphen="$(printf '\302\255')"
+fullwidth_none="$(python3 -I -c \
+  'print("".join(chr(ord(c) + 0xFEE0) for c in "None"))')"
+tagged_value="$(python3 -I -c \
+  'import sys; print("".join(chr(0xE0000 + ord(c)) for c in sys.argv[1]))' \
+  "$value")"
 
 # The problem lines the checker prints, without the line number.
 value_problem="Password line has a value other than None (value not shown)"
@@ -466,6 +486,33 @@ if [ -n "$named" ]; then
   done <<< "$named"
 fi
 [ "$failed" -eq 0 ] || echo "  header: $header"
+failed=$((failed | case_failed))
+case_number=$((case_number + 1))
+
+check_failing_line "None followed by Unicode tag characters (U+E0000 to U+E007F)" \
+  "- Password: None${tagged_value}"
+check_failing_line "None with a zero width space (U+200B) inside" \
+  "- Password: No${zero_width_space}ne"
+check_failing_line "None with a soft hyphen (U+00AD) inside" \
+  "- Password: No${soft_hyphen}ne"
+check_failing_line "None in fullwidth letters" "- Password: ${fullwidth_none}"
+check_failing_line "a zero width space (U+200B) between the separator and None" \
+  "- Password:${zero_width_space} None"
+
+echo "case $case_number: None as written, after a format character or fullwidth letters before the separator"
+case_failed="$failed"
+failed=0
+run_on_lines "$work/case$case_number" "# Spec" "" \
+  "- Pass${zero_width_space}word: None" \
+  "- Password${zero_width_space}: None" \
+  "${fullwidth_password}${fullwidth_colon}None" \
+  '**Password:** `None`'
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "summary line counts 4 Password lines and 0 other lines" \
+  'printf "%s\n" "$out" | grep -qxF "1 files checked, 4 Password lines found, 0 other lines say there is no password"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+expect "stderr is empty" '[ -z "$err" ]'
+[ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
 
 if [ "$failed" -eq 0 ]; then
