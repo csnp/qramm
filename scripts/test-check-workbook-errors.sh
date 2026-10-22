@@ -141,6 +141,11 @@
 #      r attribute that stores #DIV/0! from the formula 1/0: exit 0, nothing
 #      on stderr, no FAIL line, one PASS line, and RESULT: PASS as the last
 #      line.
+#  27. The copy of case 24 with the r attribute M1x in place of 1A. M1x
+#      starts with the cell reference M1 and goes on with x, and column M
+#      of the Welcome sheet is hidden. As cases 23 to 25, with a FAIL line
+#      that says the copy is not a workbook as xl/worksheets/sheet1.xml has
+#      a c element in row 1 whose r attribute M1x is not a cell reference.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -726,8 +731,8 @@ expect "the sample workbook is checked" \
 expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
 
-# Expectations for cases 23 to 25: $1 is the copy's file name and $2 what
-# its FAIL line says xl/worksheets/sheet1.xml has.
+# Expectations for cases 23 to 25 and 27: $1 is the copy's file name and $2
+# what its FAIL line says xl/worksheets/sheet1.xml has.
 expect_no_cell_reference() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "no traceback on stderr" '[ -z "$err" ]'
@@ -772,6 +777,15 @@ expect "nothing on stderr" '[ -z "$err" ]'
 expect "no FAIL line" '[ "$(fail_count)" -eq 0 ]'
 expect "one PASS line" '[ "$(pass_count)" -eq 1 ]'
 expect "last line is RESULT: PASS" 'last_line_is "RESULT: PASS"'
+end_case
+
+# M1x starts with M1, a cell reference in column M, which is hidden.
+edit_part "$work/badcellref.xlsx" "$work/prefixcellref.xlsx" \
+  xl/worksheets/sheet1.xml '<c r="1A" ' '<c r="M1x" '
+start_case "case 27: a c element whose r attribute only starts with a cell reference" \
+  "$checker" "$work/prefixcellref.xlsx" toolkit/Sample_Assessment.xlsx
+expect_no_cell_reference "$work/prefixcellref.xlsx" \
+  "a c element in row 1 whose r attribute M1x is not a cell reference"
 end_case
 
 if [ "$failed" -eq 0 ]; then
