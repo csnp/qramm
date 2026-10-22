@@ -1025,10 +1025,11 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 28 to 36, 39 to 46 and 48 to 50, which pass a copy and then the
-# sample workbook: $1 is the copy's file name, $2 what the FAIL line says
-# the copy has and $3 the reason the map cannot be read. $3 can hold a
-# single quote, so the expected line is passed to has_line in a variable.
+# Expectations for cases 28 to 36, 39 to 46, 48, 51 and 52, which pass a
+# copy and then the sample workbook: $1 is the copy's file name, $2 what
+# the FAIL line says the copy has and $3 the reason the map cannot be
+# read. $3 can hold a single quote, so the expected line is passed to
+# has_line in a variable.
 expect_map_unreadable() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "no traceback on stderr" '[ -z "$err" ]'
