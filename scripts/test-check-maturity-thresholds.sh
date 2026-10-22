@@ -92,6 +92,25 @@
 #      then RESULT: FAIL. The case is skipped, with a line that says so, when
 #      python3 -I does not decode file names as UTF-8 and write stdout as
 #      ISO-8859-1 under that locale on this machine.
+#  24. A copy of the toolkit workbook whose text cell Welcome!H9 stores the
+#      shared string index 99999999, past the end of the shared string
+#      table, in place of its index 1820.
+#  25. A copy whose Welcome!H9 stores the index 1820 written as +1820.
+#  26. A copy whose Welcome!H9 stores the index written as " 1820", a space
+#      followed by 1820.
+#  27. A copy whose Welcome!H9 stores the index written as "1820 ", 1820
+#      followed by a space.
+#  28. A copy whose Welcome!H9 stores the index written as 18_20.
+#  29. A copy whose Welcome!H9 stores the index written with the
+#      ARABIC-INDIC digits U+0661, U+0668, U+0662 and U+0660.
+#  30. A copy whose Welcome!H9 stores -1 in place of the index 1820.
+#  Cases 24 to 30 pass the copy and then the text document of cases 18 to
+#  20, and give the results of those cases: the copy of cases 25 to 30
+#  fails as the copy of case 24 does. int() strips whitespace from the
+#  start and end of text, reads a leading sign, allows an underscore
+#  between two digits and reads the other Unicode decimal digits, so it
+#  reads the index of cases 25 to 29 as 1820, and -1 as the index of the
+#  last shared string.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -579,8 +598,8 @@ printf '%s\n' \
   '3.5 to 4.0: Advanced' \
   > "$work/ranges.md"
 
-# Expectations for cases 18 to 21: $1 is the copy's file name and $2 the
-# reason its FAIL line gives.
+# Expectations for cases 18 to 21 and 24 to 30: $1 is the copy's file name
+# and $2 the reason its FAIL line gives.
 expect_cannot_read() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "no traceback on stderr" '[ -z "$err" ]'
@@ -668,6 +687,55 @@ else
   echo "$title"
   echo "  skip python3 does not decode file names as UTF-8 and write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($probe)"
 fi
+
+# The text cell Welcome!H9 of the toolkit workbook stores the shared string
+# index 1820, the index of the text that gives the score ranges.
+h9='<c r="H9" s="205" t="s"><v>1820</v>'
+
+make_copy "$toolkit" "$work/endindex.xlsx" "$h9" '<c r="H9" s="205" t="s"><v>99999999</v>'
+start_case "case 24: a shared string index past the end of the table" \
+  "$work/endindex.xlsx" "$work/ranges.md"
+expect_cannot_read endindex.xlsx "not a workbook"
+end_case
+
+make_copy "$toolkit" "$work/plusindex.xlsx" "$h9" '<c r="H9" s="205" t="s"><v>+1820</v>'
+start_case "case 25: a shared string index written with a plus sign" \
+  "$work/plusindex.xlsx" "$work/ranges.md"
+expect_cannot_read plusindex.xlsx "not a workbook"
+end_case
+
+make_copy "$toolkit" "$work/spaceindex.xlsx" "$h9" '<c r="H9" s="205" t="s"><v> 1820</v>'
+start_case "case 26: a shared string index written after a space" \
+  "$work/spaceindex.xlsx" "$work/ranges.md"
+expect_cannot_read spaceindex.xlsx "not a workbook"
+end_case
+
+make_copy "$toolkit" "$work/indexspace.xlsx" "$h9" '<c r="H9" s="205" t="s"><v>1820 </v>'
+start_case "case 27: a shared string index written before a space" \
+  "$work/indexspace.xlsx" "$work/ranges.md"
+expect_cannot_read indexspace.xlsx "not a workbook"
+end_case
+
+make_copy "$toolkit" "$work/underscoreindex.xlsx" "$h9" '<c r="H9" s="205" t="s"><v>18_20</v>'
+start_case "case 28: a shared string index written with an underscore" \
+  "$work/underscoreindex.xlsx" "$work/ranges.md"
+expect_cannot_read underscoreindex.xlsx "not a workbook"
+end_case
+
+# \331\241\331\250\331\242\331\240 is U+0661, U+0668, U+0662 and U+0660
+# (ARABIC-INDIC DIGIT ONE, EIGHT, TWO and ZERO) encoded as UTF-8.
+make_copy "$toolkit" "$work/arabicindex.xlsx" "$h9" \
+  "<c r=\"H9\" s=\"205\" t=\"s\"><v>$(printf '\331\241\331\250\331\242\331\240')</v>"
+start_case "case 29: a shared string index written with ARABIC-INDIC digits" \
+  "$work/arabicindex.xlsx" "$work/ranges.md"
+expect_cannot_read arabicindex.xlsx "not a workbook"
+end_case
+
+make_copy "$toolkit" "$work/negativeindex.xlsx" "$h9" '<c r="H9" s="205" t="s"><v>-1</v>'
+start_case "case 30: a negative shared string index" \
+  "$work/negativeindex.xlsx" "$work/ranges.md"
+expect_cannot_read negativeindex.xlsx "not a workbook"
+end_case
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
