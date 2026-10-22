@@ -29,10 +29,11 @@ is too large to use. The lowest multiplier adds each factor times the
 lowest risk value in its group, and the highest adds each factor times the
 highest. Both are rounded to the decimal places the formula's ROUND gives,
 with halves rounded up, and are calculated without a limit on the number of
-digits, so a ROUND to 28 places or more is checked too. A multiplier that
-has fewer decimal places than the ROUND gives is listed with zeros added up
-to those places, but to no more than 28 places, or the places it has if
-that is more.
+digits, so a ROUND to 28 places or more is checked too, as is a ROUND to a
+number of places written with more than 4300 digits, such as 1 followed by
+4300 zeros. A multiplier that has fewer decimal places than the ROUND gives
+is listed with zeros added up to those places, but to no more than 28
+places, or the places it has if that is more.
 
 With no file arguments it checks the documents in DOCUMENTS; with file
 arguments it checks those files instead (paths relative to the repository
@@ -381,7 +382,10 @@ def multiplier_range(path, problems):
         )
         return None
 
-    places = int(rounded.group(2))
+    # Decimal(), not int(), reads the number of places: in Python 3.13.12
+    # and 3.14.3, int() raises ValueError for text of more than 4300
+    # digits, and Decimal() reads text of 10000001 digits.
+    places = Decimal(rounded.group(2))
     # The default context holds 28 digits, and quantize() raises
     # InvalidOperation when its result needs more, as it does for a ROUND to
     # 28 places or more. With MAX_PREC the sums and the rounding are exact.
