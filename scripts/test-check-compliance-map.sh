@@ -179,6 +179,10 @@
 #      "<control> (<weight>)" or "-", a FAIL line for the missing Q1
 #      NIST CSF cell, a FAIL line for Data row 3 of each workbook, then
 #      RESULT: FAIL.
+#  39. Under the en_US.UTF-8 locale, a copy of the sample workbook whose
+#      cell BA3 of the Data sheet, the Weight of the first ComplianceMap
+#      row, stores the number 1 written as U+0661 (ARABIC-INDIC DIGIT ONE)
+#      in place of 1: as cases 34 to 36.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -971,8 +975,8 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 28 to 36, which pass a copy and then the sample
-# workbook: $1 is the copy's file name, $2 what the FAIL line says
+# Expectations for cases 28 to 36 and 39, which pass a copy and then the
+# sample workbook: $1 is the copy's file name, $2 what the FAIL line says
 # the copy has and $3 the reason the map cannot be read. $3 can hold a
 # single quote, so the expected line is passed to has_line in a variable.
 expect_map_unreadable() {
@@ -1105,6 +1109,17 @@ for book in "$toolkit" "$sample"; do
     "has_line '  FAIL $book Data row 3: not a question and framework in $spec'"
 done
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# Cell BA3, the Weight of the first ComplianceMap row, stores the number 1.
+# The part gives U+0661 as the character reference &#x661;, which the FAIL
+# line quotes as \331\241 under en_US.UTF-8.
+edit_part "$root/$sample" "$work/arabicweight.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="BA3" s="2"><v>1</v>' '<c r="BA3" s="2"><v>&#x661;</v>'
+LC_ALL=en_US.UTF-8 start_case "case 39: a Weight written with an Arabic-Indic digit" \
+  "$checker" "$work/arabicweight.xlsx" "$sample"
+expect_map_unreadable "$work/arabicweight.xlsx" "a Weight holds a digit that is not 0 to 9" \
+  "could not convert string to float: '$(printf '\331\241')'"
 end_case
 
 if [ "$failed" -eq 0 ]; then

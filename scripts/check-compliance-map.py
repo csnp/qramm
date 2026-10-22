@@ -278,12 +278,24 @@ def ascii_int(text):
     return int(text)
 
 
+def ascii_float(text):
+    """float(text), except that text with a character outside ASCII raises
+    ValueError, as float() does for text such as "x". float() reads every
+    Unicode decimal digit, such as U+0661 (ARABIC-INDIC DIGIT ONE) as 1,
+    and the workbook writes its numbers with the digits 0 to 9."""
+    if not text.isascii():
+        raise ValueError("could not convert string to float: {!r}".format(text))
+    return float(text)
+
+
 def cell_value(node, strings, part):
     """Stored value of a cell: str, float, or None when it is empty. part is
     the part path of the sheet that holds the cell. Raises ValueError for a
     shared string index that is not one of the shared strings, as
     ascii_int() does for an index such as "x" or one that holds a digit
-    other than 0 to 9."""
+    other than 0 to 9, and as ascii_float() does for the value of a cell
+    stored as a number, such as "x" or a value that holds a digit other
+    than 0 to 9."""
     value = node.find(ns(MAIN_NS, "v"))
     kind = node.get("t")
     if kind == "inlineStr":
@@ -300,7 +312,7 @@ def cell_value(node, strings, part):
         return strings[index]
     if kind in ("str", "e"):
         return value.text
-    return float(value.text)
+    return ascii_float(value.text)
 
 
 def read_block(book, part, strings, first, width, top, bottom):
