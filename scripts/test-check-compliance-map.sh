@@ -187,9 +187,13 @@
 #      sheet has the r attribute 0_3 in place of 3.
 #  41. A copy of the sample workbook whose cell AV3 of the Data sheet stores
 #      the shared string index 714 written as 7_14.
-#  Cases 40 and 41 pass the copy and then the sample workbook, and give the
-#  results listed for cases 28 to 36. int() allows an underscore between
-#  two digits, so it reads 0_3 as 3 and 7_14 as 714.
+#  42. A copy of the sample workbook whose cell BA3 of the Data sheet, the
+#      Weight of the first ComplianceMap row, stores the number 1 written as
+#      0_1.
+#  Cases 40 to 42 pass the copy and then the sample workbook, and give the
+#  results listed for cases 28 to 36. int() and float() allow an underscore
+#  between two digits, so int() reads 0_3 as 3 and 7_14 as 714, and float()
+#  reads 0_1 as 1.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -982,7 +986,7 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 28 to 36 and 39 to 41, which pass a copy and then the
+# Expectations for cases 28 to 36 and 39 to 42, which pass a copy and then the
 # sample workbook: $1 is the copy's file name, $2 what the FAIL line says
 # the copy has and $3 the reason the map cannot be read. $3 can hold a
 # single quote, so the expected line is passed to has_line in a variable.
@@ -1143,6 +1147,15 @@ start_case "case 41: a shared string index written with an underscore" \
   "$checker" "$work/underscorestring.xlsx" "$sample"
 expect_map_unreadable "$work/underscorestring.xlsx" "a shared string index holds an underscore" \
   "invalid literal for int() with base 10: '7_14'"
+end_case
+
+# Cell BA3, the Weight of the first ComplianceMap row, stores the number 1.
+edit_part "$root/$sample" "$work/underscoreweight.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="BA3" s="2"><v>1</v>' '<c r="BA3" s="2"><v>0_1</v>'
+start_case "case 42: a Weight written with an underscore" \
+  "$checker" "$work/underscoreweight.xlsx" "$sample"
+expect_map_unreadable "$work/underscoreweight.xlsx" "a Weight holds an underscore" \
+  "could not convert string to float: '0_1'"
 end_case
 
 if [ "$failed" -eq 0 ]; then
