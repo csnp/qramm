@@ -7,7 +7,7 @@
 # Usage:
 #   scripts/test-check-profile-multiplier.sh
 #
-# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 59 copy the checker and the toolkit
+# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 60 copy the checker and the toolkit
 # workbook into a new temporary directory laid out like the repository
 # (scripts/ and toolkit/), edit the copy of the workbook, and run the
 # checker there. Cases 15, 17, 38 to 43, 47 and 48 make the same copies and
@@ -214,6 +214,13 @@
 #      stderr, the lowest multiplier, 1 + 5 * 10^-35, listed rounded half
 #      up to 34 places, and a FAIL line for the document that gives 1.00 to
 #      1.50.
+#  60. A workbook whose factor 0.10, the factor of the organization size
+#      answers in RiskMatrix rows 27 to 30, is written as
+#      1E-100000000000000000: exit 1, nothing on stderr, a FAIL line for
+#      each of those rows that says its factor and risk value are not both
+#      numbers, no == line, so no document checked, and RESULT: FAIL as the
+#      last line. Decimal() reads that text, and an exact sum with it has
+#      10^17 decimal places or more.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -1151,6 +1158,20 @@ expect "lowest multiplier is rounded half up to 34 places" \
 expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
 expect "FAIL line for between 1.00 and 1.50" \
   "has_fail 'new.md line 1: the multiplier range is 1.00 to 1.50 here, but $toolkit calculates 1.${zeros28}000001 to 1.5${zeros28#0}'"
+end_case
+
+make_copy "$work/exponent" '> 0.10 <' '> 1E-100000000000000000 <'
+start_case "case 60: a RiskMatrix factor written as 1E-100000000000000000" \
+  "$work/exponent/scripts/check-profile-multiplier.py" "$work/new.md"
+expected="  FAIL $toolkit: RiskMatrix row 27 (Fortune 500/Global Enterprise): factor ' 1E-100000000000000000 ' and risk value ' 1.5 ' are not both numbers"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "a FAIL line for each of rows 27 to 30, which carry that factor" \
+  '[ "$(fail_count)" -eq 4 ] && [ "$(printf "%s\n" "$out" | grep -c " are not both numbers$")" -eq 4 ]'
+expect "FAIL line names row 27 and gives its factor and risk value as written" \
+  'has_line "$expected"'
+expect "no == line, so no document is checked" '! printf "%s\n" "$out" | grep -q "^=="'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
