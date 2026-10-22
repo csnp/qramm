@@ -107,15 +107,21 @@
 #      warning "UserWarning: Overlapped entries: 'xl/workbook.xml' (possible
 #      zip bomb)" and read on, and zipfile raises EOFError, as with Python
 #      3.9.6.
-#  18. A copy of the sample workbook whose col element for column M of the
+#  20. A copy of the sample workbook whose col element for column M of the
 #      Welcome sheet, xl/worksheets/sheet1.xml, has hidden="1" and no min
 #      attribute. The Welcome sheet is the first sheet and is not hidden.
-#  19. The same copy with the min attribute and no max attribute.
-#  Cases 18 and 19 pass the copy and then the sample workbook: exit 1,
+#  21. The same copy with the min attribute and no max attribute.
+#  Cases 20 and 21 pass the copy and then the sample workbook: exit 1,
 #  nothing on stderr, one FAIL line, which says the copy is not a workbook
-#  as xl/worksheets/sheet1.xml has a hidden col element with no min (case 18)
-#  or no max (case 19) attribute, a PASS line for the sample workbook, and
+#  as xl/worksheets/sheet1.xml has a hidden col element with no min (case 20)
+#  or no max (case 21) attribute, a PASS line for the sample workbook, and
 #  RESULT: FAIL as the last line.
+#  22. A copy of the sample workbook whose Relationship element with Id rId1
+#      in xl/_rels/workbook.xml.rels, the one the Welcome sheet names, has no
+#      Target attribute, then the sample workbook: exit 1, nothing on stderr,
+#      one FAIL line, which says the copy is not a workbook as that
+#      Relationship element has no Target attribute, a PASS line for the
+#      sample workbook, and RESULT: FAIL as the last line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -658,7 +664,7 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 18 and 19: $1 is the copy's file name and $2 the
+# Expectations for cases 20 and 21: $1 is the copy's file name and $2 the
 # attribute its hidden col element lacks.
 expect_no_column_bound() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
@@ -675,16 +681,30 @@ expect_no_column_bound() {
 # hidden.
 edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/nomin.xlsx" \
   xl/worksheets/sheet1.xml '<col min="13" max="13" ' '<col max="13" '
-start_case "case 18: a hidden col element with no min attribute" \
+start_case "case 20: a hidden col element with no min attribute" \
   "$checker" "$work/nomin.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_column_bound "$work/nomin.xlsx" min
 end_case
 
 edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/nomax.xlsx" \
   xl/worksheets/sheet1.xml '<col min="13" max="13" ' '<col min="13" '
-start_case "case 19: a hidden col element with no max attribute" \
+start_case "case 21: a hidden col element with no max attribute" \
   "$checker" "$work/nomax.xlsx" toolkit/Sample_Assessment.xlsx
 expect_no_column_bound "$work/nomax.xlsx" max
+end_case
+
+edit_part "$root/toolkit/Sample_Assessment.xlsx" "$work/notarget.xlsx" \
+  xl/_rels/workbook.xml.rels ' Target="worksheets/sheet1.xml"' ''
+start_case "case 22: a sheet's Relationship element with no Target attribute" \
+  "$checker" "$work/notarget.xlsx" toolkit/Sample_Assessment.xlsx
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "FAIL line says it is not a workbook as the Relationship element has no Target attribute" \
+  "has_fail '$work/notarget.xlsx: not a workbook (xl/_rels/workbook.xml.rels has a Relationship element with Id rId1 and no Target attribute)'"
+expect "the sample workbook is checked" \
+  'has_line "== toolkit/Sample_Assessment.xlsx" && [ "$(pass_count)" -eq 1 ]'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
 
 if [ "$failed" -eq 0 ]; then

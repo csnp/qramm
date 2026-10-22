@@ -134,12 +134,23 @@
 #      as the xl/workbook.xml entry is in case 24, with the second central
 #      directory header for xl/worksheets/sheet8.xmz: as cases 19 to 22,
 #      except that stderr can hold the warning of case 24 for that part.
-#  23. A copy of the sample workbook whose row element for row 3 of the Data
+#  26. A copy of the sample workbook whose row element for row 3 of the Data
 #      sheet, xl/worksheets/sheet10.xml, the first row of the ComplianceMap
-#      range, has no r attribute, then the sample workbook: exit 1, nothing
-#      on stderr, one FAIL line, which says the map cannot be read as
-#      xl/worksheets/sheet10.xml has a row element with no r attribute, the
-#      map PASS line for the sample workbook, then RESULT: FAIL.
+#      range, has no r attribute.
+#  27. A copy of the sample workbook whose c element for cell A3 of the Data
+#      sheet, the first c element of row 3, has no r attribute.
+#  28. The same copy with r="1A", which is not a cell reference, on that c
+#      element.
+#  29. A copy of the sample workbook whose Relationship element with Id rId1
+#      in xl/_rels/workbook.xml.rels, the one the Welcome sheet names, has no
+#      Target attribute.
+#  30. A copy of the sample workbook whose cell AV3 of the Data sheet, the
+#      first cell of the ComplianceMap range and a shared string cell, stores
+#      the shared string index 999999, past the end of the shared strings.
+#  Cases 26 to 30 pass the copy and then the sample workbook: exit 1,
+#  nothing on stderr, one FAIL line, which says the map cannot be read and
+#  names what the copy has, the map PASS line for the sample workbook, then
+#  RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -908,19 +919,68 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
+# Expectations for cases 26 to 30, which pass a copy and then the sample
+# workbook: $1 is the copy's file name, $2 what the FAIL line says the copy
+# has and $3 the reason the map cannot be read.
+expect_map_unreadable() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line says the map cannot be read as $2" \
+    "has_line '  FAIL $1: cannot read the compliance map ($3)'"
+  expect "the sample workbook is checked" \
+    "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
 # The Data sheet is xl/worksheets/sheet10.xml in the sample workbook, and
 # the ComplianceMap range, Data!$AV$3:$BA$962, starts at its row 3.
 edit_part "$root/$sample" "$work/norow.xlsx" xl/worksheets/sheet10.xml '<row r="3" ' '<row '
-start_case "case 23: a row element with no r attribute" \
+start_case "case 26: a row element with no r attribute" \
   "$checker" "$work/norow.xlsx" "$sample"
-expect "exit status is 1" '[ "$status" -eq 1 ]'
-expect "no traceback on stderr" '[ -z "$err" ]'
-expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
-expect "FAIL line says the map cannot be read as a row element has no r attribute" \
-  "has_line '  FAIL $work/norow.xlsx: cannot read the compliance map (xl/worksheets/sheet10.xml has a row element with no r attribute)'"
-expect "the sample workbook is checked" \
-  "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
-expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+expect_map_unreadable "$work/norow.xlsx" "a row element has no r attribute" \
+  "xl/worksheets/sheet10.xml has a row element with no r attribute"
+end_case
+
+edit_part "$root/$sample" "$work/nocellref.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="A3" s="2" t="s">' '<c s="2" t="s">'
+start_case "case 27: a c element with no r attribute" \
+  "$checker" "$work/nocellref.xlsx" "$sample"
+expect_map_unreadable "$work/nocellref.xlsx" "a c element has no r attribute" \
+  "xl/worksheets/sheet10.xml has a c element with no r attribute in row 3"
+end_case
+
+edit_part "$root/$sample" "$work/badcellref.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="A3" s="2" t="s">' '<c r="1A" s="2" t="s">'
+start_case "case 28: a c element whose r attribute is not a cell reference" \
+  "$checker" "$work/badcellref.xlsx" "$sample"
+expect_map_unreadable "$work/badcellref.xlsx" "a c element's r attribute is not a cell reference" \
+  "xl/worksheets/sheet10.xml has a c element in row 3 whose r attribute 1A is not a cell reference"
+end_case
+
+edit_part "$root/$sample" "$work/notarget.xlsx" xl/_rels/workbook.xml.rels \
+  ' Target="worksheets/sheet1.xml"' ''
+start_case "case 29: a sheet's Relationship element with no Target attribute" \
+  "$checker" "$work/notarget.xlsx" "$sample"
+expect_map_unreadable "$work/notarget.xlsx" "a Relationship element has no Target attribute" \
+  "xl/_rels/workbook.xml.rels has a Relationship element with Id rId1 and no Target attribute"
+end_case
+
+# Cell AV3, the first cell of the ComplianceMap range, stores shared string
+# 714.
+strings_count="$(python3 -I -c '
+import sys, zipfile
+import xml.etree.ElementTree as ET
+with zipfile.ZipFile(sys.argv[1]) as book:
+    root = ET.fromstring(book.read("xl/sharedStrings.xml"))
+print(len(root.findall("{http://schemas.openxmlformats.org/spreadsheetml/2006/main}si")))
+' "$root/$sample")"
+edit_part "$root/$sample" "$work/nostring.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="AV3" s="2" t="s"><v>714</v>' '<c r="AV3" s="2" t="s"><v>999999</v>'
+start_case "case 30: a shared string index past the end of the shared strings" \
+  "$checker" "$work/nostring.xlsx" "$sample"
+expect_map_unreadable "$work/nostring.xlsx" "a shared string index is past the end" \
+  "xl/worksheets/sheet10.xml cell AV3 gives shared string index 999999, and the workbook has $strings_count shared strings"
 end_case
 
 if [ "$failed" -eq 0 ]; then
