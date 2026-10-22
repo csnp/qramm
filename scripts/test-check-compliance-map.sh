@@ -183,6 +183,13 @@
 #      cell BA3 of the Data sheet, the Weight of the first ComplianceMap
 #      row, stores the number 1 written as U+0661 (ARABIC-INDIC DIGIT ONE)
 #      in place of 1: as cases 34 to 36.
+#  40. A copy of the sample workbook whose row element for row 3 of the Data
+#      sheet has the r attribute 0_3 in place of 3.
+#  41. A copy of the sample workbook whose cell AV3 of the Data sheet stores
+#      the shared string index 714 written as 7_14.
+#  Cases 40 and 41 pass the copy and then the sample workbook, and give the
+#  results listed for cases 28 to 36. int() allows an underscore between
+#  two digits, so it reads 0_3 as 3 and 7_14 as 714.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -975,7 +982,7 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
 PY
 }
 
-# Expectations for cases 28 to 36 and 39, which pass a copy and then the
+# Expectations for cases 28 to 36 and 39 to 41, which pass a copy and then the
 # sample workbook: $1 is the copy's file name, $2 what the FAIL line says
 # the copy has and $3 the reason the map cannot be read. $3 can hold a
 # single quote, so the expected line is passed to has_line in a variable.
@@ -1120,6 +1127,22 @@ LC_ALL=en_US.UTF-8 start_case "case 39: a Weight written with an Arabic-Indic di
   "$checker" "$work/arabicweight.xlsx" "$sample"
 expect_map_unreadable "$work/arabicweight.xlsx" "a Weight holds a digit that is not 0 to 9" \
   "could not convert string to float: '$(printf '\331\241')'"
+end_case
+
+edit_part "$root/$sample" "$work/underscorerow.xlsx" xl/worksheets/sheet10.xml \
+  '<row r="3" ' '<row r="0_3" '
+start_case "case 40: a row element whose r attribute holds an underscore" \
+  "$checker" "$work/underscorerow.xlsx" "$sample"
+expect_map_unreadable "$work/underscorerow.xlsx" "a row element's r attribute holds an underscore" \
+  "invalid literal for int() with base 10: '0_3'"
+end_case
+
+edit_part "$root/$sample" "$work/underscorestring.xlsx" xl/worksheets/sheet10.xml \
+  '<c r="AV3" s="2" t="s"><v>714</v>' '<c r="AV3" s="2" t="s"><v>7_14</v>'
+start_case "case 41: a shared string index written with an underscore" \
+  "$checker" "$work/underscorestring.xlsx" "$sample"
+expect_map_unreadable "$work/underscorestring.xlsx" "a shared string index holds an underscore" \
+  "invalid literal for int() with base 10: '7_14'"
 end_case
 
 if [ "$failed" -eq 0 ]; then
