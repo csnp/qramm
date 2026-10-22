@@ -5,7 +5,7 @@
 # Usage:
 #   scripts/test-check-top-strengths.sh
 #
-# Cases 2 to 21 copy the checker into a new temporary directory laid out
+# Cases 2 to 24 copy the checker into a new temporary directory laid out
 # like the repository (scripts/ and toolkit/), so that the checker treats
 # that directory as the repository root. The workbook there is the toolkit
 # workbook, or a copy of it with text replaced in its XML parts. The
@@ -53,6 +53,15 @@
 #      such file or directory), and the overview is not checked.
 #  21. A text file in place of the workbook: exit 1, a FAIL line that says
 #      it cannot be read (not a workbook).
+#  22. The text "Practices scoring up to 3.6 out of 4.": exit 1, one FAIL
+#      line, which says that line 4 does not say "up to three", no PASS
+#      line for up to three, a PASS line for the threshold and for the
+#      maximum, and RESULT: FAIL.
+#  23. The text of case 3 with "Up to 3", a period and U+0666 (ARABIC-INDIC
+#      DIGIT SIX) in place of "Up to three": exit 1, one FAIL line, which
+#      says that line 4 does not say "up to three", and RESULT: FAIL.
+#  24. A text with "up to 3." at the end of a sentence: exit 0, a PASS line
+#      for up to three, and RESULT: PASS.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -392,6 +401,37 @@ start_case "case 21: a text file in place of the workbook" "$layout"
 expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "FAIL line says it is not a workbook" \
   'has_fail "$toolkit: cannot read (not a workbook)"'
+end_case
+
+make_layout up-to-3.6 "$root/$toolkit" 'Practices scoring up to 3.6 out of 4.'
+start_case "case 22: up to 3.6" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line for up to three" \
+  'has_fail "$overview_path:4: does not say \"up to three\"; the Scorecard has three Top Strengths entries (C36, C40 and C44)"'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "no PASS line for up to three" '! has_line "  PASS line 4: up to three"'
+expect "PASS line for the threshold" 'has_line "  PASS line 4: threshold 3.6"'
+expect "PASS line for the maximum" 'has_line "  PASS line 4: out of 4"'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+# \331\246 is U+0666 (ARABIC-INDIC DIGIT SIX).
+arabic_six="$(printf '\331\246')"
+make_layout up-to-3-arabic-6 "$root/$toolkit" "${now/Up to three/Up to 3.$arabic_six}"
+start_case "case 23: up to 3, a period and U+0666" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line for up to three" \
+  'has_fail "$overview_path:4: does not say \"up to three\"; the Scorecard has three Top Strengths entries (C36, C40 and C44)"'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+make_layout up-to-3-period "$root/$toolkit" \
+  'Lists up to 3. Each practice that scores 3.6 or more is named with its score out of 4.'
+start_case "case 24: up to 3 at the end of a sentence" "$layout"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "PASS line for up to three" 'has_line "  PASS line 4: up to three"'
+expect "last line is RESULT: PASS" 'last_line_is "RESULT: PASS"'
 end_case
 
 if [ "$failed" -eq 0 ]; then

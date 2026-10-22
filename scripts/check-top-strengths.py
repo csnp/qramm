@@ -30,7 +30,8 @@ contains "Top Strengths" describes them, and the overview must have such a
 line. Each one must, in upper or lower case:
 
     1. say "up to" the number of entries, written as a word or in digits,
-       such as "up to three";
+       such as "up to three", not followed by a period and a digit as in
+       "up to 3.6";
     2. give the threshold as a number, such as 3.6 or 3.60, other than the
        number after "out of";
     3. say "out of" the maximum, such as "out of 4".
@@ -243,7 +244,14 @@ def check_overview(lines, threshold, maximum, problems):
     overview meets, and adds a problem for each rule that one does not."""
     count = len(ENTRIES)
     word = NUMBER_WORDS[count]
-    up_to = re.compile(r"\bup to (?:{}|{})\b".format(word, count), re.IGNORECASE)
+    # \b also matches between the number and a period, so that alone it
+    # reads "up to 3.6" as "up to 3"; (?!\.\d) refuses a period followed by
+    # a digit. \d, not [0-9]: a period followed by another Unicode decimal
+    # digit, such as U+0666 (ARABIC-INDIC DIGIT SIX), is refused too, as \b
+    # already refuses such a digit right after the number.
+    up_to = re.compile(
+        r"\bup to (?:{}|{})\b(?!\.\d)".format(word, count), re.IGNORECASE
+    )
     marks = joined(mark for mark, _ in ENTRIES)
     sentences = joined(sentence for _, sentence in ENTRIES)
     fenced = False
