@@ -38,8 +38,8 @@
 #   14. A spec file with the value None after "Password:" and in each shape
 #      of cases 8 to 12, and the sentence "Protect each sheet without a
 #      password, allowing users to:": exit 0, the summary line "1 files
-#      checked, 6 Password lines found, 1 other lines mention a password (not
-#      judged)", RESULT: PASS, nothing on stderr.
+#      checked, 6 Password lines found, 1 other lines say there is no
+#      password", RESULT: PASS, nothing on stderr.
 #   15. --help: exit 2, a usage line and then the header text on stderr,
 #      nothing on stdout. Two unknown options, --bogus and --json: exit 2,
 #      and on stderr "unknown option: --bogus", "unknown option: --json"
@@ -51,6 +51,29 @@
 #      nothing on stderr, no Python traceback.
 #   18. A directory: exit 1, the directory's == line and then FAIL file: is
 #      a directory, no "not found" line, RESULT: FAIL, nothing on stderr.
+#   19-27. Line 3 records FAKE-1234 after "Passphrase:", "Passcode:",
+#      "- pwd:", "Unlock with:", "- Password" and an en dash (U+2013) or an
+#      em dash (U+2014), "Password" in fullwidth letters and a fullwidth
+#      colon, "- Pass" and "word:" with a zero width space (U+200B) between
+#      them, and "Protected without a password:": the same results as cases
+#      8 to 13.
+#   28-33. Line 3 mentions a password in no recognised shape: "The sheet
+#      password is FAKE-1234", "Sheet password FAKE-1234", the table row
+#      "| Password | FAKE-1234 |", "No password on the sheets. Workbook
+#      password FAKE-1234", "Sheet password FAKE-1234; Password: None" and
+#      "The sheets are not password-protected.": exit 1, one problem line,
+#      which names line 3 and says to write "Password: None", or "without a
+#      password", RESULT: FAIL, nothing on stderr, and FAKE-1234 printed
+#      nowhere.
+#   34. A spec file with "- Password: None", "- Password", an en dash and
+#      None, "No passwords are recorded.", "Protect each sheet without a
+#      password, allowing users to:", "The sheets are protected without a
+#      password.", the code line cd "$(pwd)" and "Unlock with the Review
+#      tab.": exit 0, the summary line "1 files checked, 2 Password lines
+#      found, 3 other lines say there is no password", RESULT: PASS, nothing
+#      on stderr.
+#   35. The checker header names every word, separator, sentence form and
+#      "no password" form that its patterns are built from.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -137,6 +160,17 @@ value="FAKE-1234"
 # UTF-8 bytes so this script stays ASCII.
 fullwidth_colon="$(printf '\357\274\232')"
 fullwidth_equals="$(printf '\357\274\235')"
+# U+2013 EN DASH, U+2014 EM DASH and U+200B ZERO WIDTH SPACE (a format
+# character), and "Password" in fullwidth letters (U+FF30 and on).
+en_dash="$(printf '\342\200\223')"
+em_dash="$(printf '\342\200\224')"
+zero_width_space="$(printf '\342\200\213')"
+fullwidth_password="$(python3 -I -c \
+  'print("".join(chr(ord(c) + 0xFEE0) for c in "Password"))')"
+
+# The problem lines the checker prints, without the line number.
+value_problem="Password line has a value other than None (value not shown)"
+shape_problem='mentions a password in no recognised shape (text not shown); write "Password: None", or "without a password"'
 
 # Runs the checker on a spec file whose lines are the remaining arguments,
 # in a new copy at $1 that is not a git checkout.
@@ -148,28 +182,30 @@ run_on_lines() {
   run_checker "$copy" toolkit-specs/spec.md
 }
 
-# Checks a run on a spec file in which line $1, and no other line, records
-# a password with a value other than None.
+# Checks a run on a spec file in which line $1, and no other line, fails
+# with the problem text $2: by default, that it records a password with a
+# value other than None.
 expect_line_fails() {
-  local number="$1" problems
+  local number="$1" problem="${2:-$value_problem}" problems
   problems="$(printf '%s\n' "$out" | grep -c '^    line ' || true)"
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "one problem line" '[ "$problems" -eq 1 ]'
-  expect "problem line names line $number" \
-    'printf "%s\n" "$out" | grep -q "^    line $number: Password line has a value other than None"'
+  expect "problem line names line $number: $problem" \
+    'printf "%s\n" "$out" | grep -qF "    line $number: $problem"'
   expect "value not printed" '! printf "%s\n%s\n" "$out" "$err" | grep -qF "$value"'
   expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
   expect "stderr is empty" '[ -z "$err" ]'
 }
 
 # Runs the next case on a spec file whose line 3 is $2, a line that records
-# the value FAKE-1234. $1 describes the line for the case heading.
+# the value FAKE-1234. $1 describes the line for the case heading. $3, when
+# given, is the problem text expected in place of the value problem.
 check_failing_line() {
   echo "case $case_number: $1 on line 3"
   case_failed="$failed"
   failed=0
   run_on_lines "$work/case$case_number" "# Spec" "" "$2"
-  expect_line_fails 3
+  expect_line_fails 3 "${3:-}"
   [ "$failed" -eq 0 ] || show_output
   failed=$((failed | case_failed))
   case_number=$((case_number + 1))
@@ -294,7 +330,7 @@ run_on_lines "$work/case$case_number" "# Spec" "" \
   "Protect each sheet without a password, allowing users to:"
 expect "exit status is 0" '[ "$status" -eq 0 ]'
 expect "summary line counts 6 Password lines and 1 other line" \
-  'printf "%s\n" "$out" | grep -qxF "1 files checked, 6 Password lines found, 1 other lines mention a password (not judged)"'
+  'printf "%s\n" "$out" | grep -qxF "1 files checked, 6 Password lines found, 1 other lines say there is no password"'
 expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
 expect "stderr is empty" '[ -z "$err" ]'
 [ "$failed" -eq 0 ] || show_output
@@ -359,6 +395,77 @@ expect "no not found line" '! printf "%s\n" "$out" | grep -q "not found"'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 expect "stderr is empty" '[ -z "$err" ]'
 [ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+case_number=19
+check_failing_line "Passphrase:" "Passphrase: $value"
+check_failing_line "Passcode:" "Passcode: $value"
+check_failing_line "pwd:" "- pwd: $value"
+check_failing_line "Unlock with:" "Unlock with: $value"
+check_failing_line "Password and an en dash (U+2013)" "- Password ${en_dash} $value"
+check_failing_line "Password and an em dash (U+2014)" "- Password${em_dash}$value"
+check_failing_line "Password in fullwidth letters and a fullwidth colon" \
+  "${fullwidth_password}${fullwidth_colon}$value"
+check_failing_line "Password with a zero width space (U+200B) inside" \
+  "- Pass${zero_width_space}word: $value"
+check_failing_line "without a password and a value" \
+  "Protected without a password: $value"
+check_failing_line "password is and a value" "The sheet password is $value" \
+  "$shape_problem"
+check_failing_line "password and a value" "Sheet password $value" \
+  "$shape_problem"
+check_failing_line "a table row" "| Password | $value |" "$shape_problem"
+check_failing_line "no password, then a password with a value" \
+  "No password on the sheets. Workbook password $value" "$shape_problem"
+check_failing_line "a password with a value before Password: None" \
+  "Sheet password $value; Password: None" "$shape_problem"
+check_failing_line "not password-protected" \
+  "The sheets are not password-protected." "$shape_problem"
+
+echo "case $case_number: None, no password, and words with ordinary uses"
+case_failed="$failed"
+failed=0
+run_on_lines "$work/case$case_number" "# Spec" "" \
+  "- Password: None" \
+  "- Password ${en_dash} None" \
+  "No passwords are recorded." \
+  "Protect each sheet without a password, allowing users to:" \
+  "The sheets are protected without a password." \
+  '    cd "$(pwd)"' \
+  "Unlock with the Review tab."
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "summary line counts 2 Password lines and 3 other lines" \
+  'printf "%s\n" "$out" | grep -qxF "1 files checked, 2 Password lines found, 3 other lines say there is no password"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+expect "stderr is empty" '[ -z "$err" ]'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+case_number=$((case_number + 1))
+
+echo "case $case_number: the header names every word, separator and form"
+case_failed="$failed"
+failed=0
+# The Python part of the checker, run without its last line, prints each
+# entry of the lists its patterns are built from as the header writes it.
+named="$({
+  awk '/<<'"'"'PY'"'"'$/ { inside = 1; next } /^PY$/ { inside = 0 } inside' \
+    "$checker" | grep -v '^sys\.exit(main('
+  cat <<'PY'
+for word in WORDS + GUARDED_WORDS + SENTENCE_FORMS:
+    print('"{}"'.format(word))
+for sep in SEPARATORS:
+    print("({})".format(sep if sep.isascii() else "U+{:04X}".format(ord(sep))))
+for form in NO_PASSWORD_FORMS:
+    print('"{}"'.format(form.format("password")))
+PY
+} | python3 -I -)" || named=""
+expect "the checker lists words, separators and forms" '[ -n "$named" ]'
+if [ -n "$named" ]; then
+  while IFS= read -r entry; do
+    expect "header names $entry" 'printf "%s\n" "$header" | grep -qF -- "$entry"'
+  done <<< "$named"
+fi
+[ "$failed" -eq 0 ] || echo "  header: $header"
 failed=$((failed | case_failed))
 
 if [ "$failed" -eq 0 ]; then

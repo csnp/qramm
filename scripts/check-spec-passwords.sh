@@ -9,19 +9,40 @@
 # repository).
 #
 # Check, for every file:
-#   passwords  A line that records a password must have the value None. The
-#              shapes recognised are "password" (any case, with or without
-#              list markers, bold or code formatting) followed by a colon, an
-#              equals sign, a fullwidth colon (U+FF1A) or a fullwidth equals
-#              sign (U+FF1D), and the sentence forms "password is set to" and
-#              "password was set to". The value is the rest of the line,
-#              without the white space and formatting marks around it. If
-#              sheet or workbook protection is added to the toolkit, it is
-#              applied without a password, so any value other than None,
-#              including an empty one, fails.
+#   passwords  A line that records a password must have the value None.
+#              Each line is first normalised: Unicode NFKC, then invisible
+#              format characters (Unicode category Cf) are removed, so a
+#              fullwidth spelling reads the same as the plain one.
+#              Words: "password", "passphrase" and "passcode" (any case, a
+#              trailing "s" allowed, with or without list markers, bold or
+#              code formatting), and "pwd" and "unlock with".
+#              Separators: a colon (:), an equals sign (=), an en dash
+#              (U+2013) and an em dash (U+2014). A fullwidth colon or equals
+#              sign is read as the plain one after normalising.
+#              A line is a Password line when one of the words is followed
+#              by a separator, or when "password", "passphrase" or "passcode"
+#              is followed by "is set to" or "was set to". "pwd" and "unlock
+#              with" count only with a separator after them, because the bare
+#              words have ordinary uses (the shell command, "unlock with the
+#              Review tab"). The value is the rest of the line, without the
+#              white space and formatting marks around it. If sheet or
+#              workbook protection is added to the toolkit, it is applied
+#              without a password, so any value other than None, including an
+#              empty one, fails.
+#              Any other mention of "password", "passphrase" or "passcode"
+#              (any case, also inside a longer word such as
+#              "password-protected") fails unless it reads "without a
+#              password", "without any password", "no password" or "no
+#              passwords" (or the same with passphrase or passcode). Each
+#              mention is judged on its own, so one mention in that form does
+#              not clear another on the same line. A Password line is judged
+#              by its value first, and a mention before the separator is
+#              judged the same way. The fix is to write "Password: None", or
+#              "without a password".
+#              A value written under a word that is not listed here is not
+#              read. A password applied to a workbook is not read either;
+#              this check reads only the text of the specs.
 #              Values are never printed, only the file and line number.
-#              A line that contains "password" (any case) in no recognised
-#              shape is not judged, and the summary line counts it.
 #
 # The check fails when a given file does not exist, is a directory or is not
 # UTF-8 text, and when no tracked Markdown file is found under toolkit-specs/,
@@ -61,27 +82,86 @@ import os
 import re
 import subprocess
 import sys
+import unicodedata
 
 SPECS_DIR = "toolkit-specs"
 
-# The separators that can follow "Password": a colon, an equals sign, a
-# fullwidth colon (U+FF1A) and a fullwidth equals sign (U+FF1D).
-SEPARATORS = ":=\N{FULLWIDTH COLON}\N{FULLWIDTH EQUALS SIGN}"
+# The words that name a password. Any mention of one is judged.
+WORDS = ("password", "passphrase", "passcode")
 
-# "Password" followed by one of SEPARATORS, or by "is set to" or "was set
-# to", allowing Markdown emphasis or code marks around the word and around
-# the separator. The value is the rest of the line.
+# Words that are judged only with a separator after them, because the bare
+# words have ordinary uses.
+GUARDED_WORDS = ("pwd", "unlock with")
+
+# The separators that can follow a word. A fullwidth colon or equals sign
+# becomes the plain one under NFKC, so it needs no entry of its own.
+SEPARATORS = (":", "=", "\N{EN DASH}", "\N{EM DASH}")
+
+# The sentence forms that can follow one of WORDS in place of a separator.
+SENTENCE_FORMS = ("is set to", "was set to")
+
+# The accepted ways of saying there is no password, with {} for the word.
+NO_PASSWORD_FORMS = ("without a {}", "without any {}", "no {}", "no {}s")
+
+
+def phrase_pattern(phrase):
+    """A regex for phrase, with any white space between its words."""
+    return re.escape(phrase).replace(r"\ ", r"\s+")
+
+
+def words_pattern(words):
+    """A regex alternation of words, with any white space inside each."""
+    return "|".join(map(phrase_pattern, words))
+
+
+_WORD = r"(?:" + words_pattern(WORDS) + r")s?"
+_SEPARATOR = r"\s*[" + "".join(map(re.escape, SEPARATORS)) + r"]"
+_SENTENCE = r"\s+(?:" + words_pattern(SENTENCE_FORMS) + r")\b"
+
+# One of WORDS followed by a separator or a sentence form, or one of
+# GUARDED_WORDS followed by a separator, allowing Markdown emphasis or code
+# marks around the word and around the separator. The value is the rest of
+# the line.
 PASSWORD_LINE = re.compile(
-    r"password[*_`]*(?:\s*[" + SEPARATORS + r"]|\s+(?:is|was)\s+set\s+to\b)"
+    r"(?:" + _WORD + r"[*_`]*(?:" + _SEPARATOR + r"|" + _SENTENCE + r")"
+    r"|\b(?:" + words_pattern(GUARDED_WORDS) + r")\b[*_`]*" + _SEPARATOR + r")"
     r"[*_`]*(.*)$",
     re.I,
 )
 
-# A mention of a password. A line with one that PASSWORD_LINE does not match
-# is counted, not judged.
-PASSWORD_MENTION = re.compile(r"password", re.I)
+# A mention of one of WORDS, also inside a longer word.
+PASSWORD_MENTION = re.compile(words_pattern(WORDS), re.I)
+
+# A mention in one of NO_PASSWORD_FORMS.
+NO_PASSWORD = re.compile(
+    r"\b(?:"
+    + "|".join(
+        phrase_pattern(form).replace(
+            re.escape("{}"), "(?:" + words_pattern(WORDS) + ")"
+        )
+        for form in NO_PASSWORD_FORMS
+    )
+    + r")\b",
+    re.I,
+)
 
 ALLOWED_VALUE = "None"
+
+
+def normalise(line):
+    """The line under Unicode NFKC, without format characters (Cf)."""
+    line = unicodedata.normalize("NFKC", line)
+    return "".join(c for c in line if unicodedata.category(c) != "Cf")
+
+
+def unexplained_mentions(text):
+    """Whether text mentions a password outside NO_PASSWORD_FORMS."""
+    accepted = [m.span() for m in NO_PASSWORD.finditer(text)]
+    for mention in PASSWORD_MENTION.finditer(text):
+        start, end = mention.span()
+        if not any(a <= start and end <= b for a, b in accepted):
+            return True
+    return False
 
 
 class GitListError(Exception):
@@ -127,16 +207,23 @@ def tracked_specs(root):
 
 
 def check_passwords(lines):
-    """Return (problems, password lines seen, other lines that mention a
-    password). Problems never carry a value."""
+    """Return (problems, password lines seen, other lines that say there is
+    no password). Problems never carry a value."""
     problems = []
     seen = 0
-    unjudged = 0
+    no_password = 0
+    unexplained = (
+        "line {}: mentions a password in no recognised shape (text not "
+        'shown); write "Password: None", or "without a password"'
+    )
     for number, line in enumerate(lines, 1):
+        line = normalise(line)
         m = PASSWORD_LINE.search(line)
         if not m:
-            if PASSWORD_MENTION.search(line):
-                unjudged += 1
+            if unexplained_mentions(line):
+                problems.append(unexplained.format(number))
+            elif PASSWORD_MENTION.search(line):
+                no_password += 1
             continue
         seen += 1
         value = m.group(1).strip().strip("*_`").strip()
@@ -145,7 +232,9 @@ def check_passwords(lines):
                 "line {}: Password line has a value other than {} "
                 "(value not shown)".format(number, ALLOWED_VALUE)
             )
-    return problems, seen, unjudged
+        elif unexplained_mentions(line[: m.start()]):
+            problems.append(unexplained.format(number))
+    return problems, seen, no_password
 
 
 def main(argv):
@@ -177,7 +266,7 @@ def main(argv):
 
     failed = False
     total_seen = 0
-    total_unjudged = 0
+    total_no_password = 0
     for given in files:
         if not given:
             print("== ''")
@@ -211,9 +300,9 @@ def main(argv):
             print("  FAIL file: cannot read (not UTF-8 text)")
             failed = True
             continue
-        problems, seen, unjudged = check_passwords(lines)
+        problems, seen, no_password = check_passwords(lines)
         total_seen += seen
-        total_unjudged += unjudged
+        total_no_password += no_password
         if problems:
             failed = True
             print("== {}".format(label))
@@ -222,8 +311,8 @@ def main(argv):
                 print("    {}".format(problem))
 
     print(
-        "{} files checked, {} Password lines found, {} other lines mention a "
-        "password (not judged)".format(len(files), total_seen, total_unjudged)
+        "{} files checked, {} Password lines found, {} other lines say there "
+        "is no password".format(len(files), total_seen, total_no_password)
     )
     print("RESULT: {}".format("FAIL" if failed else "PASS"))
     return 1 if failed else 0
