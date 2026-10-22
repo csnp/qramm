@@ -7,11 +7,11 @@
 # Usage:
 #   scripts/test-check-profile-multiplier.sh
 #
-# Cases 7 to 10 and 44 to 46 copy the checker and the toolkit workbook into
-# a new temporary directory laid out like the repository (scripts/ and
-# toolkit/), edit the copy of the workbook, and run the checker there. Cases
-# 15, 17 and 38 to 43 make the same copies and pass the copy of the workbook
-# to the repository's checker as a document.
+# Cases 7 to 10, 44 to 46 and 49 to 52 copy the checker and the toolkit
+# workbook into a new temporary directory laid out like the repository
+# (scripts/ and toolkit/), edit the copy of the workbook, and run the
+# checker there. Cases 15, 17, 38 to 43, 47 and 48 make the same copies and
+# pass the copy of the workbook to the repository's checker as a document.
 #
 # Cases:
 #   1. No file arguments (the documents in DOCUMENTS): exit 0, RESULT: PASS,
@@ -158,6 +158,34 @@
 #  written, with each character outside ASCII as a backslash escape
 #  (\u0661\u0666 for the digits of case 46), no document checked, and
 #  RESULT: FAIL as the last line.
+#  Cases 47 to 52 run under the en_US.ISO8859-1 locale, under which python3
+#  writes stdout as ISO-8859-1. That encoding has no byte for U+65E5 and
+#  U+672C, the sheet name the cases give, or for the ARABIC-INDIC digits
+#  U+0663 and U+0667. Each case expects nothing on stderr and each such
+#  character printed as a backslash escape, such as \u65e5. The cases are
+#  skipped, with a line that says so, when python3 -I does not write stdout
+#  as ISO-8859-1 under that locale on this machine.
+#  47. A copy of the workbook whose Welcome sheet is named U+65E5 U+672C:
+#      exit 0, one PASS line, "PASS \u65e5\u672c!H9 line 12: 1.00 to
+#      1.50", then RESULT: PASS.
+#  48. A copy whose Welcome sheet is named that way and whose H9 text gives
+#      the earlier "(0.8x – 1.5x)": exit 1, one FAIL line, which names
+#      \u65e5\u672c!H9 line 12 and gives 0.8 to 1.5, then RESULT: FAIL.
+#  49. A workbook whose Data sheet is named U+65E5 U+672C, in
+#      xl/workbook.xml and in the RiskMatrix defined name, with a text
+#      document that gives the workbook's range: exit 0, the == line gives
+#      RiskMatrix as \u65e5\u672c!M2:O30, a PASS line for the document, then
+#      RESULT: PASS.
+#  50. A workbook whose Data sheet is named that way and whose Data!M3
+#      stores its shared string index written as +16: the results of case
+#      44, with the cell named \u65e5\u672c!M3.
+#  51. A workbook whose Data!M3 has the r attribute M followed by U+0663,
+#      which the checker reads as M3, and stores +16: the results of case
+#      44, with the cell named Data!M\u0663.
+#  52. A workbook whose ProfileMultiplier formula gives the answer D17 as D1
+#      followed by U+0667, with a text document that gives the workbook's
+#      range: exit 0, the answers line "answers: D9, D11, D13, D15,
+#      D1\u0667", a PASS line for the document, then RESULT: PASS.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -185,26 +213,32 @@ trap cleanup EXIT
 failed=0
 
 # Lays out a copy of the checker at $1, with a copy of the toolkit workbook
-# in which every "$2" in its XML parts under xl/ is replaced by "$3". Fails
-# when no such part of the workbook contains "$2".
+# in which every "$2" in its XML parts under xl/ is replaced by "$3", then
+# every "$4" by "$5", and so on for each further pair of arguments. Fails
+# when no such part of the workbook contains "$2", or "$4" and so on.
 make_copy() {
-  mkdir -p "$1/scripts" "$1/toolkit"
-  cp "$checker" "$1/scripts/check-profile-multiplier.py"
-  python3 -I - "$root/$toolkit" "$1/$toolkit" "$2" "$3" <<'PY'
+  local dir="$1"
+  shift
+  mkdir -p "$dir/scripts" "$dir/toolkit"
+  cp "$checker" "$dir/scripts/check-profile-multiplier.py"
+  python3 -I - "$root/$toolkit" "$dir/$toolkit" "$@" <<'PY'
 import sys
 import zipfile
 
-source, target, old, new = sys.argv[1:5]
-found = 0
+source, target = sys.argv[1:3]
+pairs = list(zip(sys.argv[3::2], sys.argv[4::2]))
+found = [0] * len(pairs)
 with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
     for info in book.infolist():
         data = book.read(info.filename)
         if info.filename.startswith("xl/") and info.filename.endswith(".xml"):
             text = data.decode("utf-8")
-            found += text.count(old)
-            data = text.replace(old, new).encode("utf-8")
+            for number, (old, new) in enumerate(pairs):
+                found[number] += text.count(old)
+                text = text.replace(old, new)
+            data = text.encode("utf-8")
         copy.writestr(info, data)
-sys.exit(0 if found else 1)
+sys.exit(0 if all(found) else 1)
 PY
 }
 
@@ -855,10 +889,11 @@ print(sum(1 for _ in table.iter(main)))
 PY
 )"
 
-# Expects the results of cases 44 to 46, where $1 is the text the FAIL line
-# gives after the name of the cell.
+# Expects the results of cases 44 to 46, 50 and 51, where $1 is the text the
+# FAIL line gives after the name of the cell, and $2 the name of the cell as
+# printed, Data!M3 when not given.
 expect_matrix_cell_fails() {
-  expected="  FAIL $toolkit: RiskMatrix cell Data!M3: $1"
+  expected="  FAIL $toolkit: RiskMatrix cell ${2:-Data!M3}: $1"
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "nothing on stderr" '[ -z "$err" ]'
   expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
@@ -890,6 +925,114 @@ LC_ALL=en_US.ISO8859-1 start_case \
 expect_matrix_cell_fails \
   "shared string index '\\u0661\\u0666' is not one or more of the digits 0 to 9"
 end_case
+
+# The encoding python3 -I writes stdout in under en_US.ISO8859-1 on this
+# machine. Cases 47 to 52 need ISO-8859-1.
+latin1_probe="$(LC_ALL=en_US.ISO8859-1 python3 -I -c 'import codecs, sys; print(codecs.lookup(sys.stdout.encoding).name)' 2>&1 || true)"
+
+# Runs the case titled $1 with the checker and arguments that follow under
+# the en_US.ISO8859-1 locale, as start_case does. When python3 -I does not
+# write stdout as ISO-8859-1 under that locale here, prints the title and a
+# line that says the case is skipped, and returns 1 instead.
+start_latin1_case() {
+  if [ "$latin1_probe" != "iso8859-1" ]; then
+    echo "$1"
+    echo "  skip python3 does not write stdout as ISO-8859-1 under en_US.ISO8859-1 here ($latin1_probe)"
+    return 1
+  fi
+  LC_ALL=en_US.ISO8859-1 start_case "$@"
+  return 0
+}
+
+# \346\227\245\346\234\254 is U+65E5 U+672C encoded as UTF-8, a sheet name
+# that ISO-8859-1 has no bytes for. The checker is expected to print it as
+# \u65e5\u672c.
+sheet_name="$(printf '\346\227\245\346\234\254')"
+sheet_shown='\u65e5\u672c'
+
+make_copy "$work/welcomename" '<sheet name="Welcome"' "<sheet name=\"$sheet_name\""
+if start_latin1_case "case 47: a range in a sheet whose name stdout's encoding cannot hold" \
+  "$checker" "$work/welcomename/$toolkit"; then
+  expect "exit status is 0" '[ "$status" -eq 0 ]'
+  expect "nothing on stderr" '[ -z "$err" ]'
+  expect "one PASS line" '[ "$(pass_count)" -eq 1 ]'
+  expect "PASS line gives the sheet name as $sheet_shown" \
+    "has_line '  PASS $sheet_shown!H9 line 12: 1.00 to 1.50'"
+  expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+  end_case
+fi
+
+make_copy "$work/welcomenamerange" '<sheet name="Welcome"' "<sheet name=\"$sheet_name\"" \
+  'multiplier between 1.00 and 1.50, adjusted by' \
+  'multiplier (0.8x – 1.5x), adjusted by'
+if start_latin1_case "case 48: a wrong range in a sheet whose name stdout's encoding cannot hold" \
+  "$checker" "$work/welcomenamerange/$toolkit"; then
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "nothing on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line gives the sheet name as $sheet_shown and 0.8 to 1.5" \
+    "has_fail 'welcomenamerange/$toolkit $sheet_shown!H9 line 12: the multiplier range is 0.8 to 1.5 here, but $toolkit calculates 1.00 to 1.50'"
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+  end_case
+fi
+
+# The Data sheet holds RiskMatrix, Data!M2:O30. These pairs rename it in
+# xl/workbook.xml and in the RiskMatrix defined name.
+data_renamed=(
+  '<sheet name="Data"' "<sheet name=\"$sheet_name\""
+  '>Data!$M$2:$O$30<' ">$sheet_name!\$M\$2:\$O\$30<"
+)
+
+make_copy "$work/dataname" "${data_renamed[@]}"
+if start_latin1_case "case 49: a RiskMatrix sheet whose name stdout's encoding cannot hold" \
+  "$work/dataname/scripts/check-profile-multiplier.py" "$work/new.md"; then
+  expect "exit status is 0" '[ "$status" -eq 0 ]'
+  expect "nothing on stderr" '[ -z "$err" ]'
+  expect "the == line gives RiskMatrix as $sheet_shown!M2:O30" \
+    "has_line '== $toolkit ProfileMultiplier (Profile!D21), RiskMatrix ($sheet_shown!M2:O30)'"
+  expect "the document is checked" \
+    '[ "$(pass_count)" -eq 1 ] && has_line "  PASS line 1: 1.00 to 1.50"'
+  expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+  end_case
+fi
+
+make_copy "$work/datanameplus" "${data_renamed[@]}" \
+  "$m3" '<c r="M3" s="4" t="s"><v>+16</v></c>'
+if start_latin1_case "case 50: a bad RiskMatrix cell in a sheet whose name stdout's encoding cannot hold" \
+  "$work/datanameplus/scripts/check-profile-multiplier.py" "$work/new.md"; then
+  expect_matrix_cell_fails \
+    "shared string index '+16' is not one or more of the digits 0 to 9" "$sheet_shown!M3"
+  end_case
+fi
+
+# \331\243 is U+0663 (ARABIC-INDIC DIGIT THREE) encoded as UTF-8.
+make_copy "$work/arabicref" "$m3" \
+  "<c r=\"M$(printf '\331\243')\" s=\"4\" t=\"s\"><v>+16</v></c>"
+if start_latin1_case "case 51: a bad RiskMatrix cell whose reference stdout's encoding cannot hold" \
+  "$work/arabicref/scripts/check-profile-multiplier.py" "$work/new.md"; then
+  expect_matrix_cell_fails \
+    "shared string index '+16' is not one or more of the digits 0 to 9" 'Data!M\u0663'
+  end_case
+fi
+
+# \331\247 is U+0667 (ARABIC-INDIC DIGIT SEVEN) encoded as UTF-8. The term
+# of the ProfileMultiplier formula for the answer in D17 is changed to read
+# D1 followed by it.
+seven="$(printf '\331\247')"
+make_copy "$work/arabicanswer" \
+  'VLOOKUP(D17, RiskMatrix, 3, FALSE) * VLOOKUP(D17, RiskMatrix, 2, FALSE)' \
+  "VLOOKUP(D1$seven, RiskMatrix, 3, FALSE) * VLOOKUP(D1$seven, RiskMatrix, 2, FALSE)"
+if start_latin1_case "case 52: an answer whose reference stdout's encoding cannot hold" \
+  "$work/arabicanswer/scripts/check-profile-multiplier.py" "$work/new.md"; then
+  expect "exit status is 0" '[ "$status" -eq 0 ]'
+  expect "nothing on stderr" '[ -z "$err" ]'
+  expect "the answers line gives D1\\u0667" \
+    "has_line '  answers: D9, D11, D13, D15, D1\\u0667'"
+  expect "the document is checked" \
+    '[ "$(pass_count)" -eq 1 ] && has_line "  PASS line 1: 1.00 to 1.50"'
+  expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+  end_case
+fi
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
