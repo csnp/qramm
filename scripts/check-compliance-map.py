@@ -18,7 +18,9 @@ relative to the repository root, or absolute). For each workbook:
        Control_ID stored as a number fails, as a number cannot keep a CIS v8
        safeguard such as 3.10 apart from 3.1.
     3. The row's Weight is the spec's weight. A "-" in the spec matches a
-       row whose Control_ID is "-" and whose Weight is empty.
+       row whose Control_ID is "-" and whose Weight is empty. A Weight
+       stored as the logical value TRUE or FALSE fails, as it is not a
+       number.
     4. The row's Category, when it is not "-", has a name in each range the
        Compliance sheet's category cells look names up in, for example
        VLOOKUP(_xlfn.CONCAT($M$4,TRIM(E63)),Data!$BG$3:$BH$108,2,FALSE).
@@ -296,15 +298,37 @@ def ascii_float(text):
     return float(text)
 
 
+class Logical:
+    """The stored value of a cell whose t attribute is "b": the logical
+    value TRUE (stored as 1) or FALSE (stored as 0). It is not a number, so
+    it is kept apart from the floats cell_value() gives for numbers."""
+
+    __slots__ = ("value",)
+
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        return isinstance(other, Logical) and other.value == self.value
+
+    def __hash__(self):
+        return hash((Logical, self.value))
+
+    def __str__(self):
+        return "TRUE" if self.value else "FALSE"
+
+
 def cell_value(node, strings, part):
-    """Stored value of a cell: str, float, or None when it is empty. part is
-    the part path of the sheet that holds the cell. Raises ValueError for a
-    shared string index that is not one of the shared strings, as
-    ascii_int() does for an index that is not one or more of the digits 0
-    to 9, such as "x", 7_14 or +714, and as ascii_float() does for the
-    value of a cell stored as a number, such as "x", a value that holds a
-    digit other than 0 to 9 or an underscore, one with whitespace at its
-    start or end, such as " 1 ", or one with a leading sign, such as +1."""
+    """Stored value of a cell: str, float, Logical, or None when it is
+    empty. part is the part path of the sheet that holds the cell. Raises
+    ValueError for a shared string index that is not one of the shared
+    strings, as ascii_int() does for an index that is not one or more of
+    the digits 0 to 9, such as "x", 7_14 or +714, as ascii_float() does
+    for the value of a cell stored as a number, such as "x", a value that
+    holds a digit other than 0 to 9 or an underscore, one with whitespace
+    at its start or end, such as " 1 ", or one with a leading sign, such
+    as +1, and for the value of a cell stored as a logical value that is
+    not 0 or 1."""
     value = node.find(ns(MAIN_NS, "v"))
     kind = node.get("t")
     if kind == "inlineStr":
@@ -321,6 +345,14 @@ def cell_value(node, strings, part):
         return strings[index]
     if kind in ("str", "e"):
         return value.text
+    if kind == "b":
+        if value.text not in ("0", "1"):
+            raise ValueError(
+                "{} cell {} gives logical value {!r}, which is not 0 or 1".format(
+                    part, node.get("r"), value.text
+                )
+            )
+        return Logical(value.text == "1")
     return ascii_float(value.text)
 
 
@@ -373,6 +405,8 @@ def as_text(value):
     """The text Excel makes of a stored value, as CONCAT and TRIM do."""
     if isinstance(value, float):
         return "{:.15g}".format(value)
+    if isinstance(value, Logical):
+        return str(value)
     return value
 
 
@@ -425,6 +459,8 @@ def show(value):
         return "empty"
     if isinstance(value, float):
         return "{:.15g}".format(value)
+    if isinstance(value, Logical):
+        return "the logical value {}".format(value)
     return value
 
 
