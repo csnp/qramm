@@ -51,8 +51,11 @@ range. For each such chart:
 A category whose formula counts only "-", the practices with no score, is
 not checked unless its label is a maturity level. A value whose formula is
 longer than 8,192 characters, the most Excel allows in a formula, fails with
-"longer than the 8,192 Excel allows", and its criteria are not read. The
-script uses the Python standard library only.
+"longer than the 8,192 Excel allows", and its criteria are not read. A
+number of a score range or of a chart value criterion with a Unicode
+decimal digit other than 0 to 9, such as U+0661 (ARABIC-INDIC DIGIT ONE),
+fails with "has a digit other than 0 to 9". The script uses the Python
+standard library only.
 
 Exit status: 0 when the documents agree with the Scorecard, 1 when they do
 not or a file cannot be read, 2 on a usage error. An empty file argument
@@ -105,6 +108,10 @@ CUT_OFF = re.compile(r"[A-Z]+\d+>=(\d+(?:\.\d+)?),\s*\"([A-Za-z ]+)\"")
 DEFAULT = re.compile(r"1=1,\s*\"([A-Za-z ]+)\"")
 
 LEVEL_NAME = re.compile(r"\b(" + "|".join(LEVELS) + r")\b")
+# \d, not [0-9], in RANGE and COMPARISON: in a str pattern \d matches every
+# Unicode decimal digit, such as U+0661 (ARABIC-INDIC DIGIT ONE), so a number
+# written with one of them is matched whole, and odd_number() refuses it.
+# With [0-9], U+0661 followed by 1.5 would be read as 1.5.
 RANGE = re.compile(
     r"(?<![\d.])(?:"
     r"(?P<lo>\d+\.\d+) ?(?P<sep>to below|to|-|\N{EN DASH}) ?(?P<hi>\d+\.\d+)"
@@ -245,7 +252,33 @@ def describe(band):
     return "{} to {:.1f}".format(start, hi)
 
 
+def odd_number(numbers):
+    """The first of numbers, the texts of the numbers that RANGE or
+    COMPARISON matched, with a digit other than 0 to 9, or None. float()
+    reads every Unicode decimal digit, so it would read U+0661, a period and
+    U+0665 (ARABIC-INDIC DIGIT ONE and FIVE) as 1.5."""
+    for number in numbers:
+        if number is not None and not number.isascii():
+            return number
+    return None
+
+
+def number_problem(number):
+    """The reason a FAIL line gives for the number text odd_number() found.
+    !a writes each digit other than 0 to 9 as a backslash escape, as ascii()
+    does."""
+    return "the number {!a} has a digit other than 0 to 9".format(number)
+
+
 def to_band(match):
+    """(lo, lo inclusive, hi, hi inclusive) of a RANGE match, or the reason
+    a FAIL line gives when one of its numbers has a digit other than 0 to
+    9."""
+    odd = odd_number(
+        match.group(name) for name in ("lo", "hi", "below", "single", "named")
+    )
+    if odd is not None:
+        return number_problem(odd)
     if match.group("lo"):
         lo, hi = float(match.group("lo")), float(match.group("hi"))
         below = match.group("sep").lower() == "to below"
@@ -257,7 +290,9 @@ def to_band(match):
 
 
 def stated_ranges(lines):
-    """List of (line number, level, band) outside fenced code blocks."""
+    """List of (line number, level, band) outside fenced code blocks. band
+    is the reason a FAIL line gives, a str, when a number of the range has a
+    digit other than 0 to 9."""
     found = []
     fenced = False
     for number, line in enumerate(lines, 1):
@@ -284,7 +319,13 @@ def check_document(name, parts, bands, problems):
         where = place + " " if place else ""
         for number, level, band in stated_ranges(lines):
             stated.add(level)
-            if level not in bands:
+            if isinstance(band, str):
+                problems.append(
+                    "{} {}line {}: the score range for {}: {}".format(
+                        name, where, number, level, band
+                    )
+                )
+            elif level not in bands:
                 problems.append(
                     "{} {}line {}: {} is given the score range {}, but the {} labels "
                     "no dimension or overall score {} ({}!H9:H12 and H14)".format(
@@ -462,13 +503,16 @@ def count_criteria(formula):
 
 def criteria_band(criteria):
     """(lo, lo inclusive, hi, hi inclusive) of the scores from MIN_SCORE to
-    MAX_SCORE that meet every criterion, or None when a criterion is not a
-    comparison with a number."""
+    MAX_SCORE that meet every criterion, None when a criterion is not a
+    comparison with a number, or the reason a FAIL line gives, a str, when
+    the number of a comparison has a digit other than 0 to 9."""
     lo, lo_inclusive, hi, hi_inclusive = MIN_SCORE, True, MAX_SCORE, True
     for criterion in criteria:
         match = COMPARISON.fullmatch(criterion)
         if match is None:
             return None
+        if odd_number([match.group(2)]) is not None:
+            return number_problem(match.group(2))
         operator, value = match.group(1) or "=", float(match.group(2))
         if operator in (">", ">=", "="):
             inclusive = operator != ">"
@@ -516,6 +560,12 @@ def check_chart(path, chart, bands, problems):
             problems.append(
                 "{} {}: the {} chart counts the practices with no score as "
                 "{}".format(path, value_place, CHART_TITLE, level)
+            )
+        elif isinstance(band, str):
+            problems.append(
+                "{} {}: the {} chart value: {}".format(
+                    path, value_place, CHART_TITLE, band
+                )
             )
         elif band is None:
             problems.append(
