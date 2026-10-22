@@ -18,9 +18,12 @@ column and a risk value in its third; its first row is a header. This script
 reads the formula and fails unless every term has that form. The answers to
 one profile question share that question's factor, so the script groups the
 RiskMatrix rows by factor and fails unless there is one group for each term.
-The lowest multiplier adds each factor times the lowest risk value in its
-group, and the highest adds each factor times the highest. Both are rounded
-to the decimal places the formula's ROUND gives, with halves rounded up.
+A RiskMatrix cell whose shared string index is not one or more of the
+digits 0 to 9, or is past the end of the shared string table, fails with a
+line that names the cell. The lowest multiplier adds each factor times the
+lowest risk value in its group, and the highest adds each factor times the
+highest. Both are rounded to the decimal places the formula's ROUND gives,
+with halves rounded up.
 
 With no file arguments it checks the documents in DOCUMENTS; with file
 arguments it checks those files instead (paths relative to the repository
@@ -159,7 +162,9 @@ def cell_text(cell, strings):
     sign, allows an underscore between two digits and reads the other
     Unicode decimal digits, so it reads " 1820", +1820, 18_20 and 1820
     written with ARABIC-INDIC digits as 1820, and -1 as the index of the
-    last shared string."""
+    last shared string. The message of either error gives the index as
+    written, with each character outside ASCII as a backslash escape, so
+    that it can be printed whatever the encoding of stdout."""
     if cell is None:
         return None
     if cell.get("t") == "inlineStr":
@@ -170,8 +175,13 @@ def cell_text(cell, strings):
     if cell.get("t") == "s":
         if not INDEX.fullmatch(value.text):
             raise ValueError(
-                "shared string index {!r} is not one or more of the digits 0 "
-                "to 9".format(value.text)
+                "shared string index {} is not one or more of the digits 0 "
+                "to 9".format(ascii(value.text))
+            )
+        if int(value.text) >= len(strings):
+            raise IndexError(
+                "shared string index {} is past the end of the shared string "
+                "table, which has {} strings".format(value.text, len(strings))
             )
         return strings[int(value.text)]
     return value.text
@@ -233,12 +243,24 @@ def multiplier_range(path, problems):
     answers = [term.group(1) for term in terms]
 
     reference, top, left, bottom, cells = matrix
+    sheet = reference.rsplit("!", 1)[0]
     before = len(problems)
     groups = {}
     for row in range(top, bottom + 1):
-        category, factor, value = (
-            cell_text(cells.get((row, left + offset)), strings) for offset in range(3)
-        )
+        texts = []
+        for column in range(left, left + 3):
+            cell = cells.get((row, column))
+            try:
+                texts.append(cell_text(cell, strings))
+            except (IndexError, ValueError) as error:
+                problems.append(
+                    "{}: {} cell {}!{}: {}".format(
+                        WORKBOOK, MATRIX, sheet, cell.get("r"), error
+                    )
+                )
+        if len(texts) < 3:
+            continue
+        category, factor, value = texts
         if not (category or "").strip():
             continue
         try:

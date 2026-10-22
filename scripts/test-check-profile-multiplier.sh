@@ -7,11 +7,11 @@
 # Usage:
 #   scripts/test-check-profile-multiplier.sh
 #
-# Cases 7 to 10 copy the checker and the toolkit workbook into a new
-# temporary directory laid out like the repository (scripts/ and toolkit/),
-# edit the copy of the workbook, and run the checker there. Cases 15, 17 and
-# 38 to 43 make the same copies and pass the copy of the workbook to the
-# repository's checker as a document.
+# Cases 7 to 10 and 44 to 46 copy the checker and the toolkit workbook into
+# a new temporary directory laid out like the repository (scripts/ and
+# toolkit/), edit the copy of the workbook, and run the checker there. Cases
+# 15, 17 and 38 to 43 make the same copies and pass the copy of the workbook
+# to the repository's checker as a document.
 #
 # Cases:
 #   1. No file arguments (the documents in DOCUMENTS): exit 0, RESULT: PASS,
@@ -145,6 +145,17 @@
 #  end of text, reads a leading sign, allows an underscore between two
 #  digits and reads the other Unicode decimal digits, so it reads the index
 #  of cases 38 to 42 as 1820, and -1 as the index of the last shared string.
+#  44. A workbook whose RiskMatrix cell Data!M3 stores its shared string
+#      index 16 written as +16.
+#  45. A workbook whose Data!M3 stores 99999999, past the end of the shared
+#      string table, in place of the index 16.
+#  46. Under the en_US.ISO8859-1 locale, a workbook whose Data!M3 stores the
+#      index written with the ARABIC-INDIC digits U+0661 and U+0666.
+#  Cases 44 to 46 run a copy of the checker beside the workbook with a text
+#  document that gives the workbook's range: exit 1, nothing on stderr, one
+#  FAIL line, which names the workbook and Data!M3 and gives the index as
+#  written (with ١٦ for the digits of case 46), no document
+#  checked, and RESULT: FAIL as the last line.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -824,6 +835,57 @@ make_copy "$work/negativeindex" "$h9" '<c r="H9" s="205" t="s"><v>-1</v>'
 start_case "case 43: a negative shared string index" \
   "$checker" "$work/negativeindex/$toolkit" "$work/new.md"
 expect_not_a_workbook "negativeindex/$toolkit"
+end_case
+
+# The cell Data!M3, the first answer row of RiskMatrix (Data!M2:O30), stores
+# the shared string index 16.
+m3='<c r="M3" s="4" t="s"><v>16</v></c>'
+strings_count="$(python3 -I - "$root/$toolkit" <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+import zipfile
+
+with zipfile.ZipFile(sys.argv[1]) as book:
+    table = ET.fromstring(book.read("xl/sharedStrings.xml"))
+main = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}si"
+print(sum(1 for _ in table.iter(main)))
+PY
+)"
+
+# Expects the results of cases 44 to 46, where $1 is the text the FAIL line
+# gives after the name of the cell.
+expect_matrix_cell_fails() {
+  expected="  FAIL $toolkit: RiskMatrix cell Data!M3: $1"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "nothing on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line names the workbook and the RiskMatrix cell" 'has_line "$expected"'
+  expect "no document is checked" '[ "$(pass_count)" -eq 0 ]'
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
+make_copy "$work/plusmatrix" "$m3" '<c r="M3" s="4" t="s"><v>+16</v></c>'
+start_case "case 44: a RiskMatrix shared string index written with a plus sign" \
+  "$work/plusmatrix/scripts/check-profile-multiplier.py" "$work/new.md"
+expect_matrix_cell_fails "shared string index '+16' is not one or more of the digits 0 to 9"
+end_case
+
+make_copy "$work/pastmatrix" "$m3" '<c r="M3" s="4" t="s"><v>99999999</v></c>'
+start_case "case 45: a RiskMatrix shared string index past the end of the table" \
+  "$work/pastmatrix/scripts/check-profile-multiplier.py" "$work/new.md"
+expect_matrix_cell_fails \
+  "shared string index 99999999 is past the end of the shared string table, which has $strings_count strings"
+end_case
+
+# \331\241\331\246 is U+0661 and U+0666 (ARABIC-INDIC DIGIT ONE and SIX)
+# encoded as UTF-8.
+make_copy "$work/arabicmatrix" "$m3" \
+  "<c r=\"M3\" s=\"4\" t=\"s\"><v>$(printf '\331\241\331\246')</v></c>"
+LC_ALL=en_US.ISO8859-1 start_case \
+  "case 46: a RiskMatrix shared string index written with ARABIC-INDIC digits" \
+  "$work/arabicmatrix/scripts/check-profile-multiplier.py" "$work/new.md"
+expect_matrix_cell_fails \
+  "shared string index '\\u0661\\u0666' is not one or more of the digits 0 to 9"
 end_case
 
 if [ "$failed" -eq 0 ]; then
