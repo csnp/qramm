@@ -110,6 +110,11 @@ RANGE = re.compile(
     re.IGNORECASE,
 )
 
+# A shared string index. [0-9], not \d: in a str pattern \d also matches the
+# other Unicode decimal digits, such as U+0661 (ARABIC-INDIC DIGIT ONE), and
+# int() reads them too.
+INDEX = re.compile(r"[0-9]+")
+
 CHART_PART = re.compile(r"xl/charts/chart\d+\.xml")
 # A chart series range, Sheet!$A$1:$A$9 or 'Sheet name'!$A$1:$A$9.
 SERIES_RANGE = re.compile(
@@ -304,7 +309,14 @@ def shared_strings(book):
 
 
 def cell_text(cell, strings):
-    """Text of a cell: its shared or inline string, or its stored value."""
+    """Text of a cell: its shared or inline string, or its stored value.
+    Raises IndexError for a shared string index past the end of strings,
+    and ValueError for one that is not one or more of the digits 0 to 9.
+    int() strips whitespace from the start and end of text, reads a leading
+    sign, allows an underscore between two digits and reads the other
+    Unicode decimal digits, so it reads " 1820", +1820, 18_20 and 1820
+    written with ARABIC-INDIC digits as 1820, and -1 as the index of the
+    last shared string."""
     if cell is None:
         return None
     if cell.get("t") == "inlineStr":
@@ -313,6 +325,11 @@ def cell_text(cell, strings):
     if value is None or value.text is None:
         return None
     if cell.get("t") == "s":
+        if not INDEX.fullmatch(value.text):
+            raise ValueError(
+                "shared string index {!r} is not one or more of the digits 0 "
+                "to 9".format(value.text)
+            )
         return strings[int(value.text)]
     return value.text
 
@@ -603,7 +620,8 @@ def main(argv):
                     raise
                 # A zip archive that is not a readable workbook: a missing
                 # part or relationship Target, XML that does not parse, or a
-                # shared-string index past the end of the table, for example.
+                # shared-string index past the end of the table or not
+                # written as one or more of the digits 0 to 9, for example.
                 problems.append("{}: cannot read (not a workbook)".format(name))
                 continue
             check_document(name, parts, bands, problems)

@@ -76,6 +76,10 @@ PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 # A defined name's reference, Sheet!$A$1 or Sheet!$A$1:$C$9.
 REFERENCE = re.compile(r"'?(.+?)'?!\$?([A-Z]+)\$?(\d+)(?::\$?([A-Z]+)\$?(\d+))?")
 CELL = re.compile(r"([A-Z]+)(\d+)")
+# A shared string index. [0-9], not \d: in a str pattern \d also matches the
+# other Unicode decimal digits, such as U+0661 (ARABIC-INDIC DIGIT ONE), and
+# int() reads them too.
+INDEX = re.compile(r"[0-9]+")
 
 # Formula parts, matched after all whitespace is removed.
 IFERROR = re.compile(r'IFERROR\((.+),"[^"]*"\)')
@@ -148,7 +152,14 @@ def column_number(letters):
 
 
 def cell_text(cell, strings):
-    """Text of a cell: its shared or inline string, or its stored value."""
+    """Text of a cell: its shared or inline string, or its stored value.
+    Raises IndexError for a shared string index past the end of strings,
+    and ValueError for one that is not one or more of the digits 0 to 9.
+    int() strips whitespace from the start and end of text, reads a leading
+    sign, allows an underscore between two digits and reads the other
+    Unicode decimal digits, so it reads " 1820", +1820, 18_20 and 1820
+    written with ARABIC-INDIC digits as 1820, and -1 as the index of the
+    last shared string."""
     if cell is None:
         return None
     if cell.get("t") == "inlineStr":
@@ -157,6 +168,11 @@ def cell_text(cell, strings):
     if value is None or value.text is None:
         return None
     if cell.get("t") == "s":
+        if not INDEX.fullmatch(value.text):
+            raise ValueError(
+                "shared string index {!r} is not one or more of the digits 0 "
+                "to 9".format(value.text)
+            )
         return strings[int(value.text)]
     return value.text
 
@@ -425,6 +441,8 @@ def main(argv):
                 # data that does not decompress, XML that does not parse or
                 # declares an unknown encoding, and a shared-string index past
                 # the end of the table each raise a different error type.
+                # cell_text() raises ValueError for a shared-string index that
+                # is not one or more of the digits 0 to 9.
                 problems.append("{}: cannot read (not a workbook)".format(name))
                 continue
             check_document(name, parts, lowest, highest, problems)

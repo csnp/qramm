@@ -9,9 +9,9 @@
 #
 # Cases 7 to 10 copy the checker and the toolkit workbook into a new
 # temporary directory laid out like the repository (scripts/ and toolkit/),
-# edit the copy of the workbook, and run the checker there. Cases 15 and 17
-# make the same copies and pass the copy of the workbook to the repository's
-# checker as a document.
+# edit the copy of the workbook, and run the checker there. Cases 15, 17 and
+# 38 to 43 make the same copies and pass the copy of the workbook to the
+# repository's checker as a document.
 #
 # Cases:
 #   1. No file arguments (the documents in DOCUMENTS): exit 0, RESULT: PASS,
@@ -128,6 +128,23 @@
 #      document that gives the workbook's range: the results of cases 23 to
 #      28. zipfile.is_zipfile() accepts this archive, and zipfile raises
 #      OSError(22, "Invalid argument") when it reads the first entry.
+#  38. A copy of the workbook whose text cell Welcome!H9 stores its shared
+#      string index 1820 written as +1820.
+#  39. A copy whose Welcome!H9 stores the index written as " 1820", a space
+#      followed by 1820.
+#  40. A copy whose Welcome!H9 stores the index written as "1820 ", 1820
+#      followed by a space.
+#  41. A copy whose Welcome!H9 stores the index written as 18_20.
+#  42. A copy whose Welcome!H9 stores the index written with the
+#      ARABIC-INDIC digits U+0661, U+0668, U+0662 and U+0660.
+#  43. A copy whose Welcome!H9 stores -1 in place of the index 1820.
+#  Cases 38 to 43 pass the copy and then a text document that gives the
+#  workbook's range, and expect the results of cases 23 to 28: the copy
+#  fails as the workbook of case 22, whose index is past the end of the
+#  shared string table, does. int() strips whitespace from the start and
+#  end of text, reads a leading sign, allows an underscore between two
+#  digits and reads the other Unicode decimal digits, so it reads the index
+#  of cases 38 to 42 as 1820, and -1 as the index of the last shared string.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -533,8 +550,8 @@ sys.exit(0 if found else 1)
 PY
 }
 
-# Expectations for cases 23 to 28, 30, 32, 33 and 37: $1 is the workbook's
-# file name.
+# Expectations for cases 23 to 28, 30, 32, 33 and 37 to 43: $1 is the
+# workbook's file name, or the end of its path.
 expect_not_a_workbook() {
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "no traceback on stderr" '[ -z "$err" ]'
@@ -764,6 +781,49 @@ move_directory_offset "$work/badoffset.xlsx"
 start_case "case 37: a central directory offset past the end of the file" \
   "$checker" "$work/badoffset.xlsx" "$work/new.md"
 expect_not_a_workbook badoffset.xlsx
+end_case
+
+# The text cell Welcome!H9 of the toolkit workbook stores the shared string
+# index 1820, the index of the text that gives the multiplier range.
+h9='<c r="H9" s="205" t="s"><v>1820</v>'
+
+make_copy "$work/plusindex" "$h9" '<c r="H9" s="205" t="s"><v>+1820</v>'
+start_case "case 38: a shared string index written with a plus sign" \
+  "$checker" "$work/plusindex/$toolkit" "$work/new.md"
+expect_not_a_workbook "plusindex/$toolkit"
+end_case
+
+make_copy "$work/spaceindex" "$h9" '<c r="H9" s="205" t="s"><v> 1820</v>'
+start_case "case 39: a shared string index written after a space" \
+  "$checker" "$work/spaceindex/$toolkit" "$work/new.md"
+expect_not_a_workbook "spaceindex/$toolkit"
+end_case
+
+make_copy "$work/indexspace" "$h9" '<c r="H9" s="205" t="s"><v>1820 </v>'
+start_case "case 40: a shared string index written before a space" \
+  "$checker" "$work/indexspace/$toolkit" "$work/new.md"
+expect_not_a_workbook "indexspace/$toolkit"
+end_case
+
+make_copy "$work/underscoreindex" "$h9" '<c r="H9" s="205" t="s"><v>18_20</v>'
+start_case "case 41: a shared string index written with an underscore" \
+  "$checker" "$work/underscoreindex/$toolkit" "$work/new.md"
+expect_not_a_workbook "underscoreindex/$toolkit"
+end_case
+
+# \331\241\331\250\331\242\331\240 is U+0661, U+0668, U+0662 and U+0660
+# (ARABIC-INDIC DIGIT ONE, EIGHT, TWO and ZERO) encoded as UTF-8.
+make_copy "$work/arabicindex" "$h9" \
+  "<c r=\"H9\" s=\"205\" t=\"s\"><v>$(printf '\331\241\331\250\331\242\331\240')</v>"
+start_case "case 42: a shared string index written with ARABIC-INDIC digits" \
+  "$checker" "$work/arabicindex/$toolkit" "$work/new.md"
+expect_not_a_workbook "arabicindex/$toolkit"
+end_case
+
+make_copy "$work/negativeindex" "$h9" '<c r="H9" s="205" t="s"><v>-1</v>'
+start_case "case 43: a negative shared string index" \
+  "$checker" "$work/negativeindex/$toolkit" "$work/new.md"
+expect_not_a_workbook "negativeindex/$toolkit"
 end_case
 
 if [ "$failed" -eq 0 ]; then
