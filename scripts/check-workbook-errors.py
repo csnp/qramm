@@ -20,6 +20,13 @@ attribute, such as 1A or M1x, that is not a cell reference, the script
 cannot tell whether the cell's column is hidden, and the workbook fails as
 not a workbook.
 
+The script reads the sheet, row, column and cell elements of a workbook in
+the namespace the Transitional Open XML format uses for them,
+http://schemas.openxmlformats.org/spreadsheetml/2006/main, or in the one
+the Strict Open XML format uses, http://purl.oclc.org/ooxml/spreadsheetml/main.
+A workbook whose xl/workbook.xml has no sheet element in either namespace
+fails as not a workbook.
+
 The script uses the Python standard library only. Exit status: 0 when no
 workbook stores an error value in a visible cell, 1 when one does or a
 workbook cannot be read, 2 on a usage error. An empty workbook argument
@@ -78,6 +85,15 @@ WORKBOOKS = [
 MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
+# The namespaces the Strict Open XML format uses for SpreadsheetML elements
+# and for the r:id attribute of a sheet element, each mapped to the one the
+# Transitional format uses in its place. read_xml() reads a name in one of
+# them as the name in the Transitional namespace. Both formats use
+# PKG_REL_NS for the Relationship elements.
+STRICT_NS = {
+    "http://purl.oclc.org/ooxml/spreadsheetml/main": MAIN_NS,
+    "http://purl.oclc.org/ooxml/officeDocument/relationships": REL_NS,
+}
 
 CELL_REF = re.compile(r"([A-Z]+)(\d+)")
 
@@ -95,10 +111,31 @@ def column_number(letters):
     return number
 
 
+def transitional(name):
+    """name, an element or attribute name such as {namespace}sheet, with a
+    namespace of STRICT_NS replaced by the one STRICT_NS gives for it."""
+    if name.startswith("{"):
+        namespace, _, local = name[1:].partition("}")
+        if namespace in STRICT_NS:
+            return ns(STRICT_NS[namespace], local)
+    return name
+
+
+def read_xml(book, part):
+    """The root element of the part path part of book, with each element and
+    attribute name replaced by what transitional() gives for it."""
+    root = ET.fromstring(book.read(part))
+    for node in root.iter():
+        node.tag = transitional(node.tag)
+        node.attrib = {transitional(name): value for name, value in node.attrib.items()}
+    return root
+
+
 def sheets(book):
     """List of (name, part path, hidden) in workbook order. Raises ValueError
-    for a sheet whose Relationship element has no Target attribute."""
-    workbook = ET.fromstring(book.read("xl/workbook.xml"))
+    for a sheet whose Relationship element has no Target attribute, and when
+    xl/workbook.xml has no sheet element that read_xml() reads in MAIN_NS."""
+    workbook = read_xml(book, "xl/workbook.xml")
     rels = ET.fromstring(book.read("xl/_rels/workbook.xml.rels"))
     targets = {
         rel.get("Id"): rel.get("Target")
@@ -116,6 +153,12 @@ def sheets(book):
         part = target.lstrip("/") if target.startswith("/") else "xl/" + target
         hidden = sheet.get("state") in ("hidden", "veryHidden")
         found.append((sheet.get("name"), part, hidden))
+    if not found:
+        # A workbook whose sheet elements are in a namespace this script
+        # does not read would otherwise pass with no cell checked.
+        raise ValueError(
+            "xl/workbook.xml has no sheet element in a namespace the script reads"
+        )
     return found
 
 
@@ -208,7 +251,7 @@ def check_workbook(label, path, problems):
             for name, part, hidden in sheets(book):
                 if hidden:
                     continue
-                root = ET.fromstring(book.read(part))
+                root = read_xml(book, part)
                 formulas += check_sheet(name, part, root, label, problems)
     except OSError as error:
         if error.errno is None or is_zip_file(path):
