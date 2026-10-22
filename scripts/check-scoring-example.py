@@ -89,16 +89,28 @@ def defined_names(workbook):
     return result
 
 
+def ascii_float(text):
+    """float(text), except that text with a character outside ASCII or with
+    an underscore raises ValueError, as float() does for text such as "x".
+    The workbook writes its numbers with the digits 0 to 9. float() also
+    reads every Unicode decimal digit, such as U+0662 (ARABIC-INDIC DIGIT
+    TWO) as 2, and allows an underscore between two digits, so it reads
+    2.5_6 as 2.56."""
+    if not text.isascii() or "_" in text:
+        raise ValueError("could not convert string to float: {!r}".format(text))
+    return float(text)
+
+
 def cached_number(node):
     """Number the c element node stores, or None when node is None or the
     cell stores no number: it has no v element or an empty one, its t
-    attribute is s, str, e or inlineStr, or float() cannot read the text of
-    its v element, such as "x"."""
+    attribute is s, str, e or inlineStr, or ascii_float() cannot read the
+    text of its v element, such as "x" or "2.5_6"."""
     value = None if node is None else node.find(ns(MAIN_NS, "v"))
     if value is None or value.text is None or node.get("t") in ("s", "str", "e", "inlineStr"):
         return None
     try:
-        return float(value.text)
+        return ascii_float(value.text)
     except ValueError:
         return None
 
