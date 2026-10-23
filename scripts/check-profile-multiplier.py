@@ -18,6 +18,9 @@ column and a risk value in its third; its first row is a header. This script
 reads the formula and fails unless every term has that form. The answers to
 one profile question share that question's factor, so the script groups the
 RiskMatrix rows by factor and fails unless there is one group for each term.
+A ProfileMultiplier or RiskMatrix reference that gives a row past 1048576,
+the last row of a worksheet, such as 1 followed by 4300 zeros, fails with a
+line that names the defined name and says its reference cannot be used.
 A RiskMatrix cell whose shared string index is not one or more of the
 digits 0 to 9, or is past the end of the shared string table, fails with a
 line that names the cell. An answer whose factor or risk value is not one
@@ -103,6 +106,9 @@ PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 # A defined name's reference, Sheet!$A$1 or Sheet!$A$1:$C$9.
 REFERENCE = re.compile(r"'?(.+?)'?!\$?([A-Z]+)\$?(\d+)(?::\$?([A-Z]+)\$?(\d+))?")
 CELL = re.compile(r"([A-Z]+)(\d+)")
+# The last row of an Excel worksheet. A defined name whose reference gives a
+# row past it cannot be used.
+LAST_ROW = 1048576
 # A shared string index. [0-9], not \d: in a str pattern \d also matches the
 # other Unicode decimal digits, such as U+0661 (ARABIC-INDIC DIGIT ONE), and
 # int() reads them too.
@@ -265,7 +271,8 @@ def cell_text(cell, strings):
 def named_cells(book, paths, names, name, problems):
     """(reference, top row, left column, bottom row, cells) for a defined
     name, where cells maps (row, column) to each cell inside the reference.
-    None when the name does not refer to cells of a sheet in the workbook."""
+    None, after adding a problem, when the name does not refer to cells of a
+    sheet in the workbook or its reference gives a row past LAST_ROW."""
     match = REFERENCE.fullmatch(names.get(name, ""))
     sheet = match.group(1).replace("''", "'") if match else None
     if sheet not in paths:
@@ -274,7 +281,19 @@ def named_cells(book, paths, names, name, problems):
         )
         return None
     _, left, top, right, bottom = match.groups()
-    top, bottom = int(top), int(bottom or top)
+    # Decimal(), not int(), reads the rows: in Python 3.14.3, int() raises
+    # ValueError for text of more than 4300 digits. A row past LAST_ROW
+    # fails here, before multiplier_range() reads RiskMatrix one row at a
+    # time: for a last row of 1 followed by 4299 zeros, which int() reads,
+    # that would be about 10^4299 rows.
+    rows = [Decimal(row) for row in (top, bottom or top)]
+    if any(row > LAST_ROW for row in rows):
+        problems.append(
+            "{}: {} refers to a row past {}, the last row of a worksheet, so "
+            "its reference cannot be used".format(WORKBOOK, name, LAST_ROW)
+        )
+        return None
+    top, bottom = (int(row) for row in rows)
     left, right = column_number(left), column_number(right or left)
     cells = {}
     for cell in parse_xml(book.read(paths[sheet])).iter(ns(MAIN_NS, "c")):

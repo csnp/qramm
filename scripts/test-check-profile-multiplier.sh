@@ -7,7 +7,7 @@
 # Usage:
 #   scripts/test-check-profile-multiplier.sh
 #
-# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 64 copy the checker and the toolkit
+# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 68 copy the checker and the toolkit
 # workbook into a new temporary directory laid out like the repository
 # (scripts/ and toolkit/), edit the copy of the workbook, and run the
 # checker there. Cases 15, 17, 38 to 43, 47 and 48 make the same copies and
@@ -245,6 +245,24 @@
 #      followed by 4300 zeros, which has 4301 digits: the results of case
 #      58. In Python 3.13.12 and 3.14.3, int() raises ValueError for text
 #      of more than 4300 digits.
+#  65. A workbook whose RiskMatrix reference, Data!$M$2:$O$30, gives its
+#      last row as 1 followed by 4300 zeros, which has 4301 digits. In
+#      Python 3.14.3, int() raises ValueError for text of more than 4300
+#      digits.
+#  66. A workbook whose RiskMatrix reference gives its last row as 1048577,
+#      the first row past the last row of a worksheet.
+#  67. A workbook whose ProfileMultiplier reference, Profile!$D$21, gives
+#      its row as 1 followed by 4300 zeros.
+#  Cases 65 to 67 run the copy of the checker with a text document that
+#  gives the workbook's range: exit 1, nothing on stderr, one FAIL line,
+#  which names the toolkit workbook and says the defined name refers to a
+#  row past 1048576, the last row of a worksheet, so its reference cannot
+#  be used, no line that says the workbook cannot be read, no == line, so
+#  no document checked, and RESULT: FAIL as the last line.
+#  68. A workbook whose RiskMatrix reference gives its last row as 1048576:
+#      exit 0, nothing on stderr, the == line gives RiskMatrix as
+#      Data!M2:O1048576, the lowest and highest multiplier listed as 1.00
+#      and 1.50, a PASS line for the document, then RESULT: PASS.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -1291,6 +1309,55 @@ expect "exit status is 0" '[ "$status" -eq 0 ]'
 expect "nothing on stderr" '[ -z "$err" ]'
 expect "workbook range is listed with 28 places" \
   'has_line "  lowest 1.$zeros28, highest 1.5${zeros28#0}"'
+expect "PASS line for between 1.00 and 1.50" 'has_line "  PASS line 1: 1.00 to 1.50"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+end_case
+
+# Expects the results of cases 65 to 67, where $1 is the defined name the
+# FAIL line gives.
+expect_reference_unusable() {
+  expected="  FAIL $toolkit: $1 refers to a row past 1048576, the last row of a worksheet, so its reference cannot be used"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "nothing on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line names $1 and says its reference cannot be used" 'has_line "$expected"'
+  expect "no line says the workbook cannot be read" \
+    '! printf "%s\n" "$out" | grep -q -F "cannot read"'
+  expect "no == line, so no document is checked" '! printf "%s\n" "$out" | grep -q "^=="'
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
+# 1 followed by 4300 zeros.
+row4301="1$(printf '%04300d' 0)"
+
+make_copy "$work/row4301" '>Data!$M$2:$O$30<' ">Data!\$M\$2:\$O\$$row4301<"
+start_case "case 65: a RiskMatrix reference whose last row has 4301 digits" \
+  "$work/row4301/scripts/check-profile-multiplier.py" "$work/new.md"
+expect "the last row has 4301 digits" '[ "${#row4301}" -eq 4301 ]'
+expect_reference_unusable RiskMatrix
+end_case
+
+make_copy "$work/row1048577" '>Data!$M$2:$O$30<' '>Data!$M$2:$O$1048577<'
+start_case "case 66: a RiskMatrix reference whose last row is 1048577" \
+  "$work/row1048577/scripts/check-profile-multiplier.py" "$work/new.md"
+expect_reference_unusable RiskMatrix
+end_case
+
+make_copy "$work/profilerow4301" '>Profile!$D$21<' ">Profile!\$D\$$row4301<"
+start_case "case 67: a ProfileMultiplier reference whose row has 4301 digits" \
+  "$work/profilerow4301/scripts/check-profile-multiplier.py" "$work/new.md"
+expect "the row has 4301 digits" '[ "${#row4301}" -eq 4301 ]'
+expect_reference_unusable ProfileMultiplier
+end_case
+
+make_copy "$work/row1048576" '>Data!$M$2:$O$30<' '>Data!$M$2:$O$1048576<'
+start_case "case 68: a RiskMatrix reference whose last row is 1048576" \
+  "$work/row1048576/scripts/check-profile-multiplier.py" "$work/new.md"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "the == line gives RiskMatrix as Data!M2:O1048576" \
+  "has_line '== $toolkit ProfileMultiplier (Profile!D21), RiskMatrix (Data!M2:O1048576)'"
+expect "workbook range is 1.00 to 1.50" 'has_line "  lowest 1.00, highest 1.50"'
 expect "PASS line for between 1.00 and 1.50" 'has_line "  PASS line 1: 1.00 to 1.50"'
 expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
 end_case
