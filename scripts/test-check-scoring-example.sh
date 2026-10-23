@@ -2,15 +2,16 @@
 # Tests scripts/check-scoring-example.py against the repository document and
 # workbook, against copies of the sample workbook whose cached value for
 # CVI_Score is not a finite number, is written in another way or is a
-# logical value, and against copies of the document whose CVI score line
-# shows a number with a digit other than 0 to 9.
+# logical value, or whose xl/workbook.xml cannot be read, and against copies
+# of the document whose CVI score line shows a number with a digit other
+# than 0 to 9.
 #
 # Usage:
 #   scripts/test-check-scoring-example.sh
 #
 # The checker reads framework/scoring-methodology.md and
 # toolkit/Sample_Assessment.xlsx from the directory above its own. Cases 2
-# to 8, 13 and 14 copy the checker and the document into a new temporary
+# to 8 and 13 to 19 copy the checker and the document into a new temporary
 # directory laid out like the repository (scripts/, framework/ and toolkit/),
 # write an edited copy of the sample workbook there, and run the checker
 # there. Cases 13 and 14 also edit the copy of the document, so that its CVI
@@ -74,6 +75,24 @@
 #      t="b" on the c element and <v>0</v>, checked against a copy of the
 #      document whose CVI score line shows 0 in place of 2.56.
 #  Cases 13 and 14: the same expectations as cases 2 to 5.
+#  15. A copy of the sample workbook whose xl/workbook.xml has the document
+#      type declaration <!DOCTYPE r [<!ENTITY e0 "FAKE">]> after its XML
+#      declaration.
+#  16. A copy whose xl/workbook.xml has <unclosed after its root element, so
+#      that its XML is not well-formed.
+#  17. A copy whose xl/workbook.xml has an XML declaration that names the
+#      encoding x-bogus, which Python has no codec for.
+#  18. A copy whose xl/workbook.xml has an XML declaration that names the
+#      encoding shift_jis, a multi-byte encoding the XML parser does not
+#      read.
+#  19. A copy that does not hold xl/workbook.xml.
+#  Cases 15 to 19: exit 1, nothing on stderr, the == line first, no PASS
+#  line, one FAIL line, which says "toolkit/Sample_Assessment.xlsx: cannot
+#  read" and gives the reason in parentheses, then RESULT: FAIL. The reason
+#  is "document type declaration" and "junk after document element", each
+#  followed by the line and column where the XML parser stopped, "unknown
+#  encoding: x-bogus", "multi-byte encodings are not supported", and "There
+#  is no item named 'xl/workbook.xml' in the archive" in double quotes.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -208,6 +227,57 @@ make_doc_copy() {
   cvi_line="$(set_shown_value "$root/$methodology" "$1/$methodology" "$2")"
 }
 
+# Writes to $2 a copy of the workbook $1 whose xl/workbook.xml is edited as
+# $3 says: doctype puts <!DOCTYPE r [<!ENTITY e0 "FAKE">]> after its XML
+# declaration, unclosed puts <unclosed at its end, after its root element,
+# encoding=<name> makes its XML declaration name the encoding <name>, and
+# missing leaves the part out of the copy. Fails when the workbook has no
+# xl/workbook.xml that starts with an XML declaration naming an encoding.
+break_workbook_xml() {
+  python3 -I - "$@" <<'PY'
+import re
+import sys
+import zipfile
+
+source, target, edit = sys.argv[1:4]
+part = "xl/workbook.xml"
+declaration = re.compile(rb'<\?xml[^>]*\bencoding="[^"]*"[^>]*\?>')
+found = False
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        data = book.read(info.filename)
+        if info.filename == part:
+            found = True
+            head = declaration.match(data)
+            if head is None:
+                sys.exit("%s: %s has no XML declaration that names an encoding" % (source, part))
+            if edit == "missing":
+                continue
+            if edit == "doctype":
+                data = data[:head.end()] + b'<!DOCTYPE r [<!ENTITY e0 "FAKE">]>' + data[head.end():]
+            elif edit == "unclosed":
+                data += b"<unclosed"
+            elif edit.startswith("encoding="):
+                name = edit[len("encoding="):].encode("ascii")
+                named = re.sub(rb'\bencoding="[^"]*"', b'encoding="' + name + b'"', head.group())
+                data = named + data[head.end():]
+            else:
+                sys.exit("unknown edit: %s" % edit)
+        copy.writestr(info, data)
+if not found:
+    sys.exit("%s has no part %s" % (source, part))
+PY
+}
+
+# Lays out a copy of the repository at $1 with the checker, the document and
+# a copy of the sample workbook made by break_workbook_xml with the edit $2.
+make_book_copy() {
+  mkdir -p "$1/scripts" "$1/framework" "$1/toolkit"
+  cp "$checker" "$1/scripts/check-scoring-example.py"
+  cp "$root/$methodology" "$1/$methodology"
+  break_workbook_xml "$root/$sample" "$1/$sample" "$2"
+}
+
 # Runs the checker at $1. Sets out, err and status.
 run_checker() {
   status=0
@@ -277,6 +347,22 @@ expect_cvi_fail() {
 expect_no_cvi_number() {
   expect_cvi_fail "CVI_Score has no cached number" \
     "  FAIL CVI_Score: Dimension 1 - CVI!L5 has no cached number"
+}
+
+# The expect lines of cases 15 to 19, whose copy of the sample workbook
+# cannot be read. $1 is the reason the FAIL line gives in parentheses, as an
+# extended regular expression.
+expect_cannot_read() {
+  local fail_pattern="  FAIL toolkit/Sample_Assessment\\.xlsx: cannot read \\($1\\)"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "nothing on stderr" '[ -z "$err" ]'
+  expect "first line is the == line" \
+    '[ "$(printf "%s\n" "$out" | head -n 1)" = "== $methodology against $sample" ]'
+  expect "no PASS line" "! printf '%s\n' \"\$out\" | grep -q '^  PASS'"
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line names the workbook and the reason" \
+    'printf "%s\n" "$out" | grep -q -x -E -- "$fail_pattern"'
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 }
 
 # The expect lines of cases 9 to 12. $1 is the text the case writes after
@@ -380,6 +466,36 @@ show_cvi_score "$work/false" 0
 start_case "case 14: CVI_Score cell stores the logical value FALSE, the document shows 0" \
   "$work/false/scripts/check-scoring-example.py"
 expect_no_cvi_number
+end_case
+
+make_book_copy "$work/book-doctype" doctype
+start_case "case 15: xl/workbook.xml has a document type declaration" \
+  "$work/book-doctype/scripts/check-scoring-example.py"
+expect_cannot_read 'document type declaration: line [0-9]+, column [0-9]+'
+end_case
+
+make_book_copy "$work/book-unclosed" unclosed
+start_case "case 16: xl/workbook.xml has <unclosed after its root element" \
+  "$work/book-unclosed/scripts/check-scoring-example.py"
+expect_cannot_read 'junk after document element: line [0-9]+, column [0-9]+'
+end_case
+
+make_book_copy "$work/book-x-bogus" encoding=x-bogus
+start_case "case 17: the XML declaration of xl/workbook.xml names the encoding x-bogus" \
+  "$work/book-x-bogus/scripts/check-scoring-example.py"
+expect_cannot_read 'unknown encoding: x-bogus'
+end_case
+
+make_book_copy "$work/book-shift-jis" encoding=shift_jis
+start_case "case 18: the XML declaration of xl/workbook.xml names the encoding shift_jis" \
+  "$work/book-shift-jis/scripts/check-scoring-example.py"
+expect_cannot_read 'multi-byte encodings are not supported'
+end_case
+
+make_book_copy "$work/book-missing" missing
+start_case "case 19: the workbook does not hold xl/workbook.xml" \
+  "$work/book-missing/scripts/check-scoring-example.py"
+expect_cannot_read "\"There is no item named 'xl/workbook\\.xml' in the archive\""
 end_case
 
 if [ "$failed" -eq 0 ]; then

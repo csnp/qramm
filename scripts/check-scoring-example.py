@@ -23,13 +23,19 @@ such as U+0662 (ARABIC-INDIC DIGIT TWO). The workbook values are the cached
 results Excel stored when the file was last calculated; the script does not
 recompute any formula. It uses the Python standard library only.
 
-Exit status: 0 when the example matches the workbook, 1 when it does not, 2 on
-a usage error. --help (or -h) prints the usage line and this text on stderr
-and exits 2. The script takes no other argument: given one, it names each
-argument on stderr on a line of its own, "unknown option: --verbose" for one
-that starts with "-" and "unexpected argument: README.md" for any other,
-then prints "this checker takes no arguments" and the usage line, and exits
-2.
+Exit status: 0 when the example matches the workbook, 1 when it does not or
+the workbook cannot be read, 2 on a usage error. A part of the workbook that
+the script reads, such as xl/workbook.xml, cannot be read when the workbook
+does not hold it, when its XML is not well-formed or has a document type
+declaration, or when its XML declaration names an encoding the XML parser
+cannot use, such as x-bogus or shift_jis. The FAIL line then gives the
+reason, as in "toolkit/Sample_Assessment.xlsx: cannot read (document type
+declaration: line 1, column 67)", and no value is compared. --help (or -h)
+prints the usage line and this text on stderr and exits 2. The script takes
+no other argument: given one, it names each argument on stderr on a line of
+its own, "unknown option: --verbose" for one that starts with "-" and
+"unexpected argument: README.md" for any other, then prints "this checker
+takes no arguments" and the usage line, and exits 2.
 """
 
 import math
@@ -280,19 +286,29 @@ def main(argv):
     doc_path = os.path.join(root, DOC)
     workbook_path = os.path.join(root, WORKBOOK)
 
-    values = cached_values(workbook_path, [name for name, _ in EXPECTED])
+    problems = []
+    try:
+        values = cached_values(workbook_path, [name for name, _ in EXPECTED])
+    except (ET.ParseError, LookupError, ValueError) as error:
+        # ET.ParseError: XML that is not well-formed, or DoctypeError, its
+        # subclass, for a document type declaration. LookupError: an XML
+        # declaration that names an encoding Python has no codec for, such
+        # as x-bogus, or KeyError, its subclass, for a part the archive does
+        # not hold. ValueError: an XML declaration that names a multi-byte
+        # encoding, such as shift_jis, which the XML parser does not read.
+        values = None
+        problems.append("{}: cannot read ({})".format(WORKBOOK, error))
     with open(doc_path, encoding="utf-8") as fh:
         lines = fh.read().splitlines()
 
     print("== {} against {}".format(DOC, WORKBOOK))
-    problems = []
     label = os.path.basename(WORKBOOK)
     blocks = labelled_blocks(lines, label)
     if len(blocks) != 1:
         problems.append(
             "{} fenced blocks are labelled with {}, expected 1".format(len(blocks), label)
         )
-    else:
+    elif values is not None:
         start, block = blocks[0]
         print("  example block opens at line {}".format(start))
         for name, line_label in EXPECTED:

@@ -27,10 +27,11 @@
 #      recorded for case 3.
 #   3. For each checker other than check-workbook-protection.py, and each
 #      part case 2 recorded for it: the copy with a document type
-#      declaration in that part alone: an exit status other than 0, the
-#      part is read, and ET.fromstring is never given XML that holds
-#      "<!DOCTYPE". Some checkers print such a workbook as one they cannot
-#      read without naming the reason, so the output is not matched.
+#      declaration in that part alone: an exit status other than 0, nothing
+#      on stderr, RESULT: FAIL as the last line of stdout, the part is read,
+#      and ET.fromstring is never given XML that holds "<!DOCTYPE". Some
+#      checkers print such a workbook as one they cannot read without naming
+#      the reason, so the FAIL lines are not matched.
 #
 # The checker runs through runpy in a python3 -I process that wraps
 # zipfile.ZipFile.open, to record the parts the checker opens, and
@@ -275,6 +276,9 @@ for checker in "${checkers[@]}"; do
     failed=0
     expect "$checker, $workbook: $part: exit status is not 0 ($status)" \
       '[ "$status" -ne 0 ]'
+    expect "$checker, $workbook: $part: nothing on stderr" '[ -z "$err" ]'
+    expect "$checker, $workbook: $part: last line is RESULT: FAIL" \
+      '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
     expect "$checker, $workbook: $part: ET.fromstring is given no document type declaration ($parsed)" \
       '[ "$parsed" -eq 0 ]'
     expect "$checker, $workbook: $part: the part is read" \
