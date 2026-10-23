@@ -2,24 +2,27 @@
 # Tests scripts/check-scoring-example.py against the repository document and
 # workbook, against copies of the sample workbook whose cached value for
 # CVI_Score is not a finite number, is written in another way or is a
-# logical value, or whose xl/workbook.xml cannot be read, and against copies
-# of the document whose CVI score line shows a number with a digit other
-# than 0 to 9.
+# logical value, or whose xl/workbook.xml cannot be read, against copies of
+# the repository whose sample workbook is missing, is a text file, has an
+# entry that does not match its CRC-32 or has a Relationship element with no
+# Target attribute, and against copies of the document whose CVI score line
+# shows a number with a digit other than 0 to 9.
 #
 # Usage:
 #   scripts/test-check-scoring-example.sh
 #
 # The checker reads framework/scoring-methodology.md and
 # toolkit/Sample_Assessment.xlsx from the directory above its own. Cases 2
-# to 8 and 13 to 19 copy the checker and the document into a new temporary
+# to 8 and 13 to 23 copy the checker and the document into a new temporary
 # directory laid out like the repository (scripts/, framework/ and toolkit/),
-# write an edited copy of the sample workbook there, and run the checker
-# there. Cases 13 and 14 also edit the copy of the document, so that its CVI
-# score line shows the value the cell stores. Cases 9 to 12 copy the checker
-# and the sample workbook into such a directory, write there a copy of the
-# document whose line that starts with "CVI score" ends with "= " and the
-# text the case names in place of its own text after the last "=", and run
-# the checker there.
+# write an edited copy of the sample workbook there (case 20 writes none,
+# and case 21 a text file in its place), and run the checker there. Cases 13
+# and 14 also edit the copy of the document, so that its CVI score line
+# shows the value the cell stores. Cases 9 to 12 copy the checker and the
+# sample workbook into such a directory, write there a copy of the document
+# whose line that starts with "CVI score" ends with "= " and the text the
+# case names in place of its own text after the last "=", and run the
+# checker there.
 #
 # Cases:
 #   1. The repository document and workbook: exit 0, nothing on stderr, a
@@ -93,6 +96,17 @@
 #  followed by the line and column where the XML parser stopped, "unknown
 #  encoding: x-bogus", "multi-byte encodings are not supported", and "There
 #  is no item named 'xl/workbook.xml' in the archive" in double quotes.
+#  20. A copy of the repository with no sample workbook.
+#  21. A copy whose sample workbook is a text file.
+#  22. A copy of the sample workbook whose xl/workbook.xml entry does not
+#      match the CRC-32 that both of its headers give.
+#  23. A copy of the sample workbook whose Relationship element with Id
+#      rId8, the relationship of the Compliance sheet, has no Target
+#      attribute.
+#  Cases 20 to 23: the expectations of cases 15 to 19. The reason is "No
+#  such file or directory", "File is not a zip file", "Bad CRC-32 for file
+#  'xl/workbook.xml'" and "xl/_rels/workbook.xml.rels has a Relationship
+#  element with Id rId8 and no Target attribute".
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -278,6 +292,71 @@ make_book_copy() {
   break_workbook_xml "$root/$sample" "$1/$sample" "$2"
 }
 
+# Writes to $2 a copy of the workbook $1 damaged as $3 says: crc changes the
+# CRC-32 that both headers of the entry xl/workbook.xml give, so that the
+# entry's data does not match it, and no-target removes the Target attribute
+# of the Relationship element with Id rId8 in xl/_rels/workbook.xml.rels.
+# Fails when the workbook does not have exactly one such entry or attribute.
+damage_workbook() {
+  python3 -I - "$@" <<'PY'
+import re
+import struct
+import sys
+import zipfile
+
+source, target, edit = sys.argv[1:4]
+if edit not in ("crc", "no-target"):
+    sys.exit("unknown edit: %s" % edit)
+found = 0
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        data = book.read(info.filename)
+        if edit == "no-target" and info.filename == "xl/_rels/workbook.xml.rels":
+            data, found = re.subn(
+                rb'(<Relationship Id="rId8"[^>]*?) Target="[^"]*"', rb"\1", data
+            )
+        copy.writestr(info, data)
+if edit == "crc":
+    with zipfile.ZipFile(target) as book:
+        infos = book.infolist()
+    with open(target, "rb") as fh:
+        data = bytearray(fh.read())
+    # The copy has no comment, so its last 22 bytes are the end of central
+    # directory record, which ends with the central directory's offset and a
+    # 2-byte comment length.
+    (directory,) = struct.unpack_from("<I", data, len(data) - 6)
+    for info in infos:
+        if info.filename == "xl/workbook.xml":
+            found += 1
+            # The CRC-32 is at offset 14 of the local file header and at
+            # offset 16 of the central directory header.
+            crc = info.CRC ^ 0xFFFFFFFF
+            struct.pack_into("<I", data, info.header_offset + 14, crc)
+            struct.pack_into("<I", data, directory + 16, crc)
+        names, extra, comment = struct.unpack_from("<HHH", data, directory + 28)
+        directory += 46 + names + extra + comment
+    with open(target, "wb") as fh:
+        fh.write(data)
+if found != 1:
+    sys.exit("%s: %d places for the edit %s, expected 1" % (source, found, edit))
+PY
+}
+
+# Lays out a copy of the repository at $1 with the checker and the document,
+# and with the sample workbook as $2 says: missing leaves it out, text writes
+# a text file in its place, and crc or no-target writes a copy of it made by
+# damage_workbook with that edit.
+make_damaged_copy() {
+  mkdir -p "$1/scripts" "$1/framework" "$1/toolkit"
+  cp "$checker" "$1/scripts/check-scoring-example.py"
+  cp "$root/$methodology" "$1/$methodology"
+  case "$2" in
+    missing) ;;
+    text) printf 'This is a text file, not a workbook.\n' > "$1/$sample" ;;
+    *) damage_workbook "$root/$sample" "$1/$sample" "$2" ;;
+  esac
+}
+
 # Runs the checker at $1. Sets out, err and status.
 run_checker() {
   status=0
@@ -349,9 +428,9 @@ expect_no_cvi_number() {
     "  FAIL CVI_Score: Dimension 1 - CVI!L5 has no cached number"
 }
 
-# The expect lines of cases 15 to 19, whose copy of the sample workbook
-# cannot be read. $1 is the reason the FAIL line gives in parentheses, as an
-# extended regular expression.
+# The expect lines of cases 15 to 23, whose copy of the repository has a
+# sample workbook that cannot be read, or none. $1 is the reason the FAIL
+# line gives in parentheses, as an extended regular expression.
 expect_cannot_read() {
   local fail_pattern="  FAIL toolkit/Sample_Assessment\\.xlsx: cannot read \\($1\\)"
   expect "exit status is 1" '[ "$status" -eq 1 ]'
@@ -496,6 +575,30 @@ make_book_copy "$work/book-missing" missing
 start_case "case 19: the workbook does not hold xl/workbook.xml" \
   "$work/book-missing/scripts/check-scoring-example.py"
 expect_cannot_read "\"There is no item named 'xl/workbook\\.xml' in the archive\""
+end_case
+
+make_damaged_copy "$work/no-workbook" missing
+start_case "case 20: there is no sample workbook" \
+  "$work/no-workbook/scripts/check-scoring-example.py"
+expect_cannot_read 'No such file or directory'
+end_case
+
+make_damaged_copy "$work/text-workbook" text
+start_case "case 21: the sample workbook is a text file" \
+  "$work/text-workbook/scripts/check-scoring-example.py"
+expect_cannot_read 'File is not a zip file'
+end_case
+
+make_damaged_copy "$work/bad-crc" crc
+start_case "case 22: the xl/workbook.xml entry does not match its CRC-32" \
+  "$work/bad-crc/scripts/check-scoring-example.py"
+expect_cannot_read "Bad CRC-32 for file 'xl/workbook\\.xml'"
+end_case
+
+make_damaged_copy "$work/no-target" no-target
+start_case "case 23: the Relationship element with Id rId8 has no Target attribute" \
+  "$work/no-target/scripts/check-scoring-example.py"
+expect_cannot_read 'xl/_rels/workbook\.xml\.rels has a Relationship element with Id rId8 and no Target attribute'
 end_case
 
 if [ "$failed" -eq 0 ]; then

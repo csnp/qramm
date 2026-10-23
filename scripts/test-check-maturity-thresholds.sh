@@ -175,6 +175,18 @@
 #  followed by the line and column where the XML parser stopped, "unknown
 #  encoding: x-bogus", "multi-byte encodings are not supported", and "There
 #  is no item named 'xl/workbook.xml' in the archive" in double quotes.
+#  45. A copy of the repository with no toolkit workbook.
+#  46. A copy whose toolkit workbook is a text file.
+#  47. A copy whose toolkit workbook has an xl/workbook.xml entry that does
+#      not match the CRC-32 that both of its headers give.
+#  48. A copy whose toolkit workbook has no Target attribute on its
+#      Relationship element with Id rId8, the relationship of the
+#      Compliance sheet.
+#  Cases 45 to 48 pass the text document of cases 18 to 20 and give the
+#  results of cases 40 to 44. The reason is "No such file or directory",
+#  "File is not a zip file", "Bad CRC-32 for file 'xl/workbook.xml'" and
+#  "xl/_rels/workbook.xml.rels has a Relationship element with Id rId8 and
+#  no Target attribute".
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -1051,9 +1063,73 @@ break_repository() {
   break_workbook_xml "$root/$toolkit" "$1/$toolkit" "$2"
 }
 
-# The expect lines of cases 40 to 44, whose copy of the toolkit workbook
-# cannot be read. $1 is the reason the FAIL line gives in parentheses, as an
-# extended regular expression.
+# Writes to $2 a copy of the workbook $1 damaged as $3 says: crc changes the
+# CRC-32 that both headers of the entry xl/workbook.xml give, so that the
+# entry's data does not match it, and no-target removes the Target attribute
+# of the Relationship element with Id rId8 in xl/_rels/workbook.xml.rels.
+# Fails when the workbook does not have exactly one such entry or attribute.
+damage_workbook() {
+  python3 -I - "$@" <<'PY'
+import re
+import struct
+import sys
+import zipfile
+
+source, target, edit = sys.argv[1:4]
+if edit not in ("crc", "no-target"):
+    sys.exit("unknown edit: %s" % edit)
+found = 0
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        data = book.read(info.filename)
+        if edit == "no-target" and info.filename == "xl/_rels/workbook.xml.rels":
+            data, found = re.subn(
+                rb'(<Relationship Id="rId8"[^>]*?) Target="[^"]*"', rb"\1", data
+            )
+        copy.writestr(info, data)
+if edit == "crc":
+    with zipfile.ZipFile(target) as book:
+        infos = book.infolist()
+    with open(target, "rb") as fh:
+        data = bytearray(fh.read())
+    # The copy has no comment, so its last 22 bytes are the end of central
+    # directory record, which ends with the central directory's offset and a
+    # 2-byte comment length.
+    (directory,) = struct.unpack_from("<I", data, len(data) - 6)
+    for info in infos:
+        if info.filename == "xl/workbook.xml":
+            found += 1
+            # The CRC-32 is at offset 14 of the local file header and at
+            # offset 16 of the central directory header.
+            crc = info.CRC ^ 0xFFFFFFFF
+            struct.pack_into("<I", data, info.header_offset + 14, crc)
+            struct.pack_into("<I", data, directory + 16, crc)
+        names, extra, comment = struct.unpack_from("<HHH", data, directory + 28)
+        directory += 46 + names + extra + comment
+    with open(target, "wb") as fh:
+        fh.write(data)
+if found != 1:
+    sys.exit("%s: %d places for the edit %s, expected 1" % (source, found, edit))
+PY
+}
+
+# Lays out a copy of the repository at $1, as copy_repository does, with the
+# toolkit workbook as $2 says: missing leaves it out, text writes a text file
+# in its place, and crc or no-target writes a copy of it made by
+# damage_workbook with that edit.
+damage_repository() {
+  mkdir -p "$1/scripts" "$1/toolkit"
+  cp "$checker" "$1/scripts/check-maturity-thresholds.py"
+  case "$2" in
+    missing) ;;
+    text) printf 'This is a text file, not a workbook.\n' > "$1/$toolkit" ;;
+    *) damage_workbook "$root/$toolkit" "$1/$toolkit" "$2" ;;
+  esac
+}
+
+# The expect lines of cases 40 to 48, whose copy of the repository has a
+# toolkit workbook that cannot be read, or none. $1 is the reason the FAIL
+# line gives in parentheses, as an extended regular expression.
 expect_scorecard_unreadable() {
   local fail_pattern="  FAIL toolkit/QRAMM_Assessment_Toolkit\\.xlsx: cannot read \\($1\\)"
   expect "exit status is 1" '[ "$status" -eq 1 ]'
@@ -1103,6 +1179,34 @@ checker="$work/book-missing/scripts/check-maturity-thresholds.py" \
   start_case "case 44: the toolkit workbook does not hold xl/workbook.xml" \
   "$work/ranges.md"
 expect_scorecard_unreadable "\"There is no item named 'xl/workbook\\.xml' in the archive\""
+end_case
+
+damage_repository "$work/no-workbook" missing
+checker="$work/no-workbook/scripts/check-maturity-thresholds.py" \
+  start_case "case 45: there is no toolkit workbook" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'No such file or directory'
+end_case
+
+damage_repository "$work/text-workbook" text
+checker="$work/text-workbook/scripts/check-maturity-thresholds.py" \
+  start_case "case 46: the toolkit workbook is a text file" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'File is not a zip file'
+end_case
+
+damage_repository "$work/bad-crc" crc
+checker="$work/bad-crc/scripts/check-maturity-thresholds.py" \
+  start_case "case 47: the xl/workbook.xml entry does not match its CRC-32" \
+  "$work/ranges.md"
+expect_scorecard_unreadable "Bad CRC-32 for file 'xl/workbook\\.xml'"
+end_case
+
+damage_repository "$work/no-target" no-target
+checker="$work/no-target/scripts/check-maturity-thresholds.py" \
+  start_case "case 48: the Relationship element with Id rId8 has no Target attribute" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'xl/_rels/workbook\.xml\.rels has a Relationship element with Id rId8 and no Target attribute'
 end_case
 
 if [ "$failed" -eq 0 ]; then
