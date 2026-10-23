@@ -29,6 +29,11 @@ relative to the repository root, or absolute). For each workbook:
        matches. A category with no name there shows as its bare label in
        the Compliance sheet.
 
+A ComplianceMap reference, or a range the Compliance sheet looks category
+names up in, that gives a row past 1048576, the last row of a worksheet,
+such as 1 followed by 4300 zeros, fails with a line that names it and says
+its reference cannot be used, before any row of it is read.
+
 The script reads stored cell values and the formula text of the Compliance
 sheet, and uses the Python standard library only.
 
@@ -58,6 +63,7 @@ import xml.etree.ElementTree as ET
 import xml.parsers.expat
 import zipfile
 import zlib
+from decimal import Decimal
 
 try:
     import lzma
@@ -145,6 +151,9 @@ NAME_LOOKUP = re.compile(
     r"('?)(.+?)\1!\$?([A-Z]+)\$?([0-9]+):\$?([A-Z]+)\$?([0-9]+),2,FALSE\)"
 )
 TOLERANCE = 1e-9
+# The last row of an Excel worksheet. A reference that gives a row past it
+# cannot be used.
+LAST_ROW = 1048576
 # The C0 and C1 control characters and DEL, which printable() writes as
 # backslash escapes, and the escapes it writes for three of them.
 CONTROL = re.compile("[\x00-\x1f\x7f-\x9f]")
@@ -155,6 +164,11 @@ USAGE = "usage: python3 -I scripts/check-compliance-map.py [workbook ...]"
 
 class DoctypeError(ET.ParseError):
     """The error parse_xml raises for a document type declaration."""
+
+
+class UnusableReference(Exception):
+    """The error row_numbers() raises for a reference that gives a row past
+    LAST_ROW. Its text names the reference and says it cannot be used."""
 
 
 class _RootElement(Exception):
@@ -319,8 +333,27 @@ def map_range(book):
             )
         if sheet not in paths:
             raise ValueError("{} names sheet '{}', which is not in the workbook".format(MAP_NAME, sheet))
-        return paths[sheet], sheet, first, int(match.group(3)), int(match.group(5))
+        top, bottom = row_numbers(MAP_NAME, match.group(3), match.group(5))
+        return paths[sheet], sheet, first, top, bottom
     raise ValueError("the workbook has no defined name {}".format(MAP_NAME))
+
+
+def row_numbers(name, top, bottom):
+    """(top, bottom) as ints, for the first and last row of the reference
+    name, each given as one or more of the digits 0 to 9. Raises
+    UnusableReference when either is past LAST_ROW."""
+    # Decimal(), not int(), reads the rows: in Python 3.14.3, int() raises
+    # ValueError for text of more than 4300 digits. A row past LAST_ROW
+    # fails here, before read_block() makes an entry for each row from top
+    # to bottom: for a last row of 1 followed by 4299 zeros, which int()
+    # reads, that would be about 10^4299 entries.
+    rows = [Decimal(row) for row in (top, bottom)]
+    if any(row > LAST_ROW for row in rows):
+        raise UnusableReference(
+            "{} refers to a row past {}, the last row of a worksheet, so its "
+            "reference cannot be used".format(name, LAST_ROW)
+        )
+    return tuple(int(row) for row in rows)
 
 
 def ascii_int(text):
@@ -496,7 +529,11 @@ def read_name_lookups(path):
             first = column_number(first_letters)
             if column_number(last_letters) - first + 1 < 2:
                 raise ValueError("{} is narrower than 2 columns".format(label))
-            rows = read_block(book, paths[sheet], strings, first, 2, int(top), int(bottom))
+            top, bottom = row_numbers(
+                "{}, a range the {} sheet looks category names up in,".format(label, COMPLIANCE_SHEET),
+                top, bottom,
+            )
+            rows = read_block(book, paths[sheet], strings, first, 2, top, bottom)
             names = {}
             for _, values in sorted(rows.items()):
                 key = values.get(0)
@@ -576,6 +613,9 @@ def check_workbook(label, path, spec, problems):
     """label is the workbook's file name as printed; path is the file read."""
     try:
         sheet, first, rows = read_map(path)
+    except UnusableReference as error:
+        problems.append("{}: {}".format(label, error))
+        return
     except READ_ERRORS as error:
         problems.append(unreadable(label, error, path, "the compliance map"))
         return
@@ -634,6 +674,9 @@ def check_workbook(label, path, spec, problems):
 def check_category_names(label, path, sheet, first, rows, problems):
     try:
         lookups = read_name_lookups(path)
+    except UnusableReference as error:
+        problems.append("{}: {}".format(label, error))
+        return
     except READ_ERRORS as error:
         problems.append(unreadable(label, error, path, "the category name lookup"))
         return
