@@ -36,9 +36,17 @@ line. Each one must, in upper or lower case:
        number after "out of";
     3. say "out of" the maximum, such as "out of 4".
 
-A number on such a line with a Unicode decimal digit other than 0 to 9,
-such as U+0661 (ARABIC-INDIC DIGIT ONE), fails with "has a digit other
-than 0 to 9", and it is not read as the threshold or the maximum.
+The rules read such a line without its format characters (Unicode
+category Cf), such as U+200B (ZERO WIDTH SPACE) and U+2060 (WORD JOINER):
+3.6 followed by U+200B and 1 is read as 3.61, not as 3.6 and 1.
+
+A number on such a line is read with the characters with a numeric value
+right after it, such as U+00B2 (SUPERSCRIPT TWO) or U+00BD (VULGAR
+FRACTION ONE HALF). A number with a character other than 0 to 9 and the
+period fails, and it is not read as the threshold or the maximum: with
+"has a digit other than 0 to 9" when each such character is a digit,
+such as U+0661 (ARABIC-INDIC DIGIT ONE) or U+00B2, and with "has a
+numeric character that is not a digit" otherwise, such as with U+00BD.
 
 The script uses the Python standard library only. Exit status: 0 when the
 overview agrees with the Scorecard, 1 when it does not, the workbook does
@@ -53,6 +61,7 @@ with "-" and "unexpected argument: README.md" for any other, then prints
 import os
 import re
 import sys
+import unicodedata
 import xml.etree.ElementTree as ET
 import xml.parsers.expat
 import zipfile
@@ -289,20 +298,48 @@ def read_entries(cells, problems):
     return thresholds[ENTRIES[0][0]], maximums[ENTRIES[0][1]]
 
 
+def without_format(line):
+    """line without its format characters (Unicode category Cf), such as
+    U+200B (ZERO WIDTH SPACE). The rules read a Top Strengths line without
+    them: OUT_OF and NUMBER stop at one, so they would read 3.6 followed by
+    U+200B and 1 as 3.6 and 1, and up_to would read "up to 3" followed by
+    U+200B and 1 as "up to 3"."""
+    return "".join(char for char in line if unicodedata.category(char) != "Cf")
+
+
+def number_texts(pattern, text):
+    """The texts that group 1 of pattern, OUT_OF or NUMBER, matches in text,
+    each with the characters with a numeric value right after it, such as
+    U+00B2 (SUPERSCRIPT TWO). \\d matches decimal digits only, and U+00B2 is
+    not one, so the match of "out of 4" followed by U+00B2 ends at 4."""
+    texts = []
+    for match in pattern.finditer(text):
+        end = match.end(1)
+        while end < len(text) and text[end].isnumeric():
+            end += 1
+        texts.append(text[match.start(1):end])
+    return texts
+
+
 def read_numbers(texts, where, problems):
-    """The Decimal values of texts, the number texts that OUT_OF or NUMBER
-    matched on the overview line at where. A text with a digit other than 0
-    to 9 is left out, and adds a problem. Decimal() reads every Unicode
-    decimal digit, so it would read 3.6 followed by U+0661 (ARABIC-INDIC
-    DIGIT ONE) as 3.61. !a writes each digit other than 0 to 9 as a
-    backslash escape, as ascii() does."""
+    """The Decimal values of texts, the number texts that number_texts()
+    read from the overview line at where. A text with a character other
+    than 0 to 9 and the period is left out, and adds a problem. Decimal()
+    reads every Unicode decimal digit, so it would read 3.6 followed by
+    U+0661 (ARABIC-INDIC DIGIT ONE) as 3.61. !a writes each character
+    other than ASCII as a backslash escape, as ascii() does."""
     values = []
     for text in texts:
         if text.isascii():
             values.append(Decimal(text))
-        else:
+        elif all(char.isdigit() or char == "." for char in text):
             problems.append(
                 "{}: the number {!a} has a digit other than 0 to 9".format(where, text)
+            )
+        else:
+            problems.append(
+                "{}: the number {!a} has a numeric character that is not a "
+                "digit".format(where, text)
             )
     return values
 
@@ -332,7 +369,8 @@ def check_overview(lines, threshold, maximum, problems):
             continue
         described = True
         where = "{}:{}".format(OVERVIEW, number)
-        if up_to.search(line):
+        text = without_format(line)
+        if up_to.search(text):
             print("  PASS line {}: up to {}".format(number, word))
         else:
             problems.append(
@@ -340,7 +378,9 @@ def check_overview(lines, threshold, maximum, problems):
                     where, word, SHEET, word, HEADING, sentences
                 )
             )
-        given = read_numbers(NUMBER.findall(OUT_OF.sub(" ", line)), where, problems)
+        given = read_numbers(
+            number_texts(NUMBER, OUT_OF.sub(" ", text)), where, problems
+        )
         if Decimal(threshold) in given:
             print("  PASS line {}: threshold {}".format(number, threshold))
         else:
@@ -348,7 +388,9 @@ def check_overview(lines, threshold, maximum, problems):
                 "{}: does not give {}, the score from which the {} lists a "
                 "practice ({})".format(where, threshold, SHEET, marks)
             )
-        if Decimal(maximum) in read_numbers(OUT_OF.findall(line), where, problems):
+        if Decimal(maximum) in read_numbers(
+            number_texts(OUT_OF, text), where, problems
+        ):
             print("  PASS line {}: out of {}".format(number, maximum))
         else:
             problems.append(

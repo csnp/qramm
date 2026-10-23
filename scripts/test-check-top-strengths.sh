@@ -5,7 +5,7 @@
 # Usage:
 #   scripts/test-check-top-strengths.sh
 #
-# Cases 2 to 27 copy the checker into a new temporary directory laid out
+# Cases 2 to 33 copy the checker into a new temporary directory laid out
 # like the repository (scripts/ and toolkit/), so that the checker treats
 # that directory as the repository root. The workbook there is the toolkit
 # workbook, or a copy of it with text replaced in its XML parts. The
@@ -76,6 +76,28 @@
 #      4 of "out of 4": exit 1, a FAIL line that says the number has a digit
 #      other than 0 to 9, a FAIL line for the maximum, two FAIL lines in all,
 #      and a PASS line for the threshold.
+#  28. The text of case 3 with U+200B (ZERO WIDTH SPACE) and 1 right after
+#      3.6: exit 1, nothing on stderr, one FAIL line, which names 3.6 for
+#      the threshold, no PASS line for the threshold, PASS lines for up to
+#      three and the maximum, and RESULT: FAIL.
+#  29. A workbook whose three marks test 3.61, with the text of case 28:
+#      exit 0, threshold 3.61, a PASS line for the threshold, and RESULT:
+#      PASS.
+#  30. The text of case 3 with U+2060 (WORD JOINER) and 1 right after "out
+#      of 4": exit 1, one FAIL line, which says that line 4 does not say
+#      "out of 4", a PASS line for the threshold, and RESULT: FAIL.
+#  31. The text of case 3 with "Up to 3", U+200B and 1 in place of "Up to
+#      three": exit 1, one FAIL line, which says that line 4 does not say
+#      "up to three", no PASS line for up to three, and RESULT: FAIL.
+#  32. The text of case 3 with U+00B2 (SUPERSCRIPT TWO) right after "out of
+#      4" and right after 3.6: exit 1, nothing on stderr, a FAIL line for
+#      each of the two numbers that says it has a digit other than 0 to 9,
+#      FAIL lines for the threshold and the maximum, four FAIL lines in
+#      all, a PASS line for up to three, and RESULT: FAIL.
+#  33. The text of case 3 with U+00BD (VULGAR FRACTION ONE HALF) right after
+#      "out of 4": exit 1, a FAIL line that says the number has a numeric
+#      character that is not a digit, a FAIL line for the maximum, two FAIL
+#      lines in all, and a PASS line for the threshold.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -489,6 +511,87 @@ start_case "case 27: U+FF14 in place of the 4 of out of 4" "$layout"
 expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "FAIL line for U+FF14" \
   "has_fail \"\$overview_path:4: the number '\\uff14' has a digit other than 0 to 9\""
+expect "FAIL line for the maximum" \
+  'has_fail "$overview_path:4: does not say \"out of 4\"; the Scorecard gives each score out of 4 (C36, C40 and C44)"'
+expect "two FAIL lines" '[ "$(fail_count)" -eq 2 ]'
+expect "PASS line for the threshold" 'has_line "  PASS line 4: threshold 3.6"'
+end_case
+
+# \342\200\213 is U+200B (ZERO WIDTH SPACE), \342\201\240 is U+2060 (WORD
+# JOINER), \302\262 is U+00B2 (SUPERSCRIPT TWO) and \302\275 is U+00BD
+# (VULGAR FRACTION ONE HALF), encoded as UTF-8.
+zero_width_space="$(printf '\342\200\213')"
+word_joiner="$(printf '\342\201\240')"
+superscript_two="$(printf '\302\262')"
+one_half="$(printf '\302\275')"
+
+split_threshold="${now/3.6/3.6${zero_width_space}1}"
+make_layout zero-width-space "$root/$toolkit" "$split_threshold"
+start_case "case 28: U+200B and 1 right after 3.6" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "FAIL line for the threshold" \
+  'has_fail "$overview_path:4: does not give 3.6, the score from which the Scorecard lists a practice (B35, B39 and B43)"'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "no PASS line for the threshold" '! has_line "  PASS line 4: threshold 3.6"'
+expect "PASS line for up to three" 'has_line "  PASS line 4: up to three"'
+expect "PASS line for the maximum" 'has_line "  PASS line 4: out of 4"'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+make_copy "$work/marks-3.61.xlsx" '&gt;=3.6' '&gt;=3.61'
+make_layout marks-3.61 "$work/marks-3.61.xlsx" "$split_threshold"
+start_case "case 29: marks that test 3.61, and the text of case 28" "$layout"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "threshold 3.61" 'has_line "  threshold 3.61"'
+expect "PASS line for the threshold" 'has_line "  PASS line 4: threshold 3.61"'
+expect "last line is RESULT: PASS" 'last_line_is "RESULT: PASS"'
+end_case
+
+make_layout word-joiner "$root/$toolkit" "${now/out of 4/out of 4${word_joiner}1}"
+start_case "case 30: U+2060 and 1 right after out of 4" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line for the maximum" \
+  'has_fail "$overview_path:4: does not say \"out of 4\"; the Scorecard gives each score out of 4 (C36, C40 and C44)"'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "PASS line for the threshold" 'has_line "  PASS line 4: threshold 3.6"'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+make_layout up-to-zero-width-space "$root/$toolkit" \
+  "${now/Up to three/Up to 3${zero_width_space}1}"
+start_case "case 31: up to 3 followed by U+200B and 1" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line for up to three" \
+  'has_fail "$overview_path:4: does not say \"up to three\"; the Scorecard has three Top Strengths entries (C36, C40 and C44)"'
+expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+expect "no PASS line for up to three" '! has_line "  PASS line 4: up to three"'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+superscript_text="${now/out of 4/out of 4$superscript_two}"
+make_layout superscript "$root/$toolkit" "${superscript_text/3.6/3.6$superscript_two}"
+start_case "case 32: U+00B2 right after out of 4 and right after 3.6" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "FAIL line for 3.6 followed by U+00B2" \
+  "has_fail \"\$overview_path:4: the number '3.6\\xb2' has a digit other than 0 to 9\""
+expect "FAIL line for 4 followed by U+00B2" \
+  "has_fail \"\$overview_path:4: the number '4\\xb2' has a digit other than 0 to 9\""
+expect "FAIL line for the threshold" \
+  'has_fail "$overview_path:4: does not give 3.6, the score from which the Scorecard lists a practice (B35, B39 and B43)"'
+expect "FAIL line for the maximum" \
+  'has_fail "$overview_path:4: does not say \"out of 4\"; the Scorecard gives each score out of 4 (C36, C40 and C44)"'
+expect "four FAIL lines" '[ "$(fail_count)" -eq 4 ]'
+expect "PASS line for up to three" 'has_line "  PASS line 4: up to three"'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+end_case
+
+make_layout one-half "$root/$toolkit" "${now/out of 4/out of 4$one_half}"
+start_case "case 33: U+00BD right after out of 4" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "FAIL line for 4 followed by U+00BD" \
+  "has_fail \"\$overview_path:4: the number '4\\xbd' has a numeric character that is not a digit\""
 expect "FAIL line for the maximum" \
   'has_fail "$overview_path:4: does not say \"out of 4\"; the Scorecard gives each score out of 4 (C36, C40 and C44)"'
 expect "two FAIL lines" '[ "$(fail_count)" -eq 2 ]'
