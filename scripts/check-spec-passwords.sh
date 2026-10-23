@@ -167,17 +167,22 @@ def value_in(rest):
     return rest.lstrip("*_`").strip().strip("*_`").strip()
 
 
-def starts_piece(text, first):
+def starts_piece(line, piece, end, first):
     """Whether a character whose NFKD decomposition starts with first starts
-    a new piece after text, the piece before it: whether first is a starter
-    (combining class 0) that does not compose with the last character of
-    the NFKC form of text. Normalising never moves such a starter, and
-    composes nothing after it with anything before it, so a line normalises
-    to its text up to the character normalised, followed by the rest
-    normalised on its own."""
+    a new piece after line[piece:end], the piece before it: whether first is
+    a starter (combining class 0) that does not compose with the last
+    character of the NFKC form of that piece. Normalising never moves such a
+    starter, and composes nothing after it with anything before it, so a
+    line normalises to its text up to the character normalised, followed by
+    the rest normalised on its own.
+
+    The piece is copied out of line only after first is found to be a
+    starter, so a run of characters whose decomposition starts with a
+    combining mark, none of which starts a new piece, does not copy the
+    piece once for each character."""
     if unicodedata.combining(first):
         return False
-    last = unicodedata.normalize("NFKC", text)[-1]
+    last = unicodedata.normalize("NFKC", line[piece:end])[-1]
     return unicodedata.normalize("NFKC", last + first) == last + first
 
 
@@ -198,7 +203,7 @@ def written_rest(line, start):
     end = 0
     while before + at_most < start or before + len(normalise(line[piece:end])) < start:
         decomposed = unicodedata.normalize("NFKD", line[end])
-        if end > piece and starts_piece(line[piece:end], decomposed[0]):
+        if end > piece and starts_piece(line, piece, end, decomposed[0]):
             before += len(normalise(line[piece:end]))
             piece = end
             at_most = 0
