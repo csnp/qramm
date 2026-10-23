@@ -231,6 +231,26 @@
 #  Cases 51 and 52 pass the copy and then the sample workbook, and give the
 #  results listed for cases 28 to 36, with each line feed written as \n in
 #  the FAIL line, and no line that reads RESULT: PASS.
+#  53. A copy of the sample workbook whose ComplianceMap defined name gives
+#      its last row as 1 followed by 4300 zeros in place of 962.
+#  54. A copy of the sample workbook whose ComplianceMap defined name gives
+#      its last row as 1048577 in place of 962.
+#  Cases 53 and 54 pass the copy and then the sample workbook: exit 1,
+#  nothing on stderr, one FAIL line, which says ComplianceMap refers to a
+#  row past 1048576, the last row of a worksheet, so its reference cannot
+#  be used, the map PASS line for the sample workbook, then RESULT: FAIL.
+#  55. A copy of the sample workbook whose first category name lookup in
+#      the Compliance sheet gives Data!$BG$3:$BH$ and 1 followed by 4300
+#      zeros in place of Data!$BG$3:$BH$108.
+#  56. The same with Data!$BG$3:$BH$1048577.
+#  Cases 55 and 56 pass the copy: exit 1, nothing on stderr, the map PASS
+#  line, then one FAIL line, which names the range, says the Compliance
+#  sheet looks category names up in it and that it refers to a row past
+#  1048576, the last row of a worksheet, so its reference cannot be used,
+#  then RESULT: FAIL.
+#  57. The same with Data!$BG$3:$BH$1048576, the last row of a worksheet:
+#      exit 0, nothing on stderr, the map PASS line and a category name
+#      PASS line that names Data!BG3:BH1048576.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -1294,6 +1314,76 @@ start_case "case 52: a c element whose r attribute holds a line feed" \
 expect_map_unreadable "$work/linefeedcellref.xlsx" "a c element's r attribute holds a line feed" \
   'xl/worksheets/sheet10.xml has a c element in row 3 whose r attribute 1A\nRESULT: PASS is not a cell reference'
 expect "no line reads RESULT: PASS" '! printf "%s\n" "$out" | grep -q -x "RESULT: PASS"'
+end_case
+
+# Expectations for cases 53 and 54, which pass a copy and then the sample
+# workbook: $1 is the copy's file name.
+expect_map_past_last_row() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  past_line="  FAIL $1: ComplianceMap refers to a row past 1048576, the last row of a worksheet, so its reference cannot be used"
+  expect "FAIL line says the ComplianceMap reference cannot be used" 'has_line "$past_line"'
+  expect "the sample workbook is checked" \
+    "has_line '== $sample against $spec' && has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
+# Expectations for cases 55 and 56, which pass a copy: $1 is the copy's
+# file name and $2 the last row its first category name lookup gives.
+expect_lookup_past_last_row() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "map PASS line" "has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  past_line="  FAIL $1: Data!BG3:BH$2, a range the Compliance sheet looks category names up in, refers to a row past 1048576, the last row of a worksheet, so its reference cannot be used"
+  expect "FAIL line says the lookup range's reference cannot be used" 'has_line "$past_line"'
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
+# 1 followed by 4300 zeros: 4301 digits, past the 4300 digits int() reads
+# in Python 3.14.3.
+long_row="1$(printf '%04300d' 0)"
+
+edit_part "$root/$sample" "$work/maplongrow.xlsx" xl/workbook.xml \
+  'Data!$AV$3:$BA$962' "Data!\$AV\$3:\$BA\$$long_row"
+start_case "case 53: a ComplianceMap last row of 1 followed by 4300 zeros" \
+  "$checker" "$work/maplongrow.xlsx" "$sample"
+expect_map_past_last_row "$work/maplongrow.xlsx"
+end_case
+
+edit_part "$root/$sample" "$work/mappastlast.xlsx" xl/workbook.xml \
+  'Data!$AV$3:$BA$962' 'Data!$AV$3:$BA$1048577'
+start_case "case 54: a ComplianceMap last row of 1048577" \
+  "$checker" "$work/mappastlast.xlsx" "$sample"
+expect_map_past_last_row "$work/mappastlast.xlsx"
+end_case
+
+edit_part "$root/$sample" "$work/lookuplongrow.xlsx" xl/worksheets/sheet8.xml \
+  'Data!$BG$3:$BH$108' "Data!\$BG\$3:\$BH\$$long_row"
+start_case "case 55: a category name lookup last row of 1 followed by 4300 zeros" \
+  "$checker" "$work/lookuplongrow.xlsx"
+expect_lookup_past_last_row "$work/lookuplongrow.xlsx" "$long_row"
+end_case
+
+edit_part "$root/$sample" "$work/lookuppastlast.xlsx" xl/worksheets/sheet8.xml \
+  'Data!$BG$3:$BH$108' 'Data!$BG$3:$BH$1048577'
+start_case "case 56: a category name lookup last row of 1048577" \
+  "$checker" "$work/lookuppastlast.xlsx"
+expect_lookup_past_last_row "$work/lookuppastlast.xlsx" 1048577
+end_case
+
+edit_part "$root/$sample" "$work/lookuplastrow.xlsx" xl/worksheets/sheet8.xml \
+  'Data!$BG$3:$BH$108' 'Data!$BG$3:$BH$1048576'
+start_case "case 57: a category name lookup last row of 1048576" \
+  "$checker" "$work/lookuplastrow.xlsx"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "no FAIL line" '[ "$(fail_count)" -eq 0 ]'
+expect "map PASS line" "has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
+expect "category name PASS line names Data!BG3:BH1048576" \
+  'printf "%s\n" "$out" | grep -q "^  PASS [0-9]* rows with a category, each named in Data!BG3:BH1048576"'
+expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
