@@ -96,6 +96,11 @@
 #   45. Line 3 is 40,000 letters a, a space and "Password: None" with a zero
 #      width space inside None: the same results as cases 8 to 13, and the
 #      checker uses less than one second of CPU time.
+#   46-47. Line 3 is the letter a, 480,000 combining acute accents (U+0301),
+#      a space and "Password: None"; and the letter a, 480,000 halfwidth
+#      katakana voiced sound marks (U+FF9E, whose NFKD decomposition is the
+#      combining mark U+3099), a space and "Password: None": the same
+#      results as cases 42 to 44.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -610,6 +615,17 @@ check_long_line "40,000 zero width spaces (U+200B) inside Password, then None" \
   "- Pass${zero_width_spaces}word: None" pass
 check_long_line "40,000 letters a before None with a zero width space inside" \
   "$letters Password: No${zero_width_space}ne" fail
+
+# 480,000 combining acute accents (U+0301), and 480,000 halfwidth katakana
+# voiced sound marks (U+FF9E), a character of combining class 0 whose NFKD
+# decomposition is the combining mark U+3099.
+many_accents="$(python3 -I -c 'print(chr(0x301) * 480000)')"
+voiced_sound_marks="$(python3 -I -c 'print(chr(0xFF9E) * 480000)')"
+
+check_long_line "a and 480,000 combining acute accents (U+0301) before Password: None" \
+  "a$many_accents Password: None" pass
+check_long_line "a and 480,000 halfwidth voiced sound marks (U+FF9E) before Password: None" \
+  "a$voiced_sound_marks Password: None" pass
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
