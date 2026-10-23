@@ -154,6 +154,27 @@
 #  float() and int() read every Unicode decimal digit, so the checker read
 #  the numbers of cases 34 to 36 as 1.5 and 2.5, the cut-off of case 37 as
 #  3.5, and the rows of cases 38 and 39 as 21 and 25.
+#  40. A copy of the repository whose toolkit workbook has the document type
+#      declaration <!DOCTYPE r [<!ENTITY e0 "FAKE">]> after the XML
+#      declaration of xl/workbook.xml.
+#  41. A copy whose toolkit workbook has <unclosed after the root element of
+#      xl/workbook.xml, so that its XML is not well-formed.
+#  42. A copy whose toolkit workbook has an XML declaration in
+#      xl/workbook.xml that names the encoding x-bogus, which Python has no
+#      codec for.
+#  43. A copy whose toolkit workbook has an XML declaration in
+#      xl/workbook.xml that names the encoding shift_jis, a multi-byte
+#      encoding the XML parser does not read.
+#  44. A copy whose toolkit workbook does not hold xl/workbook.xml.
+#  Cases 40 to 44 pass the text document of cases 18 to 20: exit 1, nothing
+#  on stderr, one FAIL line, which says
+#  "toolkit/QRAMM_Assessment_Toolkit.xlsx: cannot read" and gives the reason
+#  in parentheses, no Scorecard ranges listed, no == line for the text
+#  document, no PASS line, and RESULT: FAIL as the last line. The reason is
+#  "document type declaration" and "junk after document element", each
+#  followed by the line and column where the XML parser stopped, "unknown
+#  encoding: x-bogus", "multi-byte encodings are not supported", and "There
+#  is no item named 'xl/workbook.xml' in the archive" in double quotes.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -978,6 +999,110 @@ expect "FAIL line says the number of a row of the category range has a digit oth
   "has_fail \"arabiclast/QRAMM_Assessment_Toolkit.xlsx: Maturity Distribution chart: a row of the category range: the number '\\u0662\\u0665' has a digit other than 0 to 9\""
 expect "no PASS line for the chart" '! printf "%s\n" "$out" | grep -q "^  PASS Scorecard!"'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+# Writes to $2 a copy of the workbook $1 whose xl/workbook.xml is edited as
+# $3 says: doctype puts <!DOCTYPE r [<!ENTITY e0 "FAKE">]> after its XML
+# declaration, unclosed puts <unclosed at its end, after its root element,
+# encoding=<name> makes its XML declaration name the encoding <name>, and
+# missing leaves the part out of the copy. Fails when the workbook has no
+# xl/workbook.xml that starts with an XML declaration naming an encoding.
+break_workbook_xml() {
+  python3 -I - "$@" <<'PY'
+import re
+import sys
+import zipfile
+
+source, target, edit = sys.argv[1:4]
+part = "xl/workbook.xml"
+declaration = re.compile(rb'<\?xml[^>]*\bencoding="[^"]*"[^>]*\?>')
+found = False
+with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
+    for info in book.infolist():
+        data = book.read(info.filename)
+        if info.filename == part:
+            found = True
+            head = declaration.match(data)
+            if head is None:
+                sys.exit("%s: %s has no XML declaration that names an encoding" % (source, part))
+            if edit == "missing":
+                continue
+            if edit == "doctype":
+                data = data[:head.end()] + b'<!DOCTYPE r [<!ENTITY e0 "FAKE">]>' + data[head.end():]
+            elif edit == "unclosed":
+                data += b"<unclosed"
+            elif edit.startswith("encoding="):
+                name = edit[len("encoding="):].encode("ascii")
+                named = re.sub(rb'\bencoding="[^"]*"', b'encoding="' + name + b'"', head.group())
+                data = named + data[head.end():]
+            else:
+                sys.exit("unknown edit: %s" % edit)
+        copy.writestr(info, data)
+if not found:
+    sys.exit("%s has no part %s" % (source, part))
+PY
+}
+
+# Lays out a copy of the repository at $1, as copy_repository does, with a
+# copy of the toolkit workbook made by break_workbook_xml with the edit $2.
+break_repository() {
+  mkdir -p "$1/scripts" "$1/toolkit"
+  cp "$checker" "$1/scripts/check-maturity-thresholds.py"
+  break_workbook_xml "$root/$toolkit" "$1/$toolkit" "$2"
+}
+
+# The expect lines of cases 40 to 44, whose copy of the toolkit workbook
+# cannot be read. $1 is the reason the FAIL line gives in parentheses, as an
+# extended regular expression.
+expect_scorecard_unreadable() {
+  local fail_pattern="  FAIL toolkit/QRAMM_Assessment_Toolkit\\.xlsx: cannot read \\($1\\)"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line names the workbook and the reason" \
+    'printf "%s\n" "$out" | grep -q -x -E -- "$fail_pattern"'
+  expect "no Scorecard ranges are listed" '! has_line "== $toolkit Scorecard!H9:H12 and H14"'
+  expect "the text document is not checked" \
+    '! has_line "== $work/ranges.md against the Scorecard"'
+  expect "no PASS line" '! printf "%s\n" "$out" | grep -q "^  PASS"'
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
+# The assignment in front of start_case runs the copy of the checker for
+# that case only, as in case 37.
+break_repository "$work/book-doctype" doctype
+checker="$work/book-doctype/scripts/check-maturity-thresholds.py" \
+  start_case "case 40: xl/workbook.xml has a document type declaration" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'document type declaration: line [0-9]+, column [0-9]+'
+end_case
+
+break_repository "$work/book-unclosed" unclosed
+checker="$work/book-unclosed/scripts/check-maturity-thresholds.py" \
+  start_case "case 41: xl/workbook.xml has <unclosed after its root element" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'junk after document element: line [0-9]+, column [0-9]+'
+end_case
+
+break_repository "$work/book-x-bogus" encoding=x-bogus
+checker="$work/book-x-bogus/scripts/check-maturity-thresholds.py" \
+  start_case "case 42: the XML declaration of xl/workbook.xml names the encoding x-bogus" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'unknown encoding: x-bogus'
+end_case
+
+break_repository "$work/book-shift-jis" encoding=shift_jis
+checker="$work/book-shift-jis/scripts/check-maturity-thresholds.py" \
+  start_case "case 43: the XML declaration of xl/workbook.xml names the encoding shift_jis" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'multi-byte encodings are not supported'
+end_case
+
+break_repository "$work/book-missing" missing
+checker="$work/book-missing/scripts/check-maturity-thresholds.py" \
+  start_case "case 44: the toolkit workbook does not hold xl/workbook.xml" \
+  "$work/ranges.md"
+expect_scorecard_unreadable "\"There is no item named 'xl/workbook\\.xml' in the archive\""
 end_case
 
 if [ "$failed" -eq 0 ]; then

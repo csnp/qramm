@@ -62,7 +62,14 @@ Exit status: 0 when the documents agree with the Scorecard, 1 when they do
 not or a file cannot be read, 2 on a usage error. An empty file argument
 fails with "no file name given", a workbook that cannot be read fails with
 "cannot read", and a text document whose bytes are not UTF-8 fails with
-"not UTF-8 text". A file name is printed with each byte that the file system
+"not UTF-8 text". A part of toolkit/QRAMM_Assessment_Toolkit.xlsx that the
+Scorecard is read from, such as xl/workbook.xml, cannot be read when the
+workbook does not hold it, when its XML is not well-formed or has a document
+type declaration, or when its XML declaration names an encoding the XML
+parser cannot use, such as x-bogus or shift_jis. The FAIL line then gives
+the reason, as in "toolkit/QRAMM_Assessment_Toolkit.xlsx: cannot read
+(document type declaration: line 1, column 67)", and no document is
+checked. A file name is printed with each byte that the file system
 encoding cannot decode, and each character that the encoding of stdout
 cannot encode, as a backslash escape, such as \\xff for the byte 0xff and
 \\u65e5 for the character U+65E5. --help (or -h) prints the usage line and
@@ -219,13 +226,25 @@ def sheet_paths(book):
 
 
 def label_formulas(path, problems):
-    """Cell reference -> formula text for LABEL_CELLS on the Scorecard."""
-    with zipfile.ZipFile(path) as book:
-        part = sheet_paths(book).get(SHEET)
-        if part is None:
-            problems.append("{}: no sheet named {}".format(WORKBOOK, SHEET))
-            return {}
-        sheet = parse_xml(book.read(part))
+    """Cell reference -> formula text for LABEL_CELLS on the Scorecard. For
+    a workbook with no Scorecard, or with a part the Scorecard is read from
+    that cannot be read, a problem is added and the result is empty."""
+    try:
+        with zipfile.ZipFile(path) as book:
+            part = sheet_paths(book).get(SHEET)
+            if part is None:
+                problems.append("{}: no sheet named {}".format(WORKBOOK, SHEET))
+                return {}
+            sheet = parse_xml(book.read(part))
+    except (ET.ParseError, LookupError, ValueError) as error:
+        # ET.ParseError: XML that is not well-formed, or DoctypeError, its
+        # subclass, for a document type declaration. LookupError: an XML
+        # declaration that names an encoding Python has no codec for, such
+        # as x-bogus, or KeyError, its subclass, for a part the archive does
+        # not hold. ValueError: an XML declaration that names a multi-byte
+        # encoding, such as shift_jis, which the XML parser does not read.
+        problems.append("{}: cannot read ({})".format(WORKBOOK, error))
+        return {}
     found = {}
     for cell in sheet.iter(ns(MAIN_NS, "c")):
         if cell.get("r") in LABEL_CELLS:
