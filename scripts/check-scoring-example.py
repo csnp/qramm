@@ -24,13 +24,17 @@ results Excel stored when the file was last calculated; the script does not
 recompute any formula. It uses the Python standard library only.
 
 Exit status: 0 when the example matches the workbook, 1 when it does not or
-the workbook cannot be read, 2 on a usage error. A part of the workbook that
-the script reads, such as xl/workbook.xml, cannot be read when the workbook
-does not hold it, when its XML is not well-formed or has a document type
-declaration, or when its XML declaration names an encoding the XML parser
-cannot use, such as x-bogus or shift_jis. The FAIL line then gives the
-reason, as in "toolkit/Sample_Assessment.xlsx: cannot read (document type
-declaration: line 1, column 67)", and no value is compared. --help (or -h)
+the workbook cannot be read, 2 on a usage error. The workbook cannot be read
+when it is missing or is not a zip archive, or when the Relationship element
+of a sheet in xl/_rels/workbook.xml.rels has no Target attribute. A part of
+the workbook that the script reads, such as xl/workbook.xml, cannot be read
+when the workbook does not hold it, when its data does not match its
+CRC-32, when its XML is not well-formed or has a document type declaration,
+or when its XML declaration names an encoding the XML parser cannot use,
+such as x-bogus or shift_jis. The FAIL line then gives the reason, as in
+"toolkit/Sample_Assessment.xlsx: cannot read (No such file or directory)"
+or "toolkit/Sample_Assessment.xlsx: cannot read (document type declaration:
+line 1, column 67)", and no value is compared. --help (or -h)
 prints the usage line and this text on stderr and exits 2. The script takes
 no other argument: given one, it names each argument on stderr on a line of
 its own, "unknown option: --verbose" for one that starts with "-" and
@@ -117,7 +121,9 @@ def ns(prefix, tag):
 
 
 def sheet_paths(book):
-    """Sheet name -> path of its XML part inside the workbook archive."""
+    """Sheet name -> path of its XML part inside the workbook archive.
+    Raises ValueError for a sheet whose Relationship element has no Target
+    attribute."""
     workbook = parse_xml(book.read("xl/workbook.xml"))
     rels = parse_xml(book.read("xl/_rels/workbook.xml.rels"))
     targets = {
@@ -126,7 +132,13 @@ def sheet_paths(book):
     }
     paths = {}
     for sheet in workbook.iter(ns(MAIN_NS, "sheet")):
-        target = targets[sheet.get(ns(REL_NS, "id"))]
+        rel_id = sheet.get(ns(REL_NS, "id"))
+        target = targets[rel_id]
+        if target is None:
+            raise ValueError(
+                "xl/_rels/workbook.xml.rels has a Relationship element with "
+                "Id {} and no Target attribute".format(rel_id)
+            )
         if target.startswith("/"):
             path = target.lstrip("/")
         else:
@@ -289,13 +301,24 @@ def main(argv):
     problems = []
     try:
         values = cached_values(workbook_path, [name for name, _ in EXPECTED])
-    except (ET.ParseError, LookupError, ValueError) as error:
-        # ET.ParseError: XML that is not well-formed, or DoctypeError, its
-        # subclass, for a document type declaration. LookupError: an XML
-        # declaration that names an encoding Python has no codec for, such
-        # as x-bogus, or KeyError, its subclass, for a part the archive does
-        # not hold. ValueError: an XML declaration that names a multi-byte
-        # encoding, such as shift_jis, which the XML parser does not read.
+    except OSError as error:
+        # FileNotFoundError, a subclass, for a workbook that is missing. Its
+        # strerror, "No such file or directory", is the reason: str() of it
+        # also gives the path. An OSError with no strerror gives str() of it.
+        values = None
+        problems.append(
+            "{}: cannot read ({})".format(WORKBOOK, error.strerror or error)
+        )
+    except (zipfile.BadZipFile, ET.ParseError, LookupError, ValueError) as error:
+        # zipfile.BadZipFile: a file that is not a zip archive, or an entry
+        # whose data does not match its CRC-32. ET.ParseError: XML that is
+        # not well-formed, or DoctypeError, its subclass, for a document type
+        # declaration. LookupError: an XML declaration that names an encoding
+        # Python has no codec for, such as x-bogus, or KeyError, its
+        # subclass, for a part the archive does not hold. ValueError: an XML
+        # declaration that names a multi-byte encoding, such as shift_jis,
+        # which the XML parser does not read, or a sheet whose Relationship
+        # element has no Target attribute.
         values = None
         problems.append("{}: cannot read ({})".format(WORKBOOK, error))
     with open(doc_path, encoding="utf-8") as fh:
