@@ -167,12 +167,42 @@ def value_in(rest):
     return rest.lstrip("*_`").strip().strip("*_`").strip()
 
 
+def starts_piece(text, first):
+    """Whether a character whose NFKD decomposition starts with first starts
+    a new piece after text, the piece before it: whether first is a starter
+    (combining class 0) that does not compose with the last character of
+    the NFKC form of text. Normalising never moves such a starter, and
+    composes nothing after it with anything before it, so a line normalises
+    to its text up to the character normalised, followed by the rest
+    normalised on its own."""
+    if unicodedata.combining(first):
+        return False
+    last = unicodedata.normalize("NFKC", text)[-1]
+    return unicodedata.normalize("NFKC", last + first) == last + first
+
+
 def written_rest(line, start):
     """The text of line after its shortest beginning that normalises to start
     characters or more, as written: for a start just after a separator, the
-    rest of the line with its format characters and fullwidth letters."""
+    rest of the line with its format characters and fullwidth letters.
+
+    The line is read in pieces (see starts_piece), so a beginning normalises
+    to the whole pieces in it normalised, followed by its part of the last
+    piece normalised. The loop adds up the normalised lengths of the whole
+    pieces as it goes. It works out the normalised length of the part only
+    when that sum and the length of the part after NFKD decomposition,
+    which normalising never makes longer, reach start together."""
+    before = 0  # normalised length of line[:piece]
+    piece = 0  # where the last piece starts
+    at_most = 0  # length of line[piece:end] after NFKD decomposition
     end = 0
-    while len(normalise(line[:end])) < start:
+    while before + at_most < start or before + len(normalise(line[piece:end])) < start:
+        decomposed = unicodedata.normalize("NFKD", line[end])
+        if end > piece and starts_piece(line[piece:end], decomposed[0]):
+            before += len(normalise(line[piece:end]))
+            piece = end
+            at_most = 0
+        at_most += len(decomposed)
         end += 1
     return line[end:]
 

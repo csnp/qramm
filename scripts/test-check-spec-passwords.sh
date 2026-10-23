@@ -85,6 +85,17 @@
 #      and in "**Password:** `None`": exit 0, the summary line "1 files
 #      checked, 4 Password lines found, 0 other lines say there is no
 #      password", RESULT: PASS, nothing on stderr.
+#   42-44. Line 3 is 40,000 letters a, a space and "Password: None"; the
+#      letter a, 40,000 combining acute accents (U+0301), a space and
+#      "Password: None"; and "- Pass", 40,000 zero width spaces (U+200B)
+#      and "word: None": exit 0, the summary line "1 files checked, 1
+#      Password lines found, 0 other lines say there is no password",
+#      RESULT: PASS, nothing on stderr, and the checker uses less than one
+#      second of CPU time. A run still going after 10 seconds is stopped,
+#      and the case fails.
+#   45. Line 3 is 40,000 letters a, a space and "Password: None" with a zero
+#      width space inside None: the same results as cases 8 to 13, and the
+#      checker uses less than one second of CPU time.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -514,6 +525,91 @@ expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "R
 expect "stderr is empty" '[ -z "$err" ]'
 [ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
+case_number=$((case_number + 1))
+
+# Runs the checker on the file $2 in copy $1, as run_checker does, and sets
+# cpu to the seconds of CPU time the run used. A run still going after 10
+# seconds is stopped; status is then 124 and cpu is "timed out".
+run_timed() {
+  local result
+  result="$(python3 -I - "$1" "$2" "$work/out" "$work/err" <<'PY'
+import resource
+import subprocess
+import sys
+
+copy, spec, out, err = sys.argv[1:]
+used = resource.getrusage(resource.RUSAGE_CHILDREN)
+with open(out, "wb") as stdout, open(err, "wb") as stderr:
+    try:
+        status = subprocess.run(
+            ["bash", "scripts/check-spec-passwords.sh", spec],
+            cwd=copy,
+            stdout=stdout,
+            stderr=stderr,
+            timeout=10,
+        ).returncode
+    except subprocess.TimeoutExpired:
+        print("124 timed out")
+        sys.exit()
+now = resource.getrusage(resource.RUSAGE_CHILDREN)
+print(status, now.ru_utime - used.ru_utime + now.ru_stime - used.ru_stime)
+PY
+)"
+  status="${result%% *}"
+  cpu="${result#* }"
+  out="$(cat "$work/out")"
+  err="$(cat "$work/err")"
+}
+
+# True when the last run_timed run finished and used less than one second of
+# CPU time.
+quick() {
+  [ "$cpu" != "timed out" ] && awk -v cpu="$cpu" 'BEGIN { exit !(cpu < 1) }'
+}
+
+# Runs the next case on a spec file whose line 3 is $2, a line far longer
+# than any in the specs, with run_timed. $1 describes the line for the case
+# heading. $3 is pass when the line records None, so the file passes, and
+# fail when line 3 fails with the value problem.
+check_long_line() {
+  echo "case $case_number: $1 on line 3"
+  case_failed="$failed"
+  failed=0
+  make_copy "$work/case$case_number"
+  printf '# Spec\n\n%s\n' "$2" > "$work/case$case_number/toolkit-specs/spec.md"
+  run_timed "$work/case$case_number" toolkit-specs/spec.md
+  if [ "$3" = pass ]; then
+    expect "exit status is 0" '[ "$status" -eq 0 ]'
+    expect "summary line counts 1 Password line and 0 other lines" \
+      'printf "%s\n" "$out" | grep -qxF "1 files checked, 1 Password lines found, 0 other lines say there is no password"'
+    expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+    expect "stderr is empty" '[ -z "$err" ]'
+  else
+    expect_line_fails 3
+  fi
+  expect "the checker uses less than one second of CPU time" quick
+  if [ "$failed" -ne 0 ]; then
+    show_output
+    echo "  CPU time: $cpu"
+  fi
+  failed=$((failed | case_failed))
+  case_number=$((case_number + 1))
+}
+
+# 40,000 letters a, 40,000 combining acute accents (U+0301) and 40,000 zero
+# width spaces.
+letters="$(python3 -I -c 'print("a" * 40000)')"
+accents="$(python3 -I -c 'print(chr(0x301) * 40000)')"
+zero_width_spaces="$(python3 -I -c 'print(chr(0x200B) * 40000)')"
+
+check_long_line "40,000 letters a before Password: None" \
+  "$letters Password: None" pass
+check_long_line "a and 40,000 combining acute accents (U+0301) before Password: None" \
+  "a$accents Password: None" pass
+check_long_line "40,000 zero width spaces (U+200B) inside Password, then None" \
+  "- Pass${zero_width_spaces}word: None" pass
+check_long_line "40,000 letters a before None with a zero width space inside" \
+  "$letters Password: No${zero_width_space}ne" fail
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"
