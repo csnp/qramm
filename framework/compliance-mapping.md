@@ -1,6 +1,8 @@
 # QRAMM Compliance Mapping Framework
 **Mapping QRAMM Practices to Federal Compliance Requirements**
 
+Updated October 31, 2026.
+
 Citations corrected on 2026-10-16 against the primary sources listed in the commit; coverage figures are under review.
 
 ## Overview
@@ -14,7 +16,7 @@ This document provides comprehensive mapping between QRAMM practices and key fed
 - **FIPS 204**: Module-Lattice-Based Digital Signature Standard (ML-DSA)  
 - **FIPS 205**: Stateless Hash-Based Digital Signature Standard (SLH-DSA)
 - **NIST SP 800-131A Rev. 2**: Transitioning the Use of Cryptographic Algorithms (Rev. 3 initial public draft, October 2024, under review)
-- **NIST IR 8547 (initial public draft, November 2024)**: Transition to Post-Quantum Cryptography Standards
+- **NIST IR 8547 (final, October 2026)**: Transition to Post-Quantum Cryptography Standards
 
 ### 2. CMMC 2.0 (Cybersecurity Maturity Model Certification)
 - **Level 1**: Foundational (15 security requirements from FAR 52.204-21)
@@ -46,14 +48,14 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 
 | QRAMM Question | NIST PQC | CMMC 2.0 | FedRAMP | FISMA |
 |----------------|----------|----------|---------|--------|
-| **Q1.1.1**: How does your organization identify cryptographic assets? | NIST IR 8547 (initial public draft) | CM.L2-3.4.1 "Establish baseline configurations" | CM-8 "System Component Inventory" | NIST SP 800-53 CM-8 |
-| **Q1.1.2**: How does your organization document cryptographic assets? | NIST IR 8547 (initial public draft) | CM.L2-3.4.2 "Maintain inventory of organizational systems" | CM-8(1) "Updates During Installation and Removal" | NIST SP 800-53 CM-8(1) |
+| **Q1.1.1**: How does your organization identify cryptographic assets? | NIST IR 8547 Section 1 | CM.L2-3.4.1 "Establish baseline configurations" | CM-8 "System Component Inventory" | NIST SP 800-53 CM-8 |
+| **Q1.1.2**: How does your organization document cryptographic assets? | NIST IR 8547 | CM.L2-3.4.2 "Maintain inventory of organizational systems" | CM-8(1) "Updates During Installation and Removal" | NIST SP 800-53 CM-8(1) |
 | **Q1.1.3**: How does your organization govern cryptographic asset ownership and accountability? | NIST SP 800-131A Rev. 2 Section 2 | AC.L2-3.1.1 "Limit system access" | AC-5 "Separation of Duties" | NIST SP 800-53 AC-5 |
-| **Q1.1.4**: How does your organization validate cryptographic asset inventory completeness? | NIST IR 8547 (initial public draft) | CA.L2-3.12.1 "Conduct security assessments" | CA-2 "Control Assessments" | NIST SP 800-53 CA-2 |
+| **Q1.1.4**: How does your organization validate cryptographic asset inventory completeness? | NIST IR 8547 | CA.L2-3.12.1 "Conduct security assessments" | CA-2 "Control Assessments" | NIST SP 800-53 CA-2 |
 | **Q1.1.5**: How does your organization ensure cryptographic visibility across third-party and cloud systems? | FIPS 203 | - | SA-9 "External System Services" | NIST SP 800-53 SA-9 |
-| **Q1.1.6**: How is cryptographic asset inventory data used for strategic planning? | NIST IR 8547 (initial public draft) | - | PM-9 "Risk Management Strategy" | NIST SP 800-53 PM-9 |
+| **Q1.1.6**: How is cryptographic asset inventory data used for strategic planning? | NIST IR 8547 Section 1 | - | PM-9 "Risk Management Strategy" | NIST SP 800-53 PM-9 |
 | **Q1.1.7**: How are cryptographic assets prioritized for quantum-resistance upgrades? | NIST SP 800-131A Section 3 "Transition Timeline" | RA.L2-3.11.2 "Scan for vulnerabilities" | RA-3 "Risk Assessment" | NIST SP 800-53 RA-3 |
-| **Q1.1.8**: How is cryptographic asset inventory maintained over time? | NIST IR 8547 (initial public draft) | CM.L2-3.4.3 "Track security configurations" | CM-8(2) "Automated Maintenance" | NIST SP 800-53 CM-8(2) |
+| **Q1.1.8**: How is cryptographic asset inventory maintained over time? | NIST IR 8547 | CM.L2-3.4.3 "Track security configurations" | CM-8(2) "Automated Maintenance" | NIST SP 800-53 CM-8(2) |
 | **Q1.1.9**: How does your organization include IoT and embedded devices in its cryptographic inventory? | FIPS 203 | SC.L2-3.13.8 "Implement cryptographic mechanisms" | SC-8 "Transmission Confidentiality and Integrity" | NIST SP 800-53 SC-8 |
 | **Q1.1.10**: How does your organization stay informed about quantum computing advancements? | - | AT.L2-3.2.1 "Ensure awareness of security risks" | AT-2 "Literacy Training and Awareness" | NIST SP 800-53 AT-2 |
 
@@ -65,13 +67,13 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 |----------------|----------|----------|---------|--------|
 | **Q1.2.1**: How does your organization identify quantum-vulnerable cryptographic algorithms? | NIST SP 800-131A Table 1 "Deprecated Algorithms" | RA.L2-3.11.1 "Identify and evaluate risk" | RA-5 "Vulnerability Monitoring and Scanning" | NIST SP 800-53 RA-5 |
 | **Q1.2.2**: How are quantum-vulnerable systems classified based on their criticality? | FIPS 199 "Security Categorization" | RA.L2-3.11.3 "Remediate vulnerabilities" | RA-2 "Security Categorization" | NIST SP 800-53 RA-2 |
-| **Q1.2.3**: How does your organization track updates to threat assessments? | NIST IR 8547 (initial public draft) | SI.L2-3.14.1 "Monitor security information" | SI-5 "Security Alerts, Advisories, and Directives" | NIST SP 800-53 SI-5 |
+| **Q1.2.3**: How does your organization track updates to threat assessments? | NIST IR 8547 | SI.L2-3.14.1 "Monitor security information" | SI-5 "Security Alerts, Advisories, and Directives" | NIST SP 800-53 SI-5 |
 | **Q1.2.4**: How does your organization evaluate the effectiveness of vulnerability classification? | - | CA.L2-3.12.3 "Monitor security controls" | CA-7 "Continuous Monitoring" | NIST SP 800-53 CA-7 |
 | **Q1.2.5**: How does your organization assess the business impact of cryptographic vulnerabilities? | FIPS 199 "Impact Assessment" | RA.L2-3.11.2 "Scan for vulnerabilities" | RA-3(1) "Supply Chain Risk Assessment" | NIST SP 800-53 RA-3(1) |
 | **Q1.2.6**: How does your organization assess quantum vulnerability of data authenticity mechanisms? | FIPS 204 "Digital Signatures" | SC.L2-3.13.11 "Employ cryptographic hashing" | SC-13 "Cryptographic Protection" | NIST SP 800-53 SC-13 |
 | **Q1.2.7**: How does your organization validate cryptographic implementation correctness? | FIPS 140-3 "Cryptographic Module Validation" | SC.L2-3.13.10 "Establish cryptographic key management" | SC-12 "Cryptographic Key Establishment and Management" | NIST SP 800-53 SC-12 |
 | **Q1.2.8**: How does your organization assess trends in cryptographic vulnerabilities? | - | CA.L2-3.12.2 "Develop security plans" | CA-5 "Plan of Action and Milestones" | NIST SP 800-53 CA-5 |
-| **Q1.2.9**: How does your organization apply quantum vulnerability insights? | NIST IR 8547 (initial public draft) | - | CA-7(3) "Trend Analyses" | NIST SP 800-53 CA-7(3) |
+| **Q1.2.9**: How does your organization apply quantum vulnerability insights? | NIST IR 8547 | - | CA-7(3) "Trend Analyses" | NIST SP 800-53 CA-7(3) |
 | **Q1.2.10**: How does your organization prioritize systems for stakeholder communication? | - | IR.L2-3.6.1 "Establish incident response" | IR-6 "Incident Reporting" | NIST SP 800-53 IR-6 |
 
 #### Practice 1.3: Cryptographic Dependency Mapping
@@ -80,12 +82,12 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 
 | QRAMM Question | NIST PQC | CMMC 2.0 | FedRAMP | FISMA |
 |----------------|----------|----------|---------|--------|
-| **Q1.3.1**: How does your organization identify cryptographic dependencies? | NIST IR 8547 Section 3.2 | CM.L2-3.4.9 "Control configuration changes" | CM-4 "Impact Analyses" | NIST SP 800-53 CM-4 |
+| **Q1.3.1**: How does your organization identify cryptographic dependencies? | NIST IR 8547 Section 2.2 | CM.L2-3.4.9 "Control configuration changes" | CM-4 "Impact Analyses" | NIST SP 800-53 CM-4 |
 | **Q1.3.2**: How does your organization document cryptographic dependencies? | NIST SP 800-160 Vol. 1 | - | RA-9 "Criticality Analysis" | NIST SP 800-53 RA-9 |
 | **Q1.3.3**: How does your organization analyze impact of cryptographic changes? | FIPS 200 "Change Impact" | CM.L2-3.4.4 "Analyze security impact" | CM-4(1) "Separate Test Environments" | NIST SP 800-53 CM-4(1) |
-| **Q1.3.4**: How does your organization validate dependency mapping accuracy? | NIST IR 8547 Section 4.2 | - | CA-2(1) "Independent Assessors" | NIST SP 800-53 CA-2(1) |
+| **Q1.3.4**: How does your organization validate dependency mapping accuracy? | - | - | CA-2(1) "Independent Assessors" | NIST SP 800-53 CA-2(1) |
 | **Q1.3.5**: How does your organization keep dependency information current? | - | CM.L2-3.4.5 "Define configuration baselines" | CM-2 "Baseline Configuration" | NIST SP 800-53 CM-2 |
-| **Q1.3.6**: How is dependency information used for migration planning? | NIST IR 8547 (initial public draft) | - | PM-30 "Supply Chain Risk Management Strategy" | NIST SP 800-53 PM-30 |
+| **Q1.3.6**: How is dependency information used for migration planning? | NIST IR 8547 | - | PM-30 "Supply Chain Risk Management Strategy" | NIST SP 800-53 PM-30 |
 | **Q1.3.7**: How does your organization manage dependencies in build systems? | NIST SP 800-218 "SSDF" | - | SA-15 "Development Process, Standards, and Tools" | NIST SP 800-53 SA-15 |
 | **Q1.3.8**: How does your organization assess OT dependencies? | NIST SP 800-82 Rev. 3 | - | SC-40 "Wireless Link Protection" | NIST SP 800-53 SC-40 |
 | **Q1.3.9**: How are dependencies evaluated for architectural complexity? | NIST SP 800-160 Vol. 2 | - | SA-15(3) "Criticality Analysis" | NIST SP 800-53 SA-15(3) |
@@ -102,12 +104,12 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 | QRAMM Question | NIST PQC | CMMC 2.0 | FedRAMP | FISMA |
 |----------------|----------|----------|---------|--------|
 | **Q2.1.1**: How is quantum risk oversight structured at the executive level? | OMB M-23-02 | - | PM-2 "Information Security Program Leadership Role" | NIST SP 800-53 PM-2 |
-| **Q2.1.2**: How comprehensive is your quantum risk policy framework? | NIST IR 8547 (initial public draft) | - | PL-1 "Policy and Procedures" | NIST SP 800-53 PL-1 |
+| **Q2.1.2**: How comprehensive is your quantum risk policy framework? | NIST IR 8547 | - | PL-1 "Policy and Procedures" | NIST SP 800-53 PL-1 |
 | **Q2.1.3**: How are quantum security initiatives funded and resourced? | OMB M-23-02 | - | PM-3 "Information Security and Privacy Resources" | NIST SP 800-53 PM-3 |
 | **Q2.1.4**: How do you measure quantum risk governance effectiveness? | - | CA.L2-3.12.3 "Monitor security controls" | PM-6 "Measures of Performance" | NIST SP 800-53 PM-6 |
 | **Q2.1.5**: How does leadership drive quantum security innovation? | - | - | PM-31 "Continuous Monitoring Strategy" | NIST SP 800-53 PM-31 |
 | **Q2.1.6**: How is quantum risk integrated into organizational strategy? | OMB M-23-02 | - | PM-9 "Risk Management Strategy" | NIST SP 800-53 PM-9 |
-| **Q2.1.7**: How are quantum security policies reviewed and maintained? | NIST IR 8547 (initial public draft) | - | PL-1 "Policy and Procedures" | NIST SP 800-53 PL-1 |
+| **Q2.1.7**: How are quantum security policies reviewed and maintained? | NIST IR 8547 | - | PL-1 "Policy and Procedures" | NIST SP 800-53 PL-1 |
 | **Q2.1.8**: How is executive leadership kept informed? | OMB M-23-02 | - | PM-14 "Testing, Training, and Monitoring" | NIST SP 800-53 PM-14 |
 | **Q2.1.9**: How do you monitor progress across quantum readiness? | - | - | PM-6 "Measures of Performance" | NIST SP 800-53 PM-6 |
 | **Q2.1.10**: How does your organization contribute to industry standards? | - | - | PM-15 "Security and Privacy Groups and Associations" | NIST SP 800-53 PM-15 |
@@ -118,7 +120,7 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 
 | QRAMM Question | NIST PQC | CMMC 2.0 | FedRAMP | FISMA |
 |----------------|----------|----------|---------|--------|
-| **Q2.2.1**: How does your organization assess quantum computing risk? | NIST IR 8547 Section 2 | RA.L2-3.11.1 "Identify and evaluate risk" | RA-3 "Risk Assessment" | NIST SP 800-53 RA-3 |
+| **Q2.2.1**: How does your organization assess quantum computing risk? | NIST IR 8547 Section 3 | RA.L2-3.11.1 "Identify and evaluate risk" | RA-3 "Risk Assessment" | NIST SP 800-53 RA-3 |
 | **Q2.2.2**: How does your organization manage quantum compliance requirements? | OMB M-23-02 | CA.L2-3.12.1 "Conduct assessments" | CA-1 "Policy and Procedures" | NIST SP 800-53 CA-1 |
 | **Q2.2.3**: How does your organization integrate quantum risk into ERM? | - | RA.L2-3.11.2 "Vulnerability identification" | RA-7 "Risk Response" | NIST SP 800-53 RA-7 |
 | **Q2.2.4**: How does your organization validate quantum risk assessments? | NIST SP 800-30 Rev. 1 | CA.L2-3.12.2 "Develop remediation plans" | CA-2(2) "Specialized Assessments" | NIST SP 800-53 CA-2(2) |
@@ -211,7 +213,7 @@ The PKI Consortium's PQC Maturity Model (PQCMM) scores the post-quantum readines
 
 | QRAMM Question | NIST PQC | CMMC 2.0 | FedRAMP | FISMA |
 |----------------|----------|----------|---------|--------|
-| **Q4.1.1**: How does your organization assess infrastructure readiness? | NIST IR 8547 Section 3 | CM.L2-3.4.1 "Baseline configurations" | CM-2 "Baseline Configuration" | NIST SP 800-53 CM-2 |
+| **Q4.1.1**: How does your organization assess infrastructure readiness? | NIST IR 8547 Section 2.2 | CM.L2-3.4.1 "Baseline configurations" | CM-2 "Baseline Configuration" | NIST SP 800-53 CM-2 |
 | **Q4.1.2**: How does your organization plan infrastructure upgrades? | - | CM.L2-3.4.2 "Configuration management" | CM-3 "Configuration Change Control" | NIST SP 800-53 CM-3 |
 | **Q4.1.3**: How does your organization prioritize infrastructure investments? | OMB M-23-02 | - | PM-11 "Mission and Business Process Definition" | NIST SP 800-53 PM-11 |
 | **Q4.1.4**: How does your organization validate infrastructure readiness? | - | CA.L2-3.12.1 "Security assessments" | CA-2 "Control Assessments" | NIST SP 800-53 CA-2 |
@@ -305,3 +307,7 @@ For each mapped requirement, organizations should collect:
 ---
 
 *This compliance mapping is maintained by the QRAMM team and updated as standards evolve. For the latest version, visit [qramm.org](https://qramm.org)*
+
+## Changes to this document
+
+October 31, 2026: The NIST IR 8547 citations now name the final report (October 27, 2026) in place of the 2024 initial public draft. Four section numbers were checked against the final text: Q1.3.1 moves from Section 3.2 to Section 2.2, Q2.2.1 from Section 2 to Section 3, and Q4.1.1 from Section 3 to Section 2.2. Q1.3.4 no longer cites IR 8547, whose text does not address validating a dependency map. Q1.1.1 and Q1.1.6 now cite Section 1. No measured value changed.
