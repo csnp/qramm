@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Tests the default file list of scripts/check-framework-docs.sh.
+# Tests the default file list of scripts/check-framework-docs.sh, and how the
+# documents in that list link a withdrawn document.
 #
 # Usage:
 #   scripts/test-check-framework-docs-defaults.sh
@@ -9,6 +10,11 @@
 # with sed. The checker is run with --no-network. Fixtures and output are
 # written to a new temporary directory under .tmp-tests/ at the repository
 # root, and the cleanup removes only a directory under it.
+#
+# A Markdown document is withdrawn when the first line that is not blank after
+# its first line starts with "Withdrawn ", such as "Withdrawn October 31,
+# 2026". A line that links a withdrawn document has to say so: "withdrawn",
+# in any letter case, is part of its text.
 #
 # Cases:
 #   1. A fixture README with a .md link that has an anchor, a directory link,
@@ -24,6 +30,15 @@
 #   5. The checker run with no file arguments exits 0, checks one file per
 #      DEFAULT_DOCS entry, has no FAIL line, and its last line is
 #      RESULT: PASS.
+#   6. Fixture documents: old.md is withdrawn; new.md is not, though a later
+#      line of it starts with "Withdrawn ". new.md links old.md, and a
+#      fixture README links old.md on a line that does not say "withdrawn",
+#      on a line that says "Withdrawn" and inside a fenced code block, and
+#      links new.md and an external URL that ends in old.md: the
+#      withdrawn-link reader lists the README line that does not say
+#      "withdrawn" and the new.md line, and nothing else.
+#   7. Every line of a DEFAULT_DOCS document, outside fenced code blocks,
+#      that links a withdrawn document says "withdrawn".
 #
 # Exit status: 0 when every case passes, 1 when any case fails.
 set -euo pipefail
@@ -99,6 +114,52 @@ with open(source, encoding="utf-8") as fh:
             if item not in seen:
                 seen.append(item)
                 print(item)
+PY
+}
+
+# Reads Markdown file names from the file $2, one per line, each relative to
+# the directory $1. For each line of those files, outside fenced code blocks,
+# whose text does not hold "withdrawn" in any letter case, prints
+# "<name>:<line number>: <target>" for each relative link on it to a
+# withdrawn Markdown document, with the target as it is written. Line numbers
+# count lines the way the checker does.
+withdrawn_links() {
+  python3 -I - "$1" "$2" <<'PY'
+import os
+import re
+import sys
+
+
+def withdrawn(path):
+    with open(path, encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+    for line in lines[1:]:
+        if line.strip():
+            return line.startswith("Withdrawn ")
+    return False
+
+
+root = sys.argv[1]
+with open(sys.argv[2], encoding="utf-8") as fh:
+    names = [name for name in fh.read().splitlines() if name]
+for name in names:
+    source = os.path.join(root, name)
+    base = os.path.dirname(source)
+    fenced = False
+    with open(source, encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+    for number, line in enumerate(lines, 1):
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+            continue
+        if fenced or "withdrawn" in line.lower():
+            continue
+        for target in re.findall(r"\]\(([^)\s]+)\)", line):
+            if re.match(r"^[a-z]+:", target) or target.startswith("#"):
+                continue
+            path = os.path.normpath(os.path.join(base, target.split("#", 1)[0]))
+            if path.endswith(".md") and os.path.isfile(path) and withdrawn(path):
+                print("{}:{}: {}".format(name, number, target))
 PY
 }
 
@@ -192,6 +253,53 @@ if [ "$failed" -ne 0 ]; then
   { grep -E '^== |^  FAIL|^    ' "$work/out" || true; } | sed 's/^/    /' | head -n 40 || true
   sed 's/^/    stderr: /' "$work/err"
 fi
+failed=$((failed | case_failed))
+
+echo "case 6: the withdrawn-link reader on fixture documents"
+case_failed="$failed"
+failed=0
+mkdir -p "$work/withdrawn/docs"
+printf '# Old\n\nWithdrawn October 31, 2026\n\nSee new.md.\n' > "$work/withdrawn/docs/old.md"
+{
+  printf '# New\n\n'
+  printf 'The current document links [the old one](old.md).\n\n'
+  printf 'Withdrawn certificates are listed here.\n'
+} > "$work/withdrawn/docs/new.md"
+{
+  printf '# Fixture\n\n'
+  printf 'The [old summary](docs/old.md) gives a quick reference.\n'
+  printf 'Withdrawn October 31, 2026: [the old summary](docs/old.md#changes).\n'
+  printf 'Read [new](docs/new.md#part) and [site](https://example.org/docs/old.md).\n'
+  printf '```\n[old](docs/old.md)\n```\n'
+} > "$work/withdrawn/README.md"
+printf 'README.md\ndocs/new.md\n' > "$work/withdrawn-names"
+status=0
+withdrawn_links "$work/withdrawn" "$work/withdrawn-names" \
+  > "$work/withdrawn-out" 2> "$work/withdrawn-err" || status=$?
+printf 'README.md:3: docs/old.md\ndocs/new.md:3: old.md\n' > "$work/withdrawn-expected"
+expect "reader exits 0" '[ "$status" -eq 0 ]'
+expect "lists the two links on lines that do not say withdrawn, and nothing else" \
+  'diff -u "$work/withdrawn-expected" "$work/withdrawn-out" > "$work/withdrawn-diff"'
+if [ "$failed" -ne 0 ]; then
+  sed 's/^/    /' "$work/withdrawn-diff"
+  sed 's/^/    stderr: /' "$work/withdrawn-err"
+fi
+failed=$((failed | case_failed))
+
+echo "case 7: DEFAULT_DOCS lines that link a withdrawn document say withdrawn"
+case_failed="$failed"
+failed=0
+status=0
+withdrawn_links "$repo" "$work/defaults" \
+  > "$work/withdrawn-links" 2> "$work/withdrawn-links-err" || status=$?
+expect "reader exits 0" '[ "$status" -eq 0 ]'
+expect "every such line says withdrawn" '[ ! -s "$work/withdrawn-links" ]'
+if [ -s "$work/withdrawn-links" ]; then
+  echo "    lines that link a withdrawn document and do not say withdrawn" \
+    "($(wc -l < "$work/withdrawn-links" | tr -d ' ')):"
+  sed 's/^/      /' "$work/withdrawn-links"
+fi
+[ "$status" -eq 0 ] || sed 's/^/    stderr: /' "$work/withdrawn-links-err"
 failed=$((failed | case_failed))
 
 if [ "$failed" -eq 0 ]; then
