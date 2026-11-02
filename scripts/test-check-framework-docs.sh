@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tests the nist check of scripts/check-framework-docs.sh.
+# Tests the nist and method checks of scripts/check-framework-docs.sh.
 #
 # Usage:
 #   scripts/test-check-framework-docs.sh [checker]
@@ -31,6 +31,14 @@
 #      stderr, no Python traceback.
 #   9. A directory: exit 1, the directory's == line and then FAIL file: is a
 #      directory, no "not found" line, RESULT: FAIL, nothing on stderr.
+#  10. A compliance-coverage-summary.md that says "no method was published"
+#      beside a compliance-mapping.md with a "Compliance Score =" line:
+#      exit 1, FAIL method, a line that names the summary line and the
+#      formula's line, RESULT: FAIL.
+#  11. The same summary with no compliance-mapping.md beside it: exit 0,
+#      PASS method with "no readable compliance-mapping.md beside it".
+#  12. The repository's framework/compliance-coverage-summary.md: exit 0,
+#      PASS method naming the formula's line in compliance-mapping.md.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -216,6 +224,49 @@ expect "FAIL line follows the directory's == line and says it is a directory" \
 expect "no not found line" '! printf "%s\n" "$out" | grep -q "not found"'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 expect "stderr is empty" '[ -z "$err" ]'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+# Writes a summary to $1 whose third line says no method was published.
+write_summary() {
+  mkdir -p "$(dirname "$1")"
+  printf '# Summary\n\nWithdrawn. They cannot be reproduced: no method was published.\n' > "$1"
+}
+
+echo "case 10: a summary that says no method was published beside a formula"
+case_failed="$failed"
+failed=0
+write_summary "$work/method/compliance-coverage-summary.md"
+printf '# Mapping\n\n```\nCompliance Score = Direct / Total Requirements\n```\n' \
+  > "$work/method/compliance-mapping.md"
+run_checker "$work/method/compliance-coverage-summary.md"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "method check fails" 'printf "%s\n" "$out" | grep -q "^  FAIL method"'
+expect "problem names the summary line and the formula line" \
+  'printf "%s\n" "$out" | grep -q "line 3: says .no method was published., but compliance-mapping.md line 4 publishes the scoring formula"'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+expect "stderr is empty" '[ -z "$err" ]'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 11: the same summary with no compliance-mapping.md beside it"
+case_failed="$failed"
+failed=0
+write_summary "$work/alone/compliance-coverage-summary.md"
+run_checker "$work/alone/compliance-coverage-summary.md"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "method check passes and says no mapping was read" \
+  'printf "%s\n" "$out" | grep -qx "  PASS method (no readable compliance-mapping.md beside it)"'
+[ "$failed" -eq 0 ] || show_output
+failed=$((failed | case_failed))
+
+echo "case 12: the repository's compliance-coverage-summary.md"
+case_failed="$failed"
+failed=0
+run_checker "$(dirname "$repo_doc")/compliance-coverage-summary.md"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "method check passes and names the formula line" \
+  'printf "%s\n" "$out" | grep -q "^  PASS method (compliance-mapping.md line [0-9]* has the formula)$"'
 [ "$failed" -eq 0 ] || show_output
 failed=$((failed | case_failed))
 

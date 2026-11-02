@@ -50,6 +50,16 @@
 #              SP n-n, NIST IR n or OMB M-nn-nn. A label such as "NIST
 #              Testing Guide" names no publication and fails.
 #
+# Extra checks for framework/compliance-coverage-summary.md (any file with
+# that name):
+#   method     When the compliance-mapping.md in the same directory has a line
+#              that starts "Compliance Score =" (its scoring formula), no line
+#              of the summary may say that no method was published, in forms
+#              such as "no method was published" or "no scoring method has
+#              been published". The failure names the summary line and the
+#              formula's line. With no readable compliance-mapping.md beside
+#              it, or no formula line in it, the check passes and says so.
+#
 # An empty file argument fails with "no file name given". The check fails
 # when a given file does not exist, is a directory or is not UTF-8 text.
 #
@@ -122,6 +132,13 @@ MAPPING_DOC = "framework/compliance-mapping.md"
 NIST_COLUMN = "NIST PQC"
 NIST_PUBLICATION = re.compile(
     r"\b(?:FIPS \d+|NIST SP \d+-\d+|NIST IR \d+|OMB M-\d{2}-\d{2})"
+)
+
+COVERAGE_DOC = "framework/compliance-coverage-summary.md"
+FORMULA_LINE = re.compile(r"^\s*Compliance Score\s*=")
+NO_METHOD = re.compile(
+    r"\bno (?:[a-z]+ ){0,2}method (?:was|has been|is|had been) published\b",
+    re.IGNORECASE,
 )
 
 BANNED_PHRASES = [
@@ -449,6 +466,36 @@ def check_nist(lines):
     return problems, rows, dashes
 
 
+def check_method(path, lines):
+    """The summary does not say no method was published beside a formula."""
+    mapping = os.path.join(os.path.dirname(path), os.path.basename(MAPPING_DOC))
+    try:
+        with open(mapping, encoding="utf-8") as fh:
+            mapping_lines = fh.read().splitlines()
+    except (OSError, UnicodeDecodeError):
+        return [], "no readable {} beside it".format(os.path.basename(MAPPING_DOC))
+    formula = None
+    for number, line in enumerate(mapping_lines, 1):
+        if FORMULA_LINE.match(line):
+            formula = number
+            break
+    if formula is None:
+        return [], "no formula line in {}".format(os.path.basename(MAPPING_DOC))
+    problems = []
+    for number, line in enumerate(lines, 1):
+        found = NO_METHOD.search(line)
+        if found:
+            problems.append(
+                "line {}: says '{}', but {} line {} publishes the scoring "
+                "formula; say what the formula gives instead".format(
+                    number, found.group(0), os.path.basename(MAPPING_DOC), formula
+                )
+            )
+    return problems, "{} line {} has the formula".format(
+        os.path.basename(MAPPING_DOC), formula
+    )
+
+
 def main(argv):
     root = os.path.realpath(argv[0])
     args = argv[1:]
@@ -527,6 +574,9 @@ def main(argv):
             nist_problems, rows, dashes = check_nist(lines)
             nist_note = "{} question rows, {} with '-'".format(rows, dashes)
             results.append(("nist", nist_problems, nist_note, []))
+        if os.path.basename(path) == os.path.basename(COVERAGE_DOC):
+            method_problems, method_note = check_method(path, lines)
+            results.append(("method", method_problems, method_note, []))
 
         for name, problems, note, listed in results:
             suffix = " ({})".format(note) if note else ""
