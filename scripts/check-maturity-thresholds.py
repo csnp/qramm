@@ -51,12 +51,14 @@ range. For each such chart:
 A category whose formula counts only "-", the practices with no score, is
 not checked unless its label is a maturity level. A value whose formula is
 longer than 8,192 characters, the most Excel allows in a formula, fails with
-"longer than the 8,192 Excel allows", and its criteria are not read. A
-cut-off of a Scorecard formula, a number of a score range or of a chart
-value criterion, or a row of a chart category or value range, with a
-Unicode decimal digit other than 0 to 9, such as U+0661 (ARABIC-INDIC DIGIT
-ONE), fails with "has a digit other than 0 to 9". The script uses the
-Python standard library only.
+"longer than the 8,192 Excel allows", and its criteria are not read. A chart
+category or value range that gives a row past 1048576, the last row of a
+worksheet, such as 1 followed by 4300 zeros, fails with "refers to a row
+past 1048576", before any row of it is read. A cut-off of a Scorecard
+formula, a number of a score range or of a chart value criterion, or a row
+of a chart category or value range, with a Unicode decimal digit other than
+0 to 9, such as U+0661 (ARABIC-INDIC DIGIT ONE), fails with "has a digit
+other than 0 to 9". The script uses the Python standard library only.
 
 Exit status: 0 when the documents agree with the Scorecard, 1 when they do
 not or a file cannot be read, 2 on a usage error. An empty file argument
@@ -90,6 +92,7 @@ import sys
 import xml.etree.ElementTree as ET
 import xml.parsers.expat
 import zipfile
+from decimal import Decimal
 
 WORKBOOK = "toolkit/QRAMM_Assessment_Toolkit.xlsx"
 SHEET = "Scorecard"
@@ -151,6 +154,9 @@ CHART_PART = re.compile(r"xl/charts/chart\d+\.xml")
 SERIES_RANGE = re.compile(
     r"(?:'((?:[^']|'')+)'|([^'!]+))!\$?([A-Z]+)\$?(\d+)(?::\$?([A-Z]+)\$?(\d+))?"
 )
+# The last row of an Excel worksheet. A chart range that gives a row past it
+# cannot be used.
+LAST_ROW = 1048576
 # COUNTIF or COUNTIFS of one range against one or more criteria, divided by a
 # whole number, one range-and-criterion pair of its arguments, and a criterion
 # that compares with a number. In CRITERION and COMPARISON each quantifier is
@@ -491,21 +497,32 @@ def cell_text(cell, strings):
     return value.text
 
 
-def range_cells(reference):
+def range_cells(reference, name):
     """(sheet name, cell references) of a range in one column, None for
     another range, or the reason a FAIL line gives, a str, when the number
-    of one of its rows has a digit other than 0 to 9. int() reads every
-    Unicode decimal digit, so it would read U+0662 U+0661 (ARABIC-INDIC
-    DIGIT TWO and ONE) as 21."""
+    of one of its rows has a digit other than 0 to 9 or one of its rows is
+    past LAST_ROW. name, such as "value range", names the range in that
+    reason. int() reads every Unicode decimal digit, so it would read
+    U+0662 U+0661 (ARABIC-INDIC DIGIT TWO and ONE) as 21."""
     match = SERIES_RANGE.fullmatch(reference.strip())
     if match is None or match.group(5) not in (None, match.group(3)):
         return None
     odd = odd_number([match.group(4), match.group(6)])
     if odd is not None:
-        return number_problem(odd)
+        return "a row of the {}: {}".format(name, number_problem(odd))
+    # Decimal(), not int(), reads the rows: in Python 3.14.3, int() raises
+    # ValueError for text of more than 4300 digits. A row past LAST_ROW
+    # fails here, before a cell reference is made for each row from the
+    # first to the last: for a last row of 1 followed by 4299 zeros, which
+    # int() reads, that would be about 10^4299 cell references.
+    rows = [Decimal(match.group(4)), Decimal(match.group(6) or match.group(4))]
+    if any(row > LAST_ROW for row in rows):
+        return (
+            "the {} refers to a row past {}, the last row of a worksheet, so "
+            "it cannot be used".format(name, LAST_ROW)
+        )
     sheet = (match.group(1) or "").replace("''", "'") or match.group(2)
-    first_row = int(match.group(4))
-    last_row = int(match.group(6) or match.group(4))
+    first_row, last_row = (int(row) for row in rows)
     return sheet, [
         "{}{}".format(match.group(3), row) for row in range(first_row, last_row + 1)
     ]
@@ -520,13 +537,14 @@ def series_categories(series, cells, strings):
         found = series.find("c:{}//c:f".format(part), {"c": CHART_NS})
         references.append((found.text or "").strip() if found is not None else "")
     category_range, value_range = references
-    labels, values = range_cells(category_range), range_cells(value_range)
+    labels = range_cells(category_range, "category range")
+    values = range_cells(value_range, "value range")
     if labels is None or values is None:
         problem = "a range is not one column of cells"
     elif isinstance(labels, str):
-        problem = "a row of the category range: {}".format(labels)
+        problem = labels
     elif isinstance(values, str):
-        problem = "a row of the value range: {}".format(values)
+        problem = values
     elif labels[0] not in cells or values[0] not in cells:
         problem = "a range names a sheet the workbook does not have"
     elif len(labels[1]) != len(values[1]):
