@@ -101,6 +101,16 @@
 #      katakana voiced sound marks (U+FF9E, whose NFKD decomposition is the
 #      combining mark U+3099), a space and "Password: None": the same
 #      results as cases 42 to 44.
+#   48-51. Line 3 is the letter a, then 40,000 U+0F73 (TIBETAN VOWEL SIGN
+#      II), 20,000 U+0F75 (TIBETAN VOWEL SIGN UU), 20,000 U+0F81 (TIBETAN
+#      VOWEL SIGN REVERSED II), or 20,000 combining acute accents (U+0301,
+#      class 230) and 20,000 combining grave accents below (U+0316, class
+#      220) in turn, then a space and "Password: None": the same results as
+#      cases 42 to 44. Each of the three vowel signs decomposes into U+0F71
+#      (class 129) and a mark of a higher class, so NFKC sorts the marks of
+#      each run by class.
+#   52. Line 3 is the letter a, 40,000 U+0F73, a space and "Password: None"
+#      with a zero width space inside None: the same results as case 45.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -626,6 +636,28 @@ check_long_line "a and 480,000 combining acute accents (U+0301) before Password:
   "a$many_accents Password: None" pass
 check_long_line "a and 480,000 halfwidth voiced sound marks (U+FF9E) before Password: None" \
   "a$voiced_sound_marks Password: None" pass
+
+# 40,000 U+0F73 (TIBETAN VOWEL SIGN II), 20,000 U+0F75 (TIBETAN VOWEL SIGN
+# UU), 20,000 U+0F81 (TIBETAN VOWEL SIGN REVERSED II), and 20,000 combining
+# acute accents (U+0301, class 230) and 20,000 combining grave accents below
+# (U+0316, class 220) in turn. Each Tibetan vowel sign decomposes into
+# U+0F71 (class 129) and a mark of a higher class, so NFKC sorts the marks
+# of each run by class.
+vowel_signs_ii="$(python3 -I -c 'print(chr(0xF73) * 40000)')"
+vowel_signs_uu="$(python3 -I -c 'print(chr(0xF75) * 20000)')"
+vowel_signs_reversed_ii="$(python3 -I -c 'print(chr(0xF81) * 20000)')"
+accents_in_turn="$(python3 -I -c 'print((chr(0x301) + chr(0x316)) * 20000)')"
+
+check_long_line "a and 40,000 U+0F73 before Password: None" \
+  "a$vowel_signs_ii Password: None" pass
+check_long_line "a and 20,000 U+0F75 before Password: None" \
+  "a$vowel_signs_uu Password: None" pass
+check_long_line "a and 20,000 U+0F81 before Password: None" \
+  "a$vowel_signs_reversed_ii Password: None" pass
+check_long_line "a and 20,000 U+0301 and U+0316 in turn before Password: None" \
+  "a$accents_in_turn Password: None" pass
+check_long_line "a and 40,000 U+0F73 before None with a zero width space inside" \
+  "a$vowel_signs_ii Password: No${zero_width_space}ne" fail
 
 if [ "$failed" -eq 0 ]; then
   echo "RESULT: PASS"

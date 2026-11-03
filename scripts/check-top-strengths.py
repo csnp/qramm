@@ -36,9 +36,22 @@ line. Each one must, in upper or lower case:
        number after "out of";
     3. say "out of" the maximum, such as "out of 4".
 
-The rules read such a line without its format characters (Unicode
-category Cf), such as U+200B (ZERO WIDTH SPACE) and U+2060 (WORD JOINER):
-3.6 followed by U+200B and 1 is read as 3.61, not as 3.6 and 1.
+The script reads each line without its format characters (Unicode
+category Cf), such as U+200B (ZERO WIDTH SPACE) and U+2060 (WORD JOINER),
+both to find "Top Strengths" in it and to apply the rules: "Top Str",
+U+200B and "engths" contains "Top Strengths", and 3.6 followed by U+200B
+and 1 is read as 3.61, not as 3.6 and 1.
+
+A Top Strengths line also fails when it has a format character whose
+bidirectional class is not BN (boundary neutral), such as U+202E
+(RIGHT-TO-LEFT OVERRIDE), U+2067 (RIGHT-TO-LEFT ISOLATE) or U+200F
+(RIGHT-TO-LEFT MARK), with a FAIL line that names each such character on
+the line. The rules read the line without it, in the order its characters
+are stored, but the Unicode Bidirectional Algorithm reads it, so a renderer
+that applies the algorithm can show the line's numbers and words in another
+order: in a left-to-right paragraph, ICU reorders 3, U+202E, .6 and U+202C
+(POP DIRECTIONAL FORMATTING) for display as 36. The algorithm ignores a BN
+character, such as U+200B.
 
 A number on such a line is read with the characters with a numeric value
 right after it, such as U+00B2 (SUPERSCRIPT TWO) or U+00BD (VULGAR
@@ -307,6 +320,31 @@ def without_format(line):
     return "".join(char for char in line if unicodedata.category(char) != "Cf")
 
 
+def bidi_formats(line):
+    """The format characters of line (Unicode category Cf) whose
+    bidirectional class is not BN (boundary neutral), each once, in the
+    order they first appear, such as U+202E (RIGHT-TO-LEFT OVERRIDE) and
+    U+200F (RIGHT-TO-LEFT MARK). without_format() leaves them out of the
+    text the rules read, and the Unicode Bidirectional Algorithm reads
+    them, so a renderer can show the line in another order than the rules
+    read it. The algorithm ignores a BN character, such as U+200B (ZERO
+    WIDTH SPACE)."""
+    return list(
+        dict.fromkeys(
+            char
+            for char in line
+            if unicodedata.category(char) == "Cf"
+            and unicodedata.bidirectional(char) != "BN"
+        )
+    )
+
+
+def character(char):
+    """char as U+, its code point in hex and its name in parentheses, such
+    as U+202E (RIGHT-TO-LEFT OVERRIDE)."""
+    return "U+{:04X} ({})".format(ord(char), unicodedata.name(char))
+
+
 def number_texts(pattern, text):
     """The texts that group 1 of pattern, OUT_OF or NUMBER, matches in text,
     each with the characters with a numeric value right after it, such as
@@ -365,11 +403,13 @@ def check_overview(lines, threshold, maximum, problems):
         if line.lstrip().startswith("```"):
             fenced = not fenced
             continue
-        if fenced or HEADING not in line:
+        if fenced:
+            continue
+        text = without_format(line)
+        if HEADING not in text:
             continue
         described = True
         where = "{}:{}".format(OVERVIEW, number)
-        text = without_format(line)
         if up_to.search(text):
             print("  PASS line {}: up to {}".format(number, word))
         else:
@@ -396,6 +436,13 @@ def check_overview(lines, threshold, maximum, problems):
             problems.append(
                 '{}: does not say "out of {}"; the {} gives each score out of '
                 "{} ({})".format(where, maximum, SHEET, maximum, sentences)
+            )
+        controls = bidi_formats(line)
+        if controls:
+            problems.append(
+                "{}: has {}, which can change the order in which a reader "
+                "sees its numbers and words; the rules read the line without "
+                "them".format(where, joined(map(character, controls)))
             )
     if not described:
         problems.append(

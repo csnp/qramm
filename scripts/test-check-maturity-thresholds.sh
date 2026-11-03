@@ -206,6 +206,37 @@
 #      chart value is not a count of practice scores in one range, one of
 #      them for Scorecard!M1048576, and no FAIL line that says a range
 #      refers to a row past 1048576.
+#  53. A copy whose toolkit workbook has an xl/workbook.xml entry that holds
+#      deflate data whose first byte is 0x07, which starts a block of the
+#      reserved type 3.
+#  54. A copy whose toolkit workbook has an xl/workbook.xml entry that gives
+#      compression method 99, which zipfile does not support.
+#  55. A copy whose toolkit workbook has an xl/workbook.xml entry with bit 0
+#      of its general purpose flags set, which marks it as encrypted.
+#  56. A copy whose toolkit workbook has an xl/workbook.xml entry that gives
+#      compression method 93 (Zstandard) and holds deflate data.
+#  57. A copy whose toolkit workbook has an xl/workbook.xml entry that gives
+#      compression method 14 (LZMA) and holds data that does not decompress
+#      as LZMA data.
+#  58. A copy whose toolkit workbook has an xl/workbook.xml entry that is
+#      stored without compression and gives a compressed and an uncompressed
+#      size that run past the end of the file.
+#  59 to 61. A copy whose toolkit workbook has a Scorecard sheet part,
+#      xl/worksheets/sheet7.xml, damaged as the xl/workbook.xml entry is in
+#      cases 53 to 55, in that order.
+#  Cases 53 to 61 pass the text document of cases 18 to 20 and give the
+#  results of cases 40 to 44. The reason is the message of the error
+#  zipfile raises. For cases 53 to 55 and 59 to 61 it is "Error -3 while
+#  decompressing data: invalid block type", "That compression method is not
+#  supported" or "File '<part>' is encrypted, password required for
+#  extraction", where <part> is the damaged entry. For case 56 it is
+#  "Unable to decompress Zstandard data: Unknown frame descriptor", or "That
+#  compression method is not supported" in a Python without
+#  compression.zstd, which is new in Python 3.14. For case 57 it is
+#  "Corrupt input data". For case 58 it is "EOFError", the name of the
+#  error Python 3.9.6 raises, which has no message, or "Overlapped entries:
+#  'xl/workbook.xml' (possible zip bomb)", the message of the
+#  zipfile.BadZipFile that Python 3.13.12 and 3.14.3 raise.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -1082,11 +1113,23 @@ break_repository() {
   break_workbook_xml "$root/$toolkit" "$1/$toolkit" "$2"
 }
 
-# Writes to $2 a copy of the workbook $1 damaged as $3 says: crc changes the
-# CRC-32 that both headers of the entry xl/workbook.xml give, so that the
-# entry's data does not match it, and no-target removes the Target attribute
-# of the Relationship element with Id rId8 in xl/_rels/workbook.xml.rels.
-# Fails when the workbook does not have exactly one such entry or attribute.
+# Writes to $2 a copy of the workbook $1 damaged as $3 says, in the entry $4,
+# or in xl/workbook.xml when $4 is not given. crc changes the CRC-32 that
+# both headers of the entry give, so that the entry's data does not match
+# it. no-target removes the Target attribute of the Relationship element
+# with Id rId8 in xl/_rels/workbook.xml.rels, and edits no entry. deflate
+# sets the first byte of the entry's deflate data to 0x07, which starts a
+# block of the reserved type 3. method99, zstd and lzma set the compression
+# method that both headers of the entry give to 99, which zipfile does not
+# support, 93 (Zstandard) or 14 (LZMA); for lzma, the first 11 bytes of the
+# entry's data are replaced by the 4-byte header zipfile reads before LZMA
+# data, which gives 5 bytes of LZMA properties, the properties 0x5d (lc=3,
+# lp=0, pb=2) and a 64 KiB dictionary size, then 0xff 0xff. encrypted sets
+# bit 0 of the general purpose flags that both headers of the entry give,
+# which marks the entry as encrypted. past-end stores the entry without
+# compression, and sets the compressed and uncompressed sizes that both of
+# its headers give to the length of the copy, which run past its end. Fails
+# when the workbook does not have exactly one such entry or attribute.
 damage_workbook() {
   python3 -I - "$@" <<'PY'
 import re
@@ -1095,7 +1138,9 @@ import sys
 import zipfile
 
 source, target, edit = sys.argv[1:4]
-if edit not in ("crc", "no-target"):
+entry = sys.argv[4] if len(sys.argv) > 4 else "xl/workbook.xml"
+methods = {"method99": 99, "zstd": 93, "lzma": 14}
+if edit not in ("crc", "no-target", "deflate", "encrypted", "past-end") + tuple(methods):
     sys.exit("unknown edit: %s" % edit)
 found = 0
 with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
@@ -1105,8 +1150,10 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
             data, found = re.subn(
                 rb'(<Relationship Id="rId8"[^>]*?) Target="[^"]*"', rb"\1", data
             )
+        if edit == "past-end" and info.filename == entry:
+            info.compress_type = zipfile.ZIP_STORED
         copy.writestr(info, data)
-if edit == "crc":
+if edit != "no-target":
     with zipfile.ZipFile(target) as book:
         infos = book.infolist()
     with open(target, "rb") as fh:
@@ -1116,13 +1163,43 @@ if edit == "crc":
     # 2-byte comment length.
     (directory,) = struct.unpack_from("<I", data, len(data) - 6)
     for info in infos:
-        if info.filename == "xl/workbook.xml":
+        if info.filename == entry:
             found += 1
-            # The CRC-32 is at offset 14 of the local file header and at
-            # offset 16 of the central directory header.
-            crc = info.CRC ^ 0xFFFFFFFF
-            struct.pack_into("<I", data, info.header_offset + 14, crc)
-            struct.pack_into("<I", data, directory + 16, crc)
+            local = info.header_offset
+            # The entry's data follows its 30-byte local file header, which
+            # gives the lengths of the file name and of the extra field at
+            # offsets 26 and 28.
+            name_length, extra_length = struct.unpack_from("<HH", data, local + 26)
+            start = local + 30 + name_length + extra_length
+            if edit == "crc":
+                # The CRC-32 is at offset 14 of the local file header and at
+                # offset 16 of the central directory header.
+                crc = info.CRC ^ 0xFFFFFFFF
+                struct.pack_into("<I", data, local + 14, crc)
+                struct.pack_into("<I", data, directory + 16, crc)
+            elif edit == "deflate":
+                if info.compress_type != zipfile.ZIP_DEFLATED:
+                    sys.exit("%s: %s is not stored with the deflate method" % (source, entry))
+                data[start] = 0x07
+            elif edit == "encrypted":
+                # The general purpose flags are at offset 6 of the local file
+                # header and at offset 8 of the central directory header.
+                for offset in (local + 6, directory + 8):
+                    (flags,) = struct.unpack_from("<H", data, offset)
+                    struct.pack_into("<H", data, offset, flags | 1)
+            elif edit == "past-end":
+                # The compressed and uncompressed sizes are at offsets 18 and
+                # 22 of the local file header and at offsets 20 and 24 of the
+                # central directory header.
+                struct.pack_into("<II", data, local + 18, len(data), len(data))
+                struct.pack_into("<II", data, directory + 20, len(data), len(data))
+            else:
+                # The compression method is at offset 8 of the local file
+                # header and at offset 10 of the central directory header.
+                struct.pack_into("<H", data, local + 8, methods[edit])
+                struct.pack_into("<H", data, directory + 10, methods[edit])
+                if edit == "lzma":
+                    data[start:start + 11] = bytes([9, 20, 5, 0, 0x5D, 0, 0, 1, 0, 255, 255])
         names, extra, comment = struct.unpack_from("<HHH", data, directory + 28)
         directory += 46 + names + extra + comment
     with open(target, "wb") as fh:
@@ -1134,21 +1211,22 @@ PY
 
 # Lays out a copy of the repository at $1, as copy_repository does, with the
 # toolkit workbook as $2 says: missing leaves it out, text writes a text file
-# in its place, and crc or no-target writes a copy of it made by
-# damage_workbook with that edit.
+# in its place, and any other edit writes a copy of it made by
+# damage_workbook with that edit, in the entry $3 when $3 is given.
 damage_repository() {
   mkdir -p "$1/scripts" "$1/toolkit"
   cp "$checker" "$1/scripts/check-maturity-thresholds.py"
   case "$2" in
     missing) ;;
     text) printf 'This is a text file, not a workbook.\n' > "$1/$toolkit" ;;
-    *) damage_workbook "$root/$toolkit" "$1/$toolkit" "$2" ;;
+    *) damage_workbook "$root/$toolkit" "$1/$toolkit" "$2" ${3+"$3"} ;;
   esac
 }
 
-# The expect lines of cases 40 to 48, whose copy of the repository has a
-# toolkit workbook that cannot be read, or none. $1 is the reason the FAIL
-# line gives in parentheses, as an extended regular expression.
+# The expect lines of cases 40 to 48 and 53 to 61, whose copy of the
+# repository has a toolkit workbook that cannot be read, or none. $1 is the
+# reason the FAIL line gives in parentheses, as an extended regular
+# expression.
 expect_scorecard_unreadable() {
   local fail_pattern="  FAIL toolkit/QRAMM_Assessment_Toolkit\\.xlsx: cannot read \\($1\\)"
   expect "exit status is 1" '[ "$status" -eq 1 ]'
@@ -1280,6 +1358,72 @@ expect "a FAIL line is for Scorecard!M1048576" \
   'has_fail "value-1048576/QRAMM_Assessment_Toolkit.xlsx Scorecard!M1048576: the Maturity Distribution chart value is not a count of practice scores in one range"'
 expect "no FAIL line says a range refers to a row past 1048576" '! has_fail "refers to a row past"'
 expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+end_case
+
+damage_repository "$work/deflate" deflate
+checker="$work/deflate/scripts/check-maturity-thresholds.py" \
+  start_case "case 53: xl/workbook.xml holds deflate data that does not decompress" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'Error -3 while decompressing data: invalid block type'
+end_case
+
+damage_repository "$work/method99" method99
+checker="$work/method99/scripts/check-maturity-thresholds.py" \
+  start_case "case 54: xl/workbook.xml gives compression method 99" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'That compression method is not supported'
+end_case
+
+damage_repository "$work/encrypted" encrypted
+checker="$work/encrypted/scripts/check-maturity-thresholds.py" \
+  start_case "case 55: xl/workbook.xml is marked as encrypted" \
+  "$work/ranges.md"
+expect_scorecard_unreadable "File 'xl/workbook\\.xml' is encrypted, password required for extraction"
+end_case
+
+damage_repository "$work/zstd" zstd
+checker="$work/zstd/scripts/check-maturity-thresholds.py" \
+  start_case "case 56: xl/workbook.xml gives compression method 93 (Zstandard)" \
+  "$work/ranges.md"
+expect_scorecard_unreadable '(Unable to decompress Zstandard data: Unknown frame descriptor|That compression method is not supported)'
+end_case
+
+damage_repository "$work/lzma" lzma
+checker="$work/lzma/scripts/check-maturity-thresholds.py" \
+  start_case "case 57: xl/workbook.xml holds LZMA data that does not decompress" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'Corrupt input data'
+end_case
+
+damage_repository "$work/past-end" past-end
+checker="$work/past-end/scripts/check-maturity-thresholds.py" \
+  start_case "case 58: the sizes of xl/workbook.xml run past the end of the file" \
+  "$work/ranges.md"
+expect_scorecard_unreadable "(EOFError|Overlapped entries: 'xl/workbook\\.xml' \\(possible zip bomb\\))"
+end_case
+
+# The part of the Scorecard sheet in the toolkit workbook.
+scorecard_part="xl/worksheets/sheet7.xml"
+
+damage_repository "$work/scorecard-deflate" deflate "$scorecard_part"
+checker="$work/scorecard-deflate/scripts/check-maturity-thresholds.py" \
+  start_case "case 59: the Scorecard sheet part holds deflate data that does not decompress" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'Error -3 while decompressing data: invalid block type'
+end_case
+
+damage_repository "$work/scorecard-method99" method99 "$scorecard_part"
+checker="$work/scorecard-method99/scripts/check-maturity-thresholds.py" \
+  start_case "case 60: the Scorecard sheet part gives compression method 99" \
+  "$work/ranges.md"
+expect_scorecard_unreadable 'That compression method is not supported'
+end_case
+
+damage_repository "$work/scorecard-encrypted" encrypted "$scorecard_part"
+checker="$work/scorecard-encrypted/scripts/check-maturity-thresholds.py" \
+  start_case "case 61: the Scorecard sheet part is marked as encrypted" \
+  "$work/ranges.md"
+expect_scorecard_unreadable "File 'xl/worksheets/sheet7\\.xml' is encrypted, password required for extraction"
 end_case
 
 if [ "$failed" -eq 0 ]; then
