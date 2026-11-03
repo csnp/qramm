@@ -69,10 +69,12 @@ toolkit/QRAMM_Assessment_Toolkit.xlsx, cannot be read when it is missing or
 is not a zip archive, or when the Relationship element of a sheet in
 xl/_rels/workbook.xml.rels has no Target attribute. A part of it that the
 Scorecard is read from, such as xl/workbook.xml, cannot be read when the
-workbook does not hold it, when its data does not match its CRC-32, when
-its XML is not well-formed or has a document type declaration, or when its
-XML declaration names an encoding the XML parser cannot use, such as
-x-bogus or shift_jis. The FAIL line then gives the reason, as in
+workbook does not hold it, when its entry is marked as encrypted, gives a
+compression method zipfile does not support or holds data that does not
+decompress, when its data does not match its CRC-32, when its XML is not
+well-formed or has a document type declaration, or when its XML
+declaration names an encoding the XML parser cannot use, such as x-bogus
+or shift_jis. The FAIL line then gives the reason, as in
 "toolkit/QRAMM_Assessment_Toolkit.xlsx: cannot read (No such file or
 directory)" or "toolkit/QRAMM_Assessment_Toolkit.xlsx: cannot read
 (document type declaration: line 1, column 67)", and no document is
@@ -92,7 +94,35 @@ import sys
 import xml.etree.ElementTree as ET
 import xml.parsers.expat
 import zipfile
+import zlib
 from decimal import Decimal
+
+try:
+    import lzma
+except ImportError:
+    lzma = None
+try:
+    # New in Python 3.14.
+    from compression import zstd
+except ImportError:
+    zstd = None
+
+# The errors other than OSError and zipfile.BadZipFile that zipfile raises
+# for an entry of a zip archive that it cannot read. RuntimeError: an entry
+# whose flags mark it as encrypted, or a compression method whose module
+# this Python lacks. NotImplementedError, a subclass of RuntimeError: a
+# compression method zipfile does not support, such as 99, or 93
+# (Zstandard) before Python 3.14. The error of the module that decompresses
+# the entry, for data that does not decompress: zlib.error for deflate,
+# lzma.LZMAError for LZMA and compression.zstd.ZstdError for Zstandard. bz2
+# raises OSError instead. EOFError, which has no message: Python 3.9.6
+# raises it for an entry stored without compression whose compressed size
+# runs past the end of the file.
+ENTRY_ERRORS = (RuntimeError, zlib.error, EOFError)
+if lzma is not None:
+    ENTRY_ERRORS += (lzma.LZMAError,)
+if zstd is not None:
+    ENTRY_ERRORS += (zstd.ZstdError,)
 
 WORKBOOK = "toolkit/QRAMM_Assessment_Toolkit.xlsx"
 SHEET = "Scorecard"
@@ -275,6 +305,15 @@ def label_formulas(path, problems):
         # which the XML parser does not read, or a sheet whose Relationship
         # element has no Target attribute.
         problems.append("{}: cannot read ({})".format(WORKBOOK, error))
+        return {}
+    except ENTRY_ERRORS as error:
+        # An entry that is encrypted, uses a compression method zipfile does
+        # not support, holds data that does not decompress or runs past the
+        # end of the file. An error with no message, such as EOFError, gives
+        # the name of its type.
+        problems.append(
+            "{}: cannot read ({})".format(WORKBOOK, str(error) or type(error).__name__)
+        )
         return {}
     found = {}
     for cell in sheet.iter(ns(MAIN_NS, "c")):

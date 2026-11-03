@@ -154,10 +154,62 @@ NO_PASSWORD = re.compile(
 
 ALLOWED_VALUE = "None"
 
+# nfkc() decomposes a text CHUNK characters at a time.
+CHUNK = 32
+
+
+def canonical_order(text):
+    """text, a text in NFKD form but for the order of its combining marks,
+    with each run of combining marks (combining class other than 0) sorted
+    by combining class in a stable sort, the order NFKD gives them."""
+    ordered = []
+    run = []
+    for char in text:
+        if unicodedata.combining(char):
+            run.append(char)
+            continue
+        ordered.extend(sorted(run, key=unicodedata.combining))
+        run = []
+        ordered.append(char)
+    ordered.extend(sorted(run, key=unicodedata.combining))
+    return "".join(ordered)
+
+
+def nfkc(text):
+    """unicodedata.normalize("NFKC", text), in a time that does not grow
+    with the square of the length of a run of combining marks.
+
+    unicodedata.normalize sorts each run of combining marks of a text by
+    combining class, in a time that grows with the square of the length of
+    a run whose marks are out of that order, such as a run of U+0F73
+    (TIBETAN VOWEL SIGN II), each of which decomposes into U+0F71 (class
+    129) and U+0F72 (class 130), or of U+0301 (COMBINING ACUTE ACCENT, class
+    230) and U+0316 (COMBINING GRAVE ACCENT BELOW, class 220) in turn.
+    nfkc() decomposes the text (NFKD) CHUNK characters at a time, so that
+    each run unicodedata.normalize sorts is no longer than the
+    decomposition of one chunk. When the last mark of a chunk has a higher
+    class than the first mark of the next, canonical_order() sorts the runs
+    of the whole text. NFC then composes the result: NFKC is NFKD followed
+    by canonical composition, and a text in NFKD form has nothing for NFC
+    to decompose."""
+    if len(text) <= CHUNK:
+        return unicodedata.normalize("NFKC", text)
+    chunks = [
+        unicodedata.normalize("NFKD", text[start:start + CHUNK])
+        for start in range(0, len(text), CHUNK)
+    ]
+    decomposed = "".join(chunks)
+    if any(
+        0 < unicodedata.combining(after[0]) < unicodedata.combining(before[-1])
+        for before, after in zip(chunks, chunks[1:])
+    ):
+        decomposed = canonical_order(decomposed)
+    return unicodedata.normalize("NFC", decomposed)
+
 
 def normalise(line):
     """The line under Unicode NFKC, without format characters (Cf)."""
-    line = unicodedata.normalize("NFKC", line)
+    line = nfkc(line)
     return "".join(c for c in line if unicodedata.category(c) != "Cf")
 
 
@@ -182,7 +234,7 @@ def starts_piece(line, piece, end, first):
     piece once for each character."""
     if unicodedata.combining(first):
         return False
-    last = unicodedata.normalize("NFKC", line[piece:end])[-1]
+    last = nfkc(line[piece:end])[-1]
     return unicodedata.normalize("NFKC", last + first) == last + first
 
 

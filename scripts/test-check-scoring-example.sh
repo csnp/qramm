@@ -3,17 +3,19 @@
 # workbook, against copies of the sample workbook whose cached value for
 # CVI_Score is not a finite number, is written in another way or is a
 # logical value, or whose xl/workbook.xml cannot be read, against copies of
-# the repository whose sample workbook is missing, is a text file, has an
-# entry that does not match its CRC-32 or has a Relationship element with no
-# Target attribute, and against copies of the document whose CVI score line
-# shows a number with a digit other than 0 to 9.
+# the repository whose sample workbook is missing, is a text file, has a
+# Relationship element with no Target attribute, or has an entry that does
+# not match its CRC-32, is marked as encrypted, gives a compression method
+# zipfile does not read, holds data that does not decompress or gives sizes
+# that run past the end of the file, and against copies of the document
+# whose CVI score line shows a number with a digit other than 0 to 9.
 #
 # Usage:
 #   scripts/test-check-scoring-example.sh
 #
 # The checker reads framework/scoring-methodology.md and
 # toolkit/Sample_Assessment.xlsx from the directory above its own. Cases 2
-# to 8 and 13 to 23 copy the checker and the document into a new temporary
+# to 8 and 13 to 35 copy the checker and the document into a new temporary
 # directory laid out like the repository (scripts/, framework/ and toolkit/),
 # write an edited copy of the sample workbook there (case 20 writes none,
 # and case 21 a text file in its place), and run the checker there. Cases 13
@@ -107,6 +109,37 @@
 #  such file or directory", "File is not a zip file", "Bad CRC-32 for file
 #  'xl/workbook.xml'" and "xl/_rels/workbook.xml.rels has a Relationship
 #  element with Id rId8 and no Target attribute".
+#  24. A copy of the sample workbook whose xl/workbook.xml entry holds
+#      deflate data whose first byte is 0x07, which starts a block of the
+#      reserved type 3.
+#  25. A copy whose xl/workbook.xml entry gives compression method 99,
+#      which zipfile does not support.
+#  26. A copy whose xl/workbook.xml entry has bit 0 of its general purpose
+#      flags set, which marks it as encrypted.
+#  27. A copy whose xl/workbook.xml entry gives compression method 93
+#      (Zstandard) and holds deflate data.
+#  28. A copy whose xl/workbook.xml entry gives compression method 14 (LZMA)
+#      and holds data that does not decompress as LZMA data.
+#  29. A copy whose xl/workbook.xml entry is stored without compression and
+#      gives a compressed and an uncompressed size that run past the end of
+#      the file.
+#  30 to 32. A copy whose Profile sheet part, xl/worksheets/sheet2.xml, is
+#      damaged as the xl/workbook.xml entry is in cases 24 to 26, in that
+#      order.
+#  33 to 35. The same for the Dimension 1 - CVI sheet part,
+#      xl/worksheets/sheet3.xml.
+#  Cases 24 to 35: the expectations of cases 15 to 19. The reason is the
+#  message of the error zipfile raises. For cases 24 to 26 and 30 to 35 it
+#  is "Error -3 while decompressing data: invalid block type", "That
+#  compression method is not supported" or "File '<part>' is encrypted,
+#  password required for extraction", where <part> is the damaged entry.
+#  For case 27 it is "Unable to decompress Zstandard data: Unknown frame
+#  descriptor", or "That compression method is not supported" in a Python
+#  without compression.zstd, which is new in Python 3.14. For case 28 it is
+#  "Corrupt input data". For case 29 it is "EOFError", the name of the
+#  error Python 3.9.6 raises, which has no message, or "Overlapped entries:
+#  'xl/workbook.xml' (possible zip bomb)", the message of the
+#  zipfile.BadZipFile that Python 3.13.12 and 3.14.3 raise.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -292,11 +325,23 @@ make_book_copy() {
   break_workbook_xml "$root/$sample" "$1/$sample" "$2"
 }
 
-# Writes to $2 a copy of the workbook $1 damaged as $3 says: crc changes the
-# CRC-32 that both headers of the entry xl/workbook.xml give, so that the
-# entry's data does not match it, and no-target removes the Target attribute
-# of the Relationship element with Id rId8 in xl/_rels/workbook.xml.rels.
-# Fails when the workbook does not have exactly one such entry or attribute.
+# Writes to $2 a copy of the workbook $1 damaged as $3 says, in the entry $4,
+# or in xl/workbook.xml when $4 is not given. crc changes the CRC-32 that
+# both headers of the entry give, so that the entry's data does not match
+# it. no-target removes the Target attribute of the Relationship element
+# with Id rId8 in xl/_rels/workbook.xml.rels, and edits no entry. deflate
+# sets the first byte of the entry's deflate data to 0x07, which starts a
+# block of the reserved type 3. method99, zstd and lzma set the compression
+# method that both headers of the entry give to 99, which zipfile does not
+# support, 93 (Zstandard) or 14 (LZMA); for lzma, the first 11 bytes of the
+# entry's data are replaced by the 4-byte header zipfile reads before LZMA
+# data, which gives 5 bytes of LZMA properties, the properties 0x5d (lc=3,
+# lp=0, pb=2) and a 64 KiB dictionary size, then 0xff 0xff. encrypted sets
+# bit 0 of the general purpose flags that both headers of the entry give,
+# which marks the entry as encrypted. past-end stores the entry without
+# compression, and sets the compressed and uncompressed sizes that both of
+# its headers give to the length of the copy, which run past its end. Fails
+# when the workbook does not have exactly one such entry or attribute.
 damage_workbook() {
   python3 -I - "$@" <<'PY'
 import re
@@ -305,7 +350,9 @@ import sys
 import zipfile
 
 source, target, edit = sys.argv[1:4]
-if edit not in ("crc", "no-target"):
+entry = sys.argv[4] if len(sys.argv) > 4 else "xl/workbook.xml"
+methods = {"method99": 99, "zstd": 93, "lzma": 14}
+if edit not in ("crc", "no-target", "deflate", "encrypted", "past-end") + tuple(methods):
     sys.exit("unknown edit: %s" % edit)
 found = 0
 with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
@@ -315,8 +362,10 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
             data, found = re.subn(
                 rb'(<Relationship Id="rId8"[^>]*?) Target="[^"]*"', rb"\1", data
             )
+        if edit == "past-end" and info.filename == entry:
+            info.compress_type = zipfile.ZIP_STORED
         copy.writestr(info, data)
-if edit == "crc":
+if edit != "no-target":
     with zipfile.ZipFile(target) as book:
         infos = book.infolist()
     with open(target, "rb") as fh:
@@ -326,13 +375,43 @@ if edit == "crc":
     # 2-byte comment length.
     (directory,) = struct.unpack_from("<I", data, len(data) - 6)
     for info in infos:
-        if info.filename == "xl/workbook.xml":
+        if info.filename == entry:
             found += 1
-            # The CRC-32 is at offset 14 of the local file header and at
-            # offset 16 of the central directory header.
-            crc = info.CRC ^ 0xFFFFFFFF
-            struct.pack_into("<I", data, info.header_offset + 14, crc)
-            struct.pack_into("<I", data, directory + 16, crc)
+            local = info.header_offset
+            # The entry's data follows its 30-byte local file header, which
+            # gives the lengths of the file name and of the extra field at
+            # offsets 26 and 28.
+            name_length, extra_length = struct.unpack_from("<HH", data, local + 26)
+            start = local + 30 + name_length + extra_length
+            if edit == "crc":
+                # The CRC-32 is at offset 14 of the local file header and at
+                # offset 16 of the central directory header.
+                crc = info.CRC ^ 0xFFFFFFFF
+                struct.pack_into("<I", data, local + 14, crc)
+                struct.pack_into("<I", data, directory + 16, crc)
+            elif edit == "deflate":
+                if info.compress_type != zipfile.ZIP_DEFLATED:
+                    sys.exit("%s: %s is not stored with the deflate method" % (source, entry))
+                data[start] = 0x07
+            elif edit == "encrypted":
+                # The general purpose flags are at offset 6 of the local file
+                # header and at offset 8 of the central directory header.
+                for offset in (local + 6, directory + 8):
+                    (flags,) = struct.unpack_from("<H", data, offset)
+                    struct.pack_into("<H", data, offset, flags | 1)
+            elif edit == "past-end":
+                # The compressed and uncompressed sizes are at offsets 18 and
+                # 22 of the local file header and at offsets 20 and 24 of the
+                # central directory header.
+                struct.pack_into("<II", data, local + 18, len(data), len(data))
+                struct.pack_into("<II", data, directory + 20, len(data), len(data))
+            else:
+                # The compression method is at offset 8 of the local file
+                # header and at offset 10 of the central directory header.
+                struct.pack_into("<H", data, local + 8, methods[edit])
+                struct.pack_into("<H", data, directory + 10, methods[edit])
+                if edit == "lzma":
+                    data[start:start + 11] = bytes([9, 20, 5, 0, 0x5D, 0, 0, 1, 0, 255, 255])
         names, extra, comment = struct.unpack_from("<HHH", data, directory + 28)
         directory += 46 + names + extra + comment
     with open(target, "wb") as fh:
@@ -344,8 +423,8 @@ PY
 
 # Lays out a copy of the repository at $1 with the checker and the document,
 # and with the sample workbook as $2 says: missing leaves it out, text writes
-# a text file in its place, and crc or no-target writes a copy of it made by
-# damage_workbook with that edit.
+# a text file in its place, and any other edit writes a copy of it made by
+# damage_workbook with that edit, in the entry $3 when $3 is given.
 make_damaged_copy() {
   mkdir -p "$1/scripts" "$1/framework" "$1/toolkit"
   cp "$checker" "$1/scripts/check-scoring-example.py"
@@ -353,7 +432,7 @@ make_damaged_copy() {
   case "$2" in
     missing) ;;
     text) printf 'This is a text file, not a workbook.\n' > "$1/$sample" ;;
-    *) damage_workbook "$root/$sample" "$1/$sample" "$2" ;;
+    *) damage_workbook "$root/$sample" "$1/$sample" "$2" ${3+"$3"} ;;
   esac
 }
 
@@ -428,7 +507,7 @@ expect_no_cvi_number() {
     "  FAIL CVI_Score: Dimension 1 - CVI!L5 has no cached number"
 }
 
-# The expect lines of cases 15 to 23, whose copy of the repository has a
+# The expect lines of cases 15 to 35, whose copy of the repository has a
 # sample workbook that cannot be read, or none. $1 is the reason the FAIL
 # line gives in parentheses, as an extended regular expression.
 expect_cannot_read() {
@@ -599,6 +678,82 @@ make_damaged_copy "$work/no-target" no-target
 start_case "case 23: the Relationship element with Id rId8 has no Target attribute" \
   "$work/no-target/scripts/check-scoring-example.py"
 expect_cannot_read 'xl/_rels/workbook\.xml\.rels has a Relationship element with Id rId8 and no Target attribute'
+end_case
+
+make_damaged_copy "$work/deflate" deflate
+start_case "case 24: xl/workbook.xml holds deflate data that does not decompress" \
+  "$work/deflate/scripts/check-scoring-example.py"
+expect_cannot_read 'Error -3 while decompressing data: invalid block type'
+end_case
+
+make_damaged_copy "$work/method99" method99
+start_case "case 25: xl/workbook.xml gives compression method 99" \
+  "$work/method99/scripts/check-scoring-example.py"
+expect_cannot_read 'That compression method is not supported'
+end_case
+
+make_damaged_copy "$work/encrypted" encrypted
+start_case "case 26: xl/workbook.xml is marked as encrypted" \
+  "$work/encrypted/scripts/check-scoring-example.py"
+expect_cannot_read "File 'xl/workbook\\.xml' is encrypted, password required for extraction"
+end_case
+
+make_damaged_copy "$work/zstd" zstd
+start_case "case 27: xl/workbook.xml gives compression method 93 (Zstandard)" \
+  "$work/zstd/scripts/check-scoring-example.py"
+expect_cannot_read '(Unable to decompress Zstandard data: Unknown frame descriptor|That compression method is not supported)'
+end_case
+
+make_damaged_copy "$work/lzma" lzma
+start_case "case 28: xl/workbook.xml holds LZMA data that does not decompress" \
+  "$work/lzma/scripts/check-scoring-example.py"
+expect_cannot_read 'Corrupt input data'
+end_case
+
+make_damaged_copy "$work/past-end" past-end
+start_case "case 29: the sizes of xl/workbook.xml run past the end of the file" \
+  "$work/past-end/scripts/check-scoring-example.py"
+expect_cannot_read "(EOFError|Overlapped entries: 'xl/workbook\\.xml' \\(possible zip bomb\\))"
+end_case
+
+# The parts of the Profile and Dimension 1 - CVI sheets, which hold the
+# cells of ProfileMultiplier and of the CVI scores.
+profile_part="xl/worksheets/sheet2.xml"
+
+make_damaged_copy "$work/profile-deflate" deflate "$profile_part"
+start_case "case 30: the Profile sheet part holds deflate data that does not decompress" \
+  "$work/profile-deflate/scripts/check-scoring-example.py"
+expect_cannot_read 'Error -3 while decompressing data: invalid block type'
+end_case
+
+make_damaged_copy "$work/profile-method99" method99 "$profile_part"
+start_case "case 31: the Profile sheet part gives compression method 99" \
+  "$work/profile-method99/scripts/check-scoring-example.py"
+expect_cannot_read 'That compression method is not supported'
+end_case
+
+make_damaged_copy "$work/profile-encrypted" encrypted "$profile_part"
+start_case "case 32: the Profile sheet part is marked as encrypted" \
+  "$work/profile-encrypted/scripts/check-scoring-example.py"
+expect_cannot_read "File 'xl/worksheets/sheet2\\.xml' is encrypted, password required for extraction"
+end_case
+
+make_damaged_copy "$work/cvi-deflate" deflate "$cvi_part"
+start_case "case 33: the Dimension 1 - CVI sheet part holds deflate data that does not decompress" \
+  "$work/cvi-deflate/scripts/check-scoring-example.py"
+expect_cannot_read 'Error -3 while decompressing data: invalid block type'
+end_case
+
+make_damaged_copy "$work/cvi-method99" method99 "$cvi_part"
+start_case "case 34: the Dimension 1 - CVI sheet part gives compression method 99" \
+  "$work/cvi-method99/scripts/check-scoring-example.py"
+expect_cannot_read 'That compression method is not supported'
+end_case
+
+make_damaged_copy "$work/cvi-encrypted" encrypted "$cvi_part"
+start_case "case 35: the Dimension 1 - CVI sheet part is marked as encrypted" \
+  "$work/cvi-encrypted/scripts/check-scoring-example.py"
+expect_cannot_read "File 'xl/worksheets/sheet3\\.xml' is encrypted, password required for extraction"
 end_case
 
 if [ "$failed" -eq 0 ]; then

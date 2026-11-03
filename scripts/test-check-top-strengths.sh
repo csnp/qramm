@@ -5,7 +5,7 @@
 # Usage:
 #   scripts/test-check-top-strengths.sh
 #
-# Cases 2 to 33 copy the checker into a new temporary directory laid out
+# Cases 2 to 43 copy the checker into a new temporary directory laid out
 # like the repository (scripts/ and toolkit/), so that the checker treats
 # that directory as the repository root. The workbook there is the toolkit
 # workbook, or a copy of it with text replaced in its XML parts. The
@@ -98,6 +98,34 @@
 #      "out of 4": exit 1, a FAIL line that says the number has a numeric
 #      character that is not a digit, a FAIL line for the maximum, two FAIL
 #      lines in all, and a PASS line for the threshold.
+#  34. The text of case 3 with 3, U+202E (RIGHT-TO-LEFT OVERRIDE), .6 and
+#      U+202C (POP DIRECTIONAL FORMATTING) in place of 3.6.
+#  35. The text of case 3 with 3, U+2067 (RIGHT-TO-LEFT ISOLATE), .6 and
+#      U+2069 (POP DIRECTIONAL ISOLATE) in place of 3.6.
+#  36. The text of case 3 with "out of ", U+202E, "4." and U+202C in place
+#      of "out of 4.".
+#  37. The text of case 3 with "Up to ", U+202E, "three" and U+202C in place
+#      of "Up to three".
+#  38. The text of case 3 with U+202E, 3.6 and U+202C in place of 3.6.
+#  39. The text of case 3 with the edits of cases 34 and 37, so that U+202E
+#      and U+202C are each on the line twice.
+#  40. The text of case 3 with 3, U+200F (RIGHT-TO-LEFT MARK) and .6 in
+#      place of 3.6.
+#  41. The text of case 3 with 3, U+070F (SYRIAC ABBREVIATION MARK), a
+#      format character whose bidirectional class is AL, and .6 in place of
+#      3.6.
+#  Cases 34 to 41: exit 1, nothing on stderr, one FAIL line, which names
+#  line 4 and each of the case's format characters once, in the order they
+#  first appear on the line, a PASS line for each of the three rules, and
+#  RESULT: FAIL.
+#  42. The text of case 3 with "th", U+200B (ZERO WIDTH SPACE) and "ree" in
+#      place of "three": exit 0, no FAIL line, a PASS line for up to three,
+#      and RESULT: PASS. The bidirectional class of U+200B is BN.
+#  43. An overview whose line 4 has the text of case 3, followed by the line
+#      "- **Top Str", U+200B, "engths**: Up to five practices, each out of
+#      7, from 9.9.": exit 1, nothing on stderr, a FAIL line for each of the
+#      three rules that names line 5, three FAIL lines in all, a PASS line
+#      for each rule that names line 4, and RESULT: FAIL.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -596,6 +624,108 @@ expect "FAIL line for the maximum" \
   'has_fail "$overview_path:4: does not say \"out of 4\"; the Scorecard gives each score out of 4 (C36, C40 and C44)"'
 expect "two FAIL lines" '[ "$(fail_count)" -eq 2 ]'
 expect "PASS line for the threshold" 'has_line "  PASS line 4: threshold 3.6"'
+end_case
+
+# \342\200\256 is U+202E (RIGHT-TO-LEFT OVERRIDE), \342\200\254 is U+202C
+# (POP DIRECTIONAL FORMATTING), \342\201\247 is U+2067 (RIGHT-TO-LEFT
+# ISOLATE), \342\201\251 is U+2069 (POP DIRECTIONAL ISOLATE), \342\200\217
+# is U+200F (RIGHT-TO-LEFT MARK) and \334\217 is U+070F (SYRIAC
+# ABBREVIATION MARK), encoded as UTF-8.
+override="$(printf '\342\200\256')"
+pop_formatting="$(printf '\342\200\254')"
+isolate="$(printf '\342\201\247')"
+pop_isolate="$(printf '\342\201\251')"
+right_to_left_mark="$(printf '\342\200\217')"
+syriac_mark="$(printf '\334\217')"
+override_names='U+202E (RIGHT-TO-LEFT OVERRIDE) and U+202C (POP DIRECTIONAL FORMATTING)'
+
+# The expect lines of cases 34 to 41, whose line 4 meets the three rules
+# and has the format characters that $1 names, as the FAIL line names them.
+expect_bidi_fail() {
+  local fail_text="$overview_path:4: has $1, which can change the order in which a reader sees its numbers and words; the rules read the line without them"
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "nothing on stderr" '[ -z "$err" ]'
+  expect "FAIL line names the format characters" 'has_fail "$fail_text"'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "PASS line for up to three" 'has_line "  PASS line 4: up to three"'
+  expect "PASS line for the threshold" 'has_line "  PASS line 4: threshold 3.6"'
+  expect "PASS line for the maximum" 'has_line "  PASS line 4: out of 4"'
+  expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
+}
+
+make_layout override-threshold "$root/$toolkit" "${now/3.6/3${override}.6${pop_formatting}}"
+start_case "case 34: 3, U+202E, .6 and U+202C in place of 3.6" "$layout"
+expect_bidi_fail "$override_names"
+end_case
+
+make_layout isolate-threshold "$root/$toolkit" "${now/3.6/3${isolate}.6${pop_isolate}}"
+start_case "case 35: 3, U+2067, .6 and U+2069 in place of 3.6" "$layout"
+expect_bidi_fail 'U+2067 (RIGHT-TO-LEFT ISOLATE) and U+2069 (POP DIRECTIONAL ISOLATE)'
+end_case
+
+make_layout override-maximum "$root/$toolkit" \
+  "${now/out of 4./out of ${override}4.${pop_formatting}}"
+start_case "case 36: out of, U+202E, 4. and U+202C in place of out of 4." "$layout"
+expect_bidi_fail "$override_names"
+end_case
+
+make_layout override-count "$root/$toolkit" \
+  "${now/Up to three/Up to ${override}three${pop_formatting}}"
+start_case "case 37: Up to, U+202E, three and U+202C in place of Up to three" "$layout"
+expect_bidi_fail "$override_names"
+end_case
+
+make_layout override-number "$root/$toolkit" "${now/3.6/${override}3.6${pop_formatting}}"
+start_case "case 38: U+202E, 3.6 and U+202C in place of 3.6" "$layout"
+expect_bidi_fail "$override_names"
+end_case
+
+twice="${now/3.6/3${override}.6${pop_formatting}}"
+make_layout override-twice "$root/$toolkit" \
+  "${twice/Up to three/Up to ${override}three${pop_formatting}}"
+start_case "case 39: U+202E and U+202C each twice on the line" "$layout"
+expect_bidi_fail "$override_names"
+end_case
+
+make_layout right-to-left-mark "$root/$toolkit" "${now/3.6/3${right_to_left_mark}.6}"
+start_case "case 40: 3, U+200F and .6 in place of 3.6" "$layout"
+expect_bidi_fail 'U+200F (RIGHT-TO-LEFT MARK)'
+end_case
+
+make_layout syriac-mark "$root/$toolkit" "${now/3.6/3${syriac_mark}.6}"
+start_case "case 41: 3, U+070F and .6 in place of 3.6" "$layout"
+expect_bidi_fail 'U+070F (SYRIAC ABBREVIATION MARK)'
+end_case
+
+make_layout zero-width-space-word "$root/$toolkit" \
+  "${now/Up to three/Up to th${zero_width_space}ree}"
+start_case "case 42: th, U+200B and ree in place of three" "$layout"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "no FAIL line" '[ "$(fail_count)" -eq 0 ]'
+expect "PASS line for up to three" 'has_line "  PASS line 4: up to three"'
+expect "last line is RESULT: PASS" 'last_line_is "RESULT: PASS"'
+end_case
+
+make_layout heading-zero-width-space "$root/$toolkit"
+printf '%s\n' '# Toolkit overview' '' '### Highlights and Recommendations' \
+  "- **Top Strengths**: $now" \
+  "- **Top Str${zero_width_space}engths**: Up to five practices, each out of 7, from 9.9." \
+  '- **Areas for Improvement**: Pinpoints lowest-scoring practices' \
+  > "$layout/$overview_path"
+start_case "case 43: a second Top Strengths line whose heading has U+200B" "$layout"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "FAIL line for up to three on line 5" \
+  'has_fail "$overview_path:5: does not say \"up to three\"; the Scorecard has three Top Strengths entries (C36, C40 and C44)"'
+expect "FAIL line for the threshold on line 5" \
+  'has_fail "$overview_path:5: does not give 3.6, the score from which the Scorecard lists a practice (B35, B39 and B43)"'
+expect "FAIL line for the maximum on line 5" \
+  'has_fail "$overview_path:5: does not say \"out of 4\"; the Scorecard gives each score out of 4 (C36, C40 and C44)"'
+expect "three FAIL lines" '[ "$(fail_count)" -eq 3 ]'
+expect "PASS line for up to three on line 4" 'has_line "  PASS line 4: up to three"'
+expect "PASS line for the threshold on line 4" 'has_line "  PASS line 4: threshold 3.6"'
+expect "PASS line for the maximum on line 4" 'has_line "  PASS line 4: out of 4"'
+expect "last line is RESULT: FAIL" 'last_line_is "RESULT: FAIL"'
 end_case
 
 if [ "$failed" -eq 0 ]; then
