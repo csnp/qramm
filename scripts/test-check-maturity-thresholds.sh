@@ -187,6 +187,25 @@
 #  "File is not a zip file", "Bad CRC-32 for file 'xl/workbook.xml'" and
 #  "xl/_rels/workbook.xml.rels has a Relationship element with Id rId8 and
 #  no Target attribute".
+#  49. A copy of the toolkit workbook whose Maturity Distribution chart
+#      value range ends at the row 1 followed by 4300 zeros in place of 25.
+#  50. A copy whose chart category range ends at the row 1 followed by 4300
+#      zeros in place of 25.
+#  51. A copy whose chart value range runs from row 1048573 to row 1048577,
+#      five rows, as many as the category range has.
+#  Cases 49 to 51: exit 1, nothing on stderr, one FAIL line, which names the
+#  chart and says that the value range, or the category range in case 50,
+#  refers to a row past 1048576, the last row of a worksheet, so it cannot
+#  be used, no FAIL line that says the copy cannot be read, no PASS line for
+#  the chart, and RESULT: FAIL as the last line. In Python 3.14.3, int()
+#  raises ValueError for the rows of cases 49 and 50, which have 4301
+#  digits, and the checker reported that as "cannot read (not a workbook)";
+#  it read row 1048577 of case 51 as a cell.
+#  52. A copy whose chart value range runs from row 1048572 to row 1048576:
+#      exit 1, nothing on stderr, five FAIL lines, each of which says that a
+#      chart value is not a count of practice scores in one range, one of
+#      them for Scorecard!M1048576, and no FAIL line that says a range
+#      refers to a row past 1048576.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -1207,6 +1226,60 @@ checker="$work/no-target/scripts/check-maturity-thresholds.py" \
   start_case "case 48: the Relationship element with Id rId8 has no Target attribute" \
   "$work/ranges.md"
 expect_scorecard_unreadable 'xl/_rels/workbook\.xml\.rels has a Relationship element with Id rId8 and no Target attribute'
+end_case
+
+# The expect lines of cases 49 to 51, whose copy of the toolkit workbook, in
+# the directory $work/$1, has a Maturity Distribution chart range that gives
+# a row past 1048576. $2 is the range the FAIL line names: category range or
+# value range.
+expect_range_unusable() {
+  expect "exit status is 1" '[ "$status" -eq 1 ]'
+  expect "no traceback on stderr" '[ -z "$err" ]'
+  expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
+  expect "FAIL line names the chart and says the $2 cannot be used" \
+    "has_fail \"$1/QRAMM_Assessment_Toolkit.xlsx: Maturity Distribution chart: the $2 refers to a row past 1048576, the last row of a worksheet, so it cannot be used\""
+  expect "no FAIL line says the copy cannot be read" '! has_fail "cannot read"'
+  expect "no PASS line for the chart" '! printf "%s\n" "$out" | grep -q "^  PASS Scorecard!"'
+  expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
+}
+
+# 4300 zeros, which follow a 1 to make a row of 4301 digits.
+zeros="$(printf '%04300d' 0)"
+
+make_copy "$toolkit" "$work/value-4301/QRAMM_Assessment_Toolkit.xlsx" \
+  'Scorecard!$M$21:$M$25' "Scorecard!\$M\$21:\$M\$1$zeros"
+start_case "case 49: a chart value range that ends at a row of 4301 digits" \
+  "$work/value-4301/QRAMM_Assessment_Toolkit.xlsx"
+expect_range_unusable value-4301 "value range"
+end_case
+
+make_copy "$toolkit" "$work/category-4301/QRAMM_Assessment_Toolkit.xlsx" \
+  'Scorecard!$L$21:$L$25' "Scorecard!\$L\$21:\$L\$1$zeros"
+start_case "case 50: a chart category range that ends at a row of 4301 digits" \
+  "$work/category-4301/QRAMM_Assessment_Toolkit.xlsx"
+expect_range_unusable category-4301 "category range"
+end_case
+
+make_copy "$toolkit" "$work/value-1048577/QRAMM_Assessment_Toolkit.xlsx" \
+  'Scorecard!$M$21:$M$25' 'Scorecard!$M$1048573:$M$1048577'
+start_case "case 51: a chart value range of rows 1048573 to 1048577" \
+  "$work/value-1048577/QRAMM_Assessment_Toolkit.xlsx"
+expect_range_unusable value-1048577 "value range"
+end_case
+
+make_copy "$toolkit" "$work/value-1048576/QRAMM_Assessment_Toolkit.xlsx" \
+  'Scorecard!$M$21:$M$25' 'Scorecard!$M$1048572:$M$1048576'
+start_case "case 52: a chart value range of rows 1048572 to 1048576" \
+  "$work/value-1048576/QRAMM_Assessment_Toolkit.xlsx"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "five FAIL lines" '[ "$(fail_count)" -eq 5 ]'
+expect "each FAIL line says a chart value is not a count of practice scores in one range" \
+  '[ "$(printf "%s\n" "$out" | grep "^  FAIL" | grep -c -F "chart value is not a count of practice scores in one range")" -eq 5 ]'
+expect "a FAIL line is for Scorecard!M1048576" \
+  'has_fail "value-1048576/QRAMM_Assessment_Toolkit.xlsx Scorecard!M1048576: the Maturity Distribution chart value is not a count of practice scores in one range"'
+expect "no FAIL line says a range refers to a row past 1048576" '! has_fail "refers to a row past"'
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
