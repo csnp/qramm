@@ -7,7 +7,7 @@
 # Usage:
 #   scripts/test-check-profile-multiplier.sh
 #
-# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 68 copy the checker and the toolkit
+# Cases 7 to 10, 44 to 46, 49 to 52 and 57 to 69 copy the checker and the toolkit
 # workbook into a new temporary directory laid out like the repository
 # (scripts/ and toolkit/), edit the copy of the workbook, and run the
 # checker there. Cases 15, 17, 38 to 43, 47 and 48 make the same copies and
@@ -263,6 +263,19 @@
 #      exit 0, nothing on stderr, the == line gives RiskMatrix as
 #      Data!M2:O1048576, the lowest and highest multiplier listed as 1.00
 #      and 1.50, a PASS line for the document, then RESULT: PASS.
+#  69. A workbook whose RiskMatrix reference gives its first row as 0, run
+#      as cases 65 to 67 are: exit 1, nothing on stderr, one FAIL line,
+#      which names the toolkit workbook and says RiskMatrix refers to a row
+#      before 1, the first row of a worksheet, so its reference cannot be
+#      used, no line that says the workbook cannot be read, no == line, so
+#      no document checked, and RESULT: FAIL as the last line.
+#  70. The checker loaded as a module, with cell_text() wrapped to count its
+#      calls, and multiplier_range() called on the workbook of case 68,
+#      whose RiskMatrix reference ends at row 1048576, and then on the
+#      repository's workbook, whose reference ends at row 30: exit 0,
+#      nothing on stderr, each call gives the range 1.00 to 1.50, and
+#      cell_text() is called as many times for the one workbook as for the
+#      other. The Data sheet holds no cell in columns M to O past row 30.
 #
 # The temporary directory is made under .tmp-tests/ at the repository root,
 # and the cleanup removes only a directory under it.
@@ -1313,10 +1326,11 @@ expect "PASS line for between 1.00 and 1.50" 'has_line "  PASS line 1: 1.00 to 1
 expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
 end_case
 
-# Expects the results of cases 65 to 67, where $1 is the defined name the
-# FAIL line gives.
+# Expects the results of cases 65 to 67 and 69, where $1 is the defined name
+# the FAIL line gives and $2 says where the row it refers to is: "past
+# 1048576, the last row of a worksheet" when it is not given.
 expect_reference_unusable() {
-  expected="  FAIL $toolkit: $1 refers to a row past 1048576, the last row of a worksheet, so its reference cannot be used"
+  expected="  FAIL $toolkit: $1 refers to a row ${2:-past 1048576, the last row of a worksheet}, so its reference cannot be used"
   expect "exit status is 1" '[ "$status" -eq 1 ]'
   expect "nothing on stderr" '[ -z "$err" ]'
   expect "one FAIL line" '[ "$(fail_count)" -eq 1 ]'
@@ -1360,6 +1374,66 @@ expect "the == line gives RiskMatrix as Data!M2:O1048576" \
 expect "workbook range is 1.00 to 1.50" 'has_line "  lowest 1.00, highest 1.50"'
 expect "PASS line for between 1.00 and 1.50" 'has_line "  PASS line 1: 1.00 to 1.50"'
 expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+end_case
+
+make_copy "$work/row0" '>Data!$M$2:$O$30<' '>Data!$M$0:$O$30<'
+start_case "case 69: a RiskMatrix reference whose first row is 0" \
+  "$work/row0/scripts/check-profile-multiplier.py" "$work/new.md"
+expect_reference_unusable RiskMatrix "before 1, the first row of a worksheet"
+end_case
+
+# Loads the checker as a module, wraps cell_text() to count its calls, and
+# calls multiplier_range() on each workbook given as an argument. For each
+# prints a line that gives the number of cell_text() calls and the lowest
+# and highest multiplier, or the problems when there is no multiplier range.
+# -B keeps python3 from writing a bytecode cache of the checker under
+# scripts/. Sets out, err and status.
+count_cell_reads() {
+  status=0
+  python3 -B -I - "$checker" "$@" > "$work/out" 2> "$work/err" <<'PY' || status=$?
+import importlib.util
+import sys
+
+spec = importlib.util.spec_from_file_location("checker", sys.argv[1])
+checker = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(checker)
+
+cell_text = checker.cell_text
+calls = 0
+
+
+def counted(cell, strings):
+    global calls
+    calls += 1
+    return cell_text(cell, strings)
+
+
+checker.cell_text = counted
+for path in sys.argv[2:]:
+    calls = 0
+    problems = []
+    found = checker.multiplier_range(path, problems)
+    if found is None:
+        print("problems: {}".format("; ".join(problems)))
+    else:
+        print(calls, found[4], found[5])
+PY
+  out="$(cat "$work/out")"
+  err="$(cat "$work/err")"
+}
+
+echo "case 70: cell_text() calls for a RiskMatrix reference that ends at row 1048576"
+case_failed="$failed"
+failed=0
+count_cell_reads "$work/row1048576/$toolkit" "$root/$toolkit"
+reads_1048576="$(printf '%s\n' "$out" | sed -n 1p)"
+reads_30="$(printf '%s\n' "$out" | sed -n 2p)"
+expect "exit status is 0" '[ "$status" -eq 0 ]'
+expect "nothing on stderr" '[ -z "$err" ]'
+expect "each workbook gives the range 1.00 to 1.50" \
+  '[ "${reads_1048576#* }" = "1.00 1.50" ] && [ "${reads_30#* }" = "1.00 1.50" ]'
+expect "cell_text() is called as many times for row 1048576 as for row 30" \
+  '[ "${reads_1048576%% *}" = "${reads_30%% *}" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
