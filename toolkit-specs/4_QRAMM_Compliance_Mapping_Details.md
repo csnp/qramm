@@ -67,7 +67,7 @@ Each question maps to multiple frameworks with relevance weights (0.0-1.0):
 | Q25: Remediation tracking | RS.MI-3 (1.0) | - | - | CA-5 (1.0) | CA-5 (1.0) | A.16.1.6 (1.0) | CC7.3 (1.0) | 7.3 (1.0) |
 | Q26: Risk acceptance process | ID.RM-3 (1.0) | - | RA.L2-3.11.1 (0.8) | RA-3 (1.0) | RA-3d (1.0) | A.6.1.3 (1.0) | CC3.3 (1.0) | 1.5 (0.8) |
 | Q27: Continuous risk monitoring | DE.CM-1 (1.0) | - | CA.L2-3.12.1 (1.0) | CA-7 (1.0) | CA-7 (1.0) | A.6.1.5 (1.0) | CC7.1 (1.0) | 7.1 (0.8) |
-| Q28: Risk metrics and KPIs | ID.RM-1 (1.0) | - | CA.L2-3.12.3 (0.8) | PM-6 (1.0) | PM-6 (1.0) | A.6.1.4 (0.8) | CC4.1 (1.0) | 1.7 (0.8) |
+| Q28: Risk metrics and KPIs | ID.RM-1 (1.0) | - | CA.L2-3.12.3 (0.8) | PM-6 (1.0) | PM-6 (1.0) | A.6.1.4 (0.8) | CC4.1 (1.0) | - |
 | Q29: Third-party risk tracking | ID.SC-3 (1.0) | - | - | SA-9 (1.0) | SA-9 (1.0) | A.15.2.2 (1.0) | CC9.2 (1.0) | 15.2 (1.0) |
 | Q30: Emerging threat intelligence | ID.RA-2 (1.0) | 3.1.2 (1.0) | - | PM-16 (1.0) | PM-16 (1.0) | A.6.1.2 (0.8) | CC7.2 (0.8) | 1.3 (0.8) |
 
@@ -83,10 +83,10 @@ Each question maps to multiple frameworks with relevance weights (0.0-1.0):
 | Q34: Risk committee charter | GV.OC-3 (1.0) | - | CA.L2-3.12.1 (0.8) | PM-9 (1.0) | PM-9 (1.0) | A.5.1.1 (1.0) | CC1.3 (1.0) | 1.1 (0.8) |
 | Q35: Policy framework | GV.PO-1 (1.0) | - | CA.L2-3.12.1 (1.0) | PL-1 (1.0) | PL-1 (1.0) | A.5.2.1 (1.0) | CC1.4 (1.0) | 1.3 (1.0) |
 | Q36: Accountability matrix | GV.RR-1 (1.0) | - | CA.L2-3.12.1 (0.8) | PM-2 (1.0) | PM-2 (1.0) | A.5.3.1 (1.0) | CC1.2 (1.0) | 1.2 (0.8) |
-| Q37: Budget allocation | GV.RM-1 (1.0) | - | CA.L2-3.12.1 (0.6) | PM-3 (1.0) | PM-3 (1.0) | A.5.1.1 (0.8) | CC1.5 (1.0) | 1.6 (0.8) |
+| Q37: Budget allocation | GV.RM-1 (1.0) | - | CA.L2-3.12.1 (0.6) | PM-3 (1.0) | PM-3 (1.0) | A.5.1.1 (0.8) | CC1.5 (1.0) | - |
 | Q38: Strategic planning | GV.SP-1 (1.0) | 4.1.2 (1.0) | CA.L2-3.12.1 (0.8) | PM-8 (1.0) | PM-8 (1.0) | A.5.1.2 (1.0) | CC2.1 (1.0) | 1.1 (0.8) |
-| Q39: Performance measurement | GV.MT-1 (1.0) | - | CA.L2-3.12.3 (1.0) | PM-6 (1.0) | PM-6 (1.0) | A.9.1.1 (1.0) | CC4.1 (1.0) | 1.7 (1.0) |
-| Q40: Executive reporting | GV.OC-3 (1.0) | - | CA.L2-3.12.3 (0.8) | CA-7 (1.0) | CA-7 (1.0) | A.9.1.3 (1.0) | CC4.2 (1.0) | 1.8 (0.8) |
+| Q39: Performance measurement | GV.MT-1 (1.0) | - | CA.L2-3.12.3 (1.0) | PM-6 (1.0) | PM-6 (1.0) | A.9.1.1 (1.0) | CC4.1 (1.0) | - |
+| Q40: Executive reporting | GV.OC-3 (1.0) | - | CA.L2-3.12.3 (0.8) | CA-7 (1.0) | CA-7 (1.0) | A.9.1.3 (1.0) | CC4.2 (1.0) | - |
 
 ### Practice 2.2: Risk Management Framework (Q41-Q50)
 
@@ -98,7 +98,7 @@ Each question maps to multiple frameworks with relevance weights (0.0-1.0):
 | Q44: Risk assessment process | ID.RA-1 (1.0) | - | RA.L2-3.11.1 (1.0) | RA-3 (1.0) | RA-3 (1.0) | A.6.1.3 (1.0) | CC3.2 (1.0) | 1.4 (1.0) |
 | Q45: Control effectiveness | PR.IP-2 (1.0) | - | CA.L2-3.12.2 (1.0) | CA-2 (1.0) | CA-2 (1.0) | A.6.1.3 (1.0) | CC3.3 (1.0) | 1.5 (0.8) |
 | Q46: Risk monitoring tools | DE.CM-1 (1.0) | - | CA.L2-3.12.1 (1.0) | CA-7 (1.0) | CA-7 (1.0) | A.6.1.5 (1.0) | CC7.1 (1.0) | 7.1 (0.8) |
-| Q47: Risk communication | ID.RM-3 (1.0) | - | CA.L2-3.12.3 (0.8) | CA-7 (1.0) | CA-7 (1.0) | A.6.1.4 (1.0) | CC3.4 (1.0) | 1.8 (0.8) |
+| Q47: Risk communication | ID.RM-3 (1.0) | - | CA.L2-3.12.3 (0.8) | CA-7 (1.0) | CA-7 (1.0) | A.6.1.4 (1.0) | CC3.4 (1.0) | - |
 | Q48: Incident risk analysis | RS.AN-5 (1.0) | - | IR.L2-3.6.2 (1.0) | IR-4 (1.0) | IR-4 (1.0) | A.16.1.4 (1.0) | CC7.3 (1.0) | 16.5 (0.8) |
 | Q49: Business continuity integration | ID.BE-5 (1.0) | - | - | CP-2 (1.0) | CP-2 (1.0) | A.17.1.1 (1.0) | CC9.1 (1.0) | 11.1 (1.0) |
 | Q50: Risk aggregation | ID.RM-1 (1.0) | - | RA.L2-3.11.1 (0.8) | PM-9 (1.0) | PM-9 (1.0) | A.6.1.4 (1.0) | CC3.2 (1.0) | 1.4 (0.8) |
@@ -109,14 +109,14 @@ Each question maps to multiple frameworks with relevance weights (0.0-1.0):
 |----------|----------|----------|-------|--------|---------|-----|------|-----|
 | Q51: Compliance framework | GV.PO-2 (1.0) | - | CA.L2-3.12.4 (1.0) | CA-1 (1.0) | CA-1 (1.0) | A.18.1.1 (1.0) | CC2.1 (1.0) | 1.3 (0.8) |
 | Q52: Regulatory tracking | ID.GV-3 (1.0) | - | CA.L2-3.12.4 (0.8) | PL-1 (1.0) | PL-1 (1.0) | A.18.1.1 (1.0) | CC2.2 (1.0) | 1.3 (0.8) |
-| Q53: Audit program | PR.IP-1 (1.0) | - | CA.L2-3.12.1 (1.0) | CA-2 (1.0) | CA-2 (1.0) | A.18.2.1 (1.0) | CC5.1 (1.0) | 1.9 (1.0) |
-| Q54: Control testing | PR.DS-6 (1.0) | - | CA.L2-3.12.2 (1.0) | CA-2 (1.0) | CA-2 (1.0) | A.18.2.2 (1.0) | CC5.2 (1.0) | 1.9 (0.8) |
-| Q55: Audit findings tracking | RS.MI-3 (1.0) | - | CA.L2-3.12.3 (1.0) | CA-5 (1.0) | CA-5 (1.0) | A.18.2.3 (1.0) | CC5.3 (1.0) | 1.10 (0.8) |
-| Q56: Compliance monitoring | DE.CM-6 (1.0) | - | CA.L2-3.12.1 (1.0) | CA-7 (1.0) | CA-7 (1.0) | A.18.2.2 (1.0) | CC5.2 (1.0) | 1.9 (0.8) |
-| Q57: Evidence management | PR.IP-1 (1.0) | - | CA.L2-3.12.4 (0.8) | CA-2 (1.0) | CA-2 (1.0) | A.18.1.3 (1.0) | CC5.3 (1.0) | 1.9 (0.8) |
-| Q58: External audit coordination | GV.OV-3 (1.0) | - | CA.L2-3.12.1 (0.8) | CA-2 (1.0) | CA-2 (1.0) | A.18.2.1 (1.0) | CC5.1 (1.0) | 1.9 (0.8) |
-| Q59: Compliance reporting | GV.OC-3 (1.0) | - | CA.L2-3.12.3 (1.0) | CA-6 (1.0) | CA-6 (1.0) | A.18.1.4 (1.0) | CC5.4 (1.0) | 1.10 (0.8) |
-| Q60: Continuous improvement | PR.IP-7 (1.0) | - | CA.L2-3.12.4 (0.8) | CA-7 (1.0) | CA-7 (1.0) | A.18.2.3 (1.0) | CC2.3 (1.0) | 1.11 (0.8) |
+| Q53: Audit program | PR.IP-1 (1.0) | - | CA.L2-3.12.1 (1.0) | CA-2 (1.0) | CA-2 (1.0) | A.18.2.1 (1.0) | CC5.1 (1.0) | - |
+| Q54: Control testing | PR.DS-6 (1.0) | - | CA.L2-3.12.2 (1.0) | CA-2 (1.0) | CA-2 (1.0) | A.18.2.2 (1.0) | CC5.2 (1.0) | - |
+| Q55: Audit findings tracking | RS.MI-3 (1.0) | - | CA.L2-3.12.3 (1.0) | CA-5 (1.0) | CA-5 (1.0) | A.18.2.3 (1.0) | CC5.3 (1.0) | - |
+| Q56: Compliance monitoring | DE.CM-6 (1.0) | - | CA.L2-3.12.1 (1.0) | CA-7 (1.0) | CA-7 (1.0) | A.18.2.2 (1.0) | CC5.2 (1.0) | - |
+| Q57: Evidence management | PR.IP-1 (1.0) | - | CA.L2-3.12.4 (0.8) | CA-2 (1.0) | CA-2 (1.0) | A.18.1.3 (1.0) | CC5.3 (1.0) | - |
+| Q58: External audit coordination | GV.OV-3 (1.0) | - | CA.L2-3.12.1 (0.8) | CA-2 (1.0) | CA-2 (1.0) | A.18.2.1 (1.0) | CC5.1 (1.0) | - |
+| Q59: Compliance reporting | GV.OC-3 (1.0) | - | CA.L2-3.12.3 (1.0) | CA-6 (1.0) | CA-6 (1.0) | A.18.1.4 (1.0) | CC5.4 (1.0) | - |
+| Q60: Continuous improvement | PR.IP-7 (1.0) | - | CA.L2-3.12.4 (0.8) | CA-7 (1.0) | CA-7 (1.0) | A.18.2.3 (1.0) | CC2.3 (1.0) | - |
 
 ## Dimension 3 - Data Protection & Encryption (DPE)
 

@@ -29,6 +29,14 @@ relative to the repository root, or absolute). For each workbook:
        matches. A category with no name there shows as its bare label in
        the Compliance sheet.
 
+Before the workbooks, the spec itself is checked:
+
+    5. A CIS v8 cell whose control starts with "1.", a safeguard of
+       Control 1 of CIS Controls v8, Inventory and Control of Enterprise
+       Assets, names one of the five safeguards of that control, 1.1 to
+       1.5. A cell such as "1.10 (0.8)" fails with a line that gives its
+       spec line and quotes the cell. The rule covers Control 1 only.
+
 A ComplianceMap reference, or a range the Compliance sheet looks category
 names up in, that gives a row past 1048576, the last row of a worksheet,
 such as 1 followed by 4300 zeros, fails with a line that names it and says
@@ -37,8 +45,8 @@ its reference cannot be used, before any row of it is read.
 The script reads stored cell values and the formula text of the Compliance
 sheet, and uses the Python standard library only.
 
-Exit status: 0 when the workbooks pass checks 1 to 4, 1 when they do not or
-a workbook cannot be read, 2 on a usage error. An empty workbook argument
+Exit status: 0 when checks 1 to 5 pass, 1 when one of them does not or a
+workbook cannot be read, 2 on a usage error. An empty workbook argument
 fails with "no file name given". A file name is printed with each byte that
 the file system encoding cannot decode, and each character that the encoding
 of stdout cannot encode, as a backslash escape, such as \\xff for the byte
@@ -122,6 +130,13 @@ FRAMEWORKS = [
 ]
 
 QUESTIONS = 120
+
+# Check 5: the spec column whose cells give CIS v8 safeguards, and the five
+# safeguards of CIS Controls v8 Control 1, Inventory and Control of
+# Enterprise Assets. A CIS cell whose control starts with "1." names one of
+# them.
+CIS_COLUMN = "CIS"
+CONTROL_1_SAFEGUARDS = ("1.1", "1.2", "1.3", "1.4", "1.5")
 
 # Offsets of the columns read from each row of the map.
 QUESTION_COLUMN = 0
@@ -274,7 +289,18 @@ def read_spec(path, problems):
                     "or \"-\"".format(SPEC, number, question, column, cell)
                 )
                 continue
-            spec[key] = (number, parsed.group(1), float(parsed.group(2)))
+            control = parsed.group(1)
+            if (
+                column == CIS_COLUMN
+                and control.startswith("1.")
+                and control not in CONTROL_1_SAFEGUARDS
+            ):
+                # The cell is still compared with the workbooks.
+                problems.append(
+                    "{} line {}: {} {} is \"{}\", expected one of the CIS v8 Control 1 "
+                    "safeguards 1.1 to 1.5, or \"-\"".format(SPEC, number, question, column, cell)
+                )
+            spec[key] = (number, control, float(parsed.group(2)))
     for index in range(1, QUESTIONS + 1):
         question = "Q{}".format(index)
         for column, framework in FRAMEWORKS:

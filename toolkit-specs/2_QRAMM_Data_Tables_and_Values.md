@@ -157,12 +157,12 @@ one for each of the 120 questions in each of the 8 frameworks listed in Complian
 
 - Helper Column (AX) is a formula that joins Question_ID and Framework with "|", for example
   `=CONCAT(AV3,"|",AW3)` in row 3.
-- Control_ID (AY) is stored as text in every row, CIS v8 safeguards included, so that 1.10
-  (Q55 and Q59) is kept apart from 1.1 (Q1).
+- Control_ID (AY) is stored as text in every row, CIS v8 safeguards included, so that a
+  safeguard such as 3.10 is kept apart from 3.1.
 - Category (AZ) is the group the control belongs to, for example ID for ID.AM-1 and A.8 for
   A.8.1.1.
 - Weight (BA) is 1, 0.8 or 0.6. When a question has no control in a framework, Control_ID and
-  Category are "-" and Weight is empty. 112 of the 960 rows are of this kind.
+  Category are "-" and Weight is empty. 125 of the 960 rows are of this kind.
 
 Sample entries (Data!AV3:BA18, the same in toolkit/QRAMM_Assessment_Toolkit.xlsx and
 toolkit/Sample_Assessment.xlsx):

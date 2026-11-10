@@ -5,10 +5,10 @@
 # Usage:
 #   scripts/test-check-compliance-map.sh
 #
-# Cases 2, 3, 6 and 7 copy the checker, the spec and both workbooks into a
-# new temporary directory laid out like the repository (scripts/,
-# toolkit-specs/ and toolkit/), edit the copy of the spec or of the
-# workbooks, and run the checker there.
+# Cases 2, 3, 6, 7, 9, 38 and 58 copy the checker, the spec and both
+# workbooks into a new temporary directory laid out like the repository
+# (scripts/, toolkit-specs/ and toolkit/), edit the copy of the spec or of
+# the workbooks, and run the checker there.
 #
 # Cases:
 #   1. The repository spec and workbooks: exit 0, a map PASS line and a
@@ -33,10 +33,12 @@
 #      exit 1, a FAIL line that says the lookup cannot be read.
 #   8. An empty workbook argument: exit 1, "FAIL '': no file name given",
 #      no "cannot read" line.
-#   9. Workbooks whose Q55 CIS v8 Control_ID (Data!AY442) is the number
-#      1.1000000000000001 and whose Q59 CIS v8 Control_ID (Data!AY474) is
-#      the text of Q1's (Data!AY10), where the spec gives 1.10 for both:
-#      exit 1, a FAIL line for each of the two cells in each workbook.
+#   9. A spec whose Q55 and Q59 CIS cells give 3.10 (0.8), and workbooks
+#      whose Q55 and Q59 CIS v8 rows (Data rows 442 and 474) carry the
+#      category 3 and the weight 0.8, with the Q55 Control_ID (Data!AY442)
+#      stored as the number 3.1000000000000001 and the Q59 Control_ID
+#      (Data!AY474) as the text 3.1: exit 1, a FAIL line for each of the
+#      two cells in each workbook.
 #  10. Under the en_US.UTF-8 locale, a workbook argument that holds the byte
 #      0xff, which is not valid UTF-8, and names no file, then the sample
 #      workbook: exit 1, no traceback, the name printed with the byte as
@@ -251,6 +253,10 @@
 #  57. The same with Data!$BG$3:$BH$1048576, the last row of a worksheet:
 #      exit 0, nothing on stderr, the map PASS line and a category name
 #      PASS line that names Data!BG3:BH1048576.
+#  58. A spec whose Q1 CIS cell gives 1.6 (1.0) and whose Q2 CIS cell gives
+#      1.10 (0.8), safeguard numbers past 1.5, the last safeguard of CIS v8
+#      Control 1: exit 1, nothing on stderr, a FAIL line for each of the
+#      two cells that names its spec line and quotes it, then RESULT: FAIL.
 #
 # Each case prints a title that starts with "case N:", where N is its
 # number. A FAIL line follows each title that gives the number of an
@@ -315,20 +321,25 @@ PY
 }
 
 # Writes to $2 a copy of the workbook $1 whose Data sheet cell $3 holds the
-# number $4 and whose Data sheet cell $5 holds the stored value of its cell
-# $6. Fails when the Data sheet lacks one of the cells.
+# value $4, and so on for each further pair of a cell and a value. A value
+# written as number:N is stored as the number N, and one written as text:T
+# as the text T. Each cell keeps its style. Fails when the Data sheet lacks
+# one of the cells or a value has neither form.
 edit_data_cells() {
   python3 -I - "$@" <<'PY'
 import re
 import sys
 import zipfile
 
-source, target, number_ref, number, copy_ref, from_ref = sys.argv[1:7]
+source, target = sys.argv[1:3]
+pairs = list(zip(sys.argv[3::2], sys.argv[4::2]))
 data = "xl/worksheets/sheet10.xml"
 
 
 def cell(text, ref):
-    match = re.search(r'<c r="%s"( s="\d+")?[^>]*>.*?</c>' % ref, text)
+    # A cell with no value can be an empty element, such as the Weight
+    # <c r="BA442" s="2"/> of a row with no control.
+    match = re.search(r'<c r="%s"( s="\d+")?(?:[^>]*?/>|[^>]*?(?<!/)>.*?</c>)' % ref, text)
     if match is None:
         sys.exit("no cell %s" % ref)
     return match
@@ -339,14 +350,17 @@ with zipfile.ZipFile(source) as book, zipfile.ZipFile(target, "w") as copy:
         part = book.read(info.filename)
         if info.filename == data:
             text = part.decode("utf-8")
-            old = cell(text, number_ref)
-            text = text.replace(
-                old.group(0),
-                '<c r="%s"%s><v>%s</v></c>' % (number_ref, old.group(1) or "", number),
-            )
-            old = cell(text, copy_ref)
-            text = text.replace(old.group(0), cell(text, from_ref).group(0).replace(
-                'r="%s"' % from_ref, 'r="%s"' % copy_ref, 1))
+            for ref, value in pairs:
+                old = cell(text, ref)
+                style = old.group(1) or ""
+                kind, _, value = value.partition(":")
+                if kind == "number":
+                    new = '<c r="%s"%s><v>%s</v></c>' % (ref, style, value)
+                elif kind == "text":
+                    new = '<c r="%s"%s t="inlineStr"><is><t>%s</t></is></c>' % (ref, style, value)
+                else:
+                    sys.exit("value for %s is not number:N or text:T" % ref)
+                text = text.replace(old.group(0), new)
             part = text.encode("utf-8")
         copy.writestr(info, part)
 PY
@@ -432,7 +446,7 @@ expect "exit status is 0" '[ "$status" -eq 0 ]'
 expect "PASS line for each workbook" \
   '[ "$(printf "%s\n" "$out" | grep -c "^  PASS 120 questions x 8 frameworks, 960 rows$")" -eq 2 ]'
 expect "category name PASS line for each workbook" \
-  '[ "$(printf "%s\n" "$out" | grep -c "^  PASS 848 rows with a category, each named in Data!BG3:BH108$")" -eq 2 ]'
+  '[ "$(printf "%s\n" "$out" | grep -c "^  PASS 835 rows with a category, each named in Data!BG3:BH108$")" -eq 2 ]'
 expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
 end_case
 
@@ -527,20 +541,28 @@ expect "FAIL says no file name was given" \
 expect "no cannot read line" '! printf "%s\n" "$out" | grep -q "cannot read"'
 end_case
 
-make_copy "$work/numeric" ''
+# The repository spec gives "-" for Q55 CIS (line 114) and Q59 CIS (line
+# 118). The copy gives 3.10 (0.8) for both, and the workbook copies carry
+# its category and weight in those rows, so the two Control_IDs are the
+# only cells that differ from the spec.
+make_copy "$work/numeric" '
+/^| Q55: /s/| - |$/| 3.10 (0.8) |/
+/^| Q59: /s/| - |$/| 3.10 (0.8) |/
+'
 for book in "$toolkit" "$sample"; do
   edit_data_cells "$root/$book" "$work/numeric/$book" \
-    AY442 1.1000000000000001 AY474 AY10
+    AY442 number:3.1000000000000001 AZ442 text:3 BA442 number:0.8 \
+    AY474 text:3.1 AZ474 text:3 BA474 number:0.8
 done
-start_case "case 9: Q55 CIS v8 stored as the number 1.1, Q59 as the text 1.1" \
+start_case "case 9: Q55 CIS v8 stored as the number 3.1, Q59 as the text 3.1" \
   "$work/numeric/scripts/check-compliance-map.py"
 expect "exit status is 1" '[ "$status" -eq 1 ]'
 expect "4 FAIL lines (2 for each workbook)" '[ "$(fail_count)" -eq 4 ]'
 for book in "$toolkit" "$sample"; do
   expect "$book: Q55 CIS control stored as a number" \
-    "has_fail '$book Q55 CIS v8: Data!AY442 is the number 1.1, the spec gives 1.10 (line 114)'"
-  expect "$book: Q59 CIS control stored as 1.1" \
-    "has_fail '$book Q59 CIS v8: Data!AY474 is 1.1, the spec gives 1.10 (line 118)'"
+    "has_fail '$book Q55 CIS v8: Data!AY442 is the number 3.1, the spec gives 3.10 (line 114)'"
+  expect "$book: Q59 CIS control stored as 3.1" \
+    "has_fail '$book Q59 CIS v8: Data!AY474 is 3.1, the spec gives 3.10 (line 118)'"
 done
 end_case
 
@@ -770,7 +792,7 @@ if [ "$stdout_encoding" = "iso8859-1" ]; then
   expect "FAIL line for Q1 FedRAMP gives the control with U+00D7 as the byte 0xd7" \
     'LC_ALL=C has_line "$ay7_line"'
   expect "the category names are checked" \
-    "has_line '  PASS 848 rows with a category, each named in Data!BG3:BH108'"
+    "has_line '  PASS 835 rows with a category, each named in Data!BG3:BH108'"
   expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
   end_case
 else
@@ -788,7 +810,7 @@ if [ "$stdout_encoding" = "iso8859-1" ]; then
   expect "no traceback on stderr" '[ -z "$err" ]'
   expect "the map is checked" "has_line '  PASS 120 questions x 8 frameworks, 960 rows'"
   expect "the category name PASS line gives the sheet name with U+2192 as \\u2192" \
-    "has_line '  PASS 848 rows with a category, each named in Data\\u2192!BG3:BH108'"
+    "has_line '  PASS 835 rows with a category, each named in Data\\u2192!BG3:BH108'"
   expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
   end_case
 else
@@ -1384,6 +1406,25 @@ expect "map PASS line" "has_line '  PASS 120 questions x 8 frameworks, 960 rows'
 expect "category name PASS line names Data!BG3:BH1048576" \
   'printf "%s\n" "$out" | grep -q "^  PASS [0-9]* rows with a category, each named in Data!BG3:BH1048576"'
 expect "last line is RESULT: PASS" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: PASS" ]'
+end_case
+
+# The repository spec gives 1.1 (1.0) for Q1 CIS (line 33) and 2.1 (0.8)
+# for Q2 CIS (line 34). Read as a number, 1.10 would be 1.1, one of the
+# five safeguards of Control 1, so the Q2 cell fails only when the checker
+# compares the control as text.
+make_copy "$work/control1" '
+/^| Q1: /s/| 1\.1 (1\.0) |$/| 1.6 (1.0) |/
+/^| Q2: /s/| 2\.1 (0\.8) |$/| 1.10 (0.8) |/
+'
+start_case "case 58: spec CIS v8 cells that name Control 1 safeguards past 1.5" \
+  "$work/control1/scripts/check-compliance-map.py"
+expect "exit status is 1" '[ "$status" -eq 1 ]'
+expect "no traceback on stderr" '[ -z "$err" ]'
+expect "FAIL line for Q1 CIS names its spec line and quotes the cell" \
+  "has_line '  FAIL $spec line 33: Q1 CIS is \"1.6 (1.0)\", expected one of the CIS v8 Control 1 safeguards 1.1 to 1.5, or \"-\"'"
+expect "FAIL line for Q2 CIS names its spec line and quotes the cell" \
+  "has_line '  FAIL $spec line 34: Q2 CIS is \"1.10 (0.8)\", expected one of the CIS v8 Control 1 safeguards 1.1 to 1.5, or \"-\"'"
+expect "last line is RESULT: FAIL" '[ "$(printf "%s\n" "$out" | tail -n 1)" = "RESULT: FAIL" ]'
 end_case
 
 if [ "$failed" -eq 0 ]; then
